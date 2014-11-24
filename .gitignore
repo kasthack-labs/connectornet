@@ -40,7 +40,9 @@ local.properties
 *.suo
 *.user
 *.sln.docstates
-
+*.ide/
+*.snk
+*.PublicKey
 # Build results
 [Dd]ebug/
 [Rr]elease/
