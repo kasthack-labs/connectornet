@@ -42,25 +42,25 @@ namespace MySql.Data.Types {
 
     public struct MySqlGeometry : IMySqlValue {
         private readonly MySqlDbType _type;
-        private readonly Double _xValue;
-        private readonly Double _yValue;
+        private readonly double _xValue;
+        private readonly double _yValue;
         private readonly int _srid;
         private readonly byte[] _valBinary;
         private readonly bool _isNull;
 
         private const int GeometryLength = 25;
 
-        public Double? XCoordinate => _xValue;
+        public double? XCoordinate => _xValue;
 
-        public Double? YCoordinate => _yValue;
+        public double? YCoordinate => _yValue;
 
         public int? Srid => _srid;
 
         public MySqlGeometry( bool isNull ) : this( MySqlDbType.Geometry, isNull ) { }
 
-        public MySqlGeometry( Double xValue, Double yValue ) : this( MySqlDbType.Geometry, xValue, yValue, 0 ) { }
+        public MySqlGeometry( double xValue, double yValue ) : this( MySqlDbType.Geometry, xValue, yValue, 0 ) { }
 
-        public MySqlGeometry( Double xValue, Double yValue, int srid ) : this( MySqlDbType.Geometry, xValue, yValue, srid ) { }
+        public MySqlGeometry( double xValue, double yValue, int srid ) : this( MySqlDbType.Geometry, xValue, yValue, srid ) { }
 
         internal MySqlGeometry( MySqlDbType type, bool isNull ) {
             _type = type;
@@ -72,7 +72,7 @@ namespace MySql.Data.Types {
             _isNull = isNull;
         }
 
-        internal MySqlGeometry( MySqlDbType type, Double xValue, Double yValue, int srid ) {
+        internal MySqlGeometry( MySqlDbType type, double xValue, double yValue, int srid ) {
             _type = type;
             _xValue = xValue;
             _yValue = yValue;
@@ -139,11 +139,11 @@ namespace MySql.Data.Types {
                 buffToWrite = ( (MySqlGeometry) val )._valBinary;
             }
             catch {
-                buffToWrite = val as Byte[];
+                buffToWrite = val as byte[];
             }
 
             if ( buffToWrite == null ) {
-                var v = new MySqlGeometry( 0, 0 );
+                MySqlGeometry v;
                 TryParse( val.ToString(), out v );
                 buffToWrite = v._valBinary;
             }
@@ -191,10 +191,7 @@ namespace MySql.Data.Types {
             return g;
         }
 
-        void IMySqlValue.SkipValue( MySqlPacket packet ) {
-            var len = (int) packet.ReadFieldLength();
-            packet.Position += len;
-        }
+        void IMySqlValue.SkipValue( MySqlPacket packet ) => packet.Position += (int) packet.ReadFieldLength();
         #endregion
 
         /// <summary>Returns the Well-Known Text representation of this value</summary>
@@ -219,7 +216,7 @@ namespace MySql.Data.Types {
 
             if ( !( value.Contains( "SRID" ) || value.Contains( "POINT(" ) || value.Contains( "POINT (" ) ) ) throw new FormatException( "String does not contain a valid geometry value" );
 
-            var result = new MySqlGeometry( 0, 0 );
+            MySqlGeometry result;
             TryParse( value, out result );
 
             return result;
@@ -249,8 +246,8 @@ namespace MySql.Data.Types {
                     point = point.Replace( "POINT (", "" ).Replace( "POINT(", "" ).Replace( ")", "" );
                     var coord = point.Split( ' ' );
                     if ( coord.Length > 1 ) {
-                        hasX = Double.TryParse( coord[ 0 ], out xVal );
-                        hasY = Double.TryParse( coord[ 1 ], out yVal );
+                        hasX = double.TryParse( coord[ 0 ], out xVal );
+                        hasY = double.TryParse( coord[ 1 ], out yVal );
                     }
                     if ( arrayResult.Length >= 1 ) Int32.TryParse( arrayResult[ 0 ].Replace( "SRID=", "" ), out sridValue );
                 }
@@ -295,10 +292,6 @@ namespace MySql.Data.Types {
             row[ "NativeDataType" ] = DBNull.Value;
         }
 
-        public string GetWkt() {
-            if ( !_isNull ) return string.Format( CultureInfo.InvariantCulture.NumberFormat, "POINT({0} {1})", _xValue, _yValue );
-
-            return String.Empty;
-        }
+        public string GetWkt() => _isNull ? String.Empty : string.Format( CultureInfo.InvariantCulture.NumberFormat, "POINT({0} {1})", _xValue, _yValue );
     }
 }

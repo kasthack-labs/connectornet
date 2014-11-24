@@ -23,6 +23,7 @@
 using System;
 using System.Data;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
@@ -40,10 +41,7 @@ namespace MySql.Data.MySqlClient {
 
         public StoredProcedure( MySqlCommand cmd, string text ) : base( cmd, text ) { }
 
-        private MySqlParameter GetReturnParameter() {
-            if ( Parameters != null ) foreach ( MySqlParameter p in Parameters ) if ( p.Direction == ParameterDirection.ReturnValue ) return p;
-            return null;
-        }
+        private MySqlParameter GetReturnParameter() => Parameters?.Cast<MySqlParameter>().FirstOrDefault( p => p.Direction == ParameterDirection.ReturnValue );
 
         public bool ServerProvidingOutputParameters { get; private set; }
 
@@ -57,7 +55,7 @@ namespace MySql.Data.MySqlClient {
             foreach ( MySqlParameter p in Command.Parameters )
                 if ( p.Direction == ParameterDirection.ReturnValue ) retValue = "?=";
                 else {
-                    key.AppendFormat( CultureInfo.InvariantCulture, "{0}?", delimiter );
+                    key.InvariantAppendFormat( "{0}?", delimiter );
                     delimiter = ",";
                 }
             key.Append( ")" );
@@ -75,12 +73,14 @@ namespace MySql.Data.MySqlClient {
             while ( x > 0
                     && ( Char.IsLetterOrDigit( dtd[ x ] ) || dtd[ x ] == ' ' ) ) x--;
             var dtdSubstring = dtd.Substring( x );
-            return StringUtility.ToUpperInvariant( dtdSubstring );
+            return dtdSubstring.InvariantToUpper();
         }
 
         private string FixProcedureName( string name ) {
             var parts = name.Split( '.' );
-            for ( var i = 0; i < parts.Length; i++ ) if ( !parts[ i ].StartsWith( "`", StringComparison.Ordinal ) ) parts[ i ] = String.Format( "`{0}`", parts[ i ] );
+            for ( var i = 0; i < parts.Length; i++ )
+                if ( !parts[ i ].InvariantStartsWith( "`" ) )
+                        parts[ i ] = String.Format( "`{0}`", parts[ i ] );
             if ( parts.Length == 1 ) return parts[ 0 ];
             return String.Format( "{0}.{1}", parts[ 0 ], parts[ 1 ] );
         }
@@ -96,11 +96,10 @@ namespace MySql.Data.MySqlClient {
 
             // make sure the parameters given to us have an appropriate type set if it's not already
             var p = Command.Parameters.GetParameterFlexible( pName, true );
-            if ( !p.TypeHasBeenSet ) {
-                var datatype = (string) param[ "DATA_TYPE" ];
-                var unsigned = GetFlags( param[ "DTD_IDENTIFIER" ].ToString() ).IndexOf( "UNSIGNED" ) != -1;
-                p.MySqlDbType = MetaData.NameToType( datatype, unsigned, realAsFloat, Connection );
-            }
+            if ( p.TypeHasBeenSet ) return p;
+            var datatype = (string) param[ "DATA_TYPE" ];
+            var unsigned = GetFlags( param[ "DTD_IDENTIFIER" ].ToString() ).InvariantIndexOf( "UNSIGNED" ) != -1;
+            p.MySqlDbType = MetaData.NameToType( datatype, unsigned, realAsFloat, Connection );
             return p;
         }
 
@@ -112,8 +111,7 @@ namespace MySql.Data.MySqlClient {
             if ( entry.Procedure == null
                  || entry.Procedure.Rows.Count == 0 ) throw new InvalidOperationException( String.Format( Resources.RoutineNotFound, spName ) );
 
-            var realAsFloat = entry.Procedure.Rows[ 0 ][ "SQL_MODE" ].ToString().IndexOf( "REAL_AS_FLOAT" ) != -1;
-
+            var realAsFloat = entry.Procedure.Rows[ 0 ][ "SQL_MODE" ].ToString().InvariantIndexOf( "REAL_AS_FLOAT" ) != -1;
             foreach ( var param in entry.Parameters.Rows ) newParms.Add( GetAndFixParameter( spName, param, realAsFloat, returnParameter ) );
             return newParms;
         }
@@ -142,10 +140,8 @@ namespace MySql.Data.MySqlClient {
         }
 
         private string SetUserVariables( MySqlParameterCollection parms, bool preparing ) {
+            if ( ServerProvidingOutputParameters ) return String.Empty;
             var setSql = new StringBuilder();
-
-            if ( ServerProvidingOutputParameters ) return setSql.ToString();
-
             var delimiter = String.Empty;
             foreach ( MySqlParameter p in parms ) {
                 if ( p.Direction != ParameterDirection.InputOutput ) continue;
@@ -156,7 +152,7 @@ namespace MySql.Data.MySqlClient {
 
                 if ( Command.Connection.Settings.AllowBatch
                      && !preparing ) {
-                    setSql.AppendFormat( CultureInfo.InvariantCulture, "{0}{1}", delimiter, sql );
+                    setSql.InvariantAppendFormat( "{0}{1}", delimiter, sql );
                     delimiter = "; ";
                 }
                 else {
@@ -180,7 +176,7 @@ namespace MySql.Data.MySqlClient {
                 var uName = "@" + ParameterPrefix + p.BaseName;
 
                 var useRealVar = p.Direction == ParameterDirection.Input || ServerProvidingOutputParameters;
-                callSql.AppendFormat( CultureInfo.InvariantCulture, "{0}{1}", delimiter, useRealVar ? pName : uName );
+                callSql.InvariantAppendFormat( "{0}{1}", delimiter, useRealVar ? pName : uName );
                 delimiter = ", ";
             }
 
@@ -193,13 +189,18 @@ namespace MySql.Data.MySqlClient {
 
             var delimiter = String.Empty;
             foreach ( MySqlParameter p in parms ) {
-                if ( p.Direction == ParameterDirection.Input ) continue;
-                if ( ( p.Direction == ParameterDirection.InputOutput || p.Direction == ParameterDirection.Output )
-                     && ServerProvidingOutputParameters ) continue;
+                switch ( p.Direction ) {
+                    case ParameterDirection.Input:
+                        continue;
+                    case ParameterDirection.InputOutput:
+                    case ParameterDirection.Output:
+                        if ( ServerProvidingOutputParameters ) continue;
+                        break;
+                }
                 var pName = "@" + p.BaseName;
                 var uName = "@" + ParameterPrefix + p.BaseName;
 
-                outSql.AppendFormat( CultureInfo.InvariantCulture, "{0}{1}", delimiter, uName );
+                outSql.InvariantAppendFormat( "{0}{1}", delimiter, uName );
                 delimiter = ", ";
             }
 
@@ -222,7 +223,7 @@ namespace MySql.Data.MySqlClient {
             // now read the output parameters data row
             reader.Read();
 
-            var prefix = "@" + ParameterPrefix;
+            const string prefix = "@" + ParameterPrefix;
 
             for ( var i = 0; i < reader.FieldCount; i++ ) {
                 var fieldName = reader.GetName( i );

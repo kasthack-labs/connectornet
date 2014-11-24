@@ -60,8 +60,8 @@ namespace MySql.Data.Common {
             return sw;
         }
 
-        public static long GetTimestamp() { return Environment.TickCount; }
+        public static long GetTimestamp() => Environment.TickCount;
 
-        private bool IsRunning() { return ( _startTime != 0 ); }
+        private bool IsRunning() => ( _startTime != 0 );
     }
 }

@@ -22,6 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlInt64 : IMySqlValue {
@@ -29,7 +30,7 @@ namespace MySql.Data.Types {
         private readonly bool _isNull;
 
         public MySqlInt64( bool isNull ) {
-            this._isNull = isNull;
+            _isNull = isNull;
             _mValue = 0;
         }
 
@@ -47,12 +48,12 @@ namespace MySql.Data.Types {
 
         public long Value => _mValue;
 
-        Type IMySqlValue.SystemType => typeof( long );
+        Type IMySqlValue.SystemType => Constants.Types.Int64;
 
         string IMySqlValue.MySqlTypeName => "BIGINT";
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
-            var v = ( val is long ) ? (long) val : Convert.ToInt64( val );
+            var v = val as long? ?? Convert.ToInt64( val );
             if ( binary ) packet.WriteInteger( v, 8 );
             else packet.WriteStringNoNull( v.ToString() );
         }

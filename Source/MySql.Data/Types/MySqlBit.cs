@@ -22,6 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     /// <summary>
@@ -53,24 +54,23 @@ namespace MySql.Data.Types {
 
         object IMySqlValue.Value => _mValue;
 
-        Type IMySqlValue.SystemType => typeof( UInt64 );
+        Type IMySqlValue.SystemType => Constants.Types.UInt64;
 
         string IMySqlValue.MySqlTypeName => "BIT";
 
         public void WriteValue( MySqlPacket packet, bool binary, object value, int length ) {
-            var v = ( value is UInt64 ) ? (UInt64) value : Convert.ToUInt64( value );
+            var v = value as ulong? ?? Convert.ToUInt64( value );
             if ( binary ) packet.WriteInteger( (long) v, 8 );
             else packet.WriteStringNoNull( v.ToString() );
         }
 
         public IMySqlValue ReadValue( MySqlPacket packet, long length, bool isNull ) {
-            this._isNull = isNull;
+            _isNull = isNull;
             if ( isNull ) return this;
 
             if ( length == -1 ) length = packet.ReadFieldLength();
 
-            if ( ReadAsString ) _mValue = UInt64.Parse( packet.ReadString( length ) );
-            else _mValue = packet.ReadBitValue( (int) length );
+            _mValue = ReadAsString ? UInt64.Parse( packet.ReadString( length ) ) : packet.ReadBitValue( (int) length );
             return this;
         }
 
@@ -89,8 +89,7 @@ namespace MySql.Data.Types {
             row[ "ColumnSize" ] = 64;
             row[ "CreateFormat" ] = "BIT";
             row[ "CreateParameters" ] = DBNull.Value;
-            ;
-            row[ "DataType" ] = typeof( UInt64 ).ToString();
+            row[ "DataType" ] = Constants.Types.UInt64.ToString();
             row[ "IsAutoincrementable" ] = false;
             row[ "IsBestMatch" ] = true;
             row[ "IsCaseSensitive" ] = false;

@@ -155,7 +155,7 @@ namespace MySql.Data.MySqlClient {
         Float = 4,
 
         /// <summary>
-        /// <see cref="Double"/><para>A normal-size (double-precision) 
+        /// <see cref="double"/><para>A normal-size (double-precision) 
         /// floating-point number. Allowable values are -1.7976931348623157E+308 
         /// to -2.2250738585072014E-308, 0, and 2.2250738585072014E-308 to 
         /// 1.7976931348623157E+308.</para>

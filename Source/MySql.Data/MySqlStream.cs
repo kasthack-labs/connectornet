@@ -109,22 +109,18 @@ namespace MySql.Data.MySqlClient {
             LoadPacket();
 
             // now we check if this packet is a server error
-            if ( _packet.Buffer[ 0 ] == 0xff ) {
-                _packet.ReadByte(); // read off the 0xff
+            if ( _packet.Buffer[ 0 ] != 0xff ) return _packet;
+            _packet.ReadByte(); // read off the 0xff
 
-                var code = _packet.ReadInteger( 2 );
-                var msg = String.Empty;
+            var code = _packet.ReadInteger( 2 );
+            var msg = String.Empty;
 
-                if ( _packet.Version.IsAtLeast( 5, 5, 0 ) ) msg = _packet.ReadString( Encoding.UTF8 );
-                else msg = _packet.ReadString();
+            msg = _packet.Version.IsAtLeast( 5, 5, 0 ) ? _packet.ReadString( Encoding.UTF8 ) : _packet.ReadString();
 
-                if ( msg.StartsWith( "#", StringComparison.Ordinal ) ) {
-                    msg.Substring( 1, 5 ); /* state code */
-                    msg = msg.Substring( 6 );
-                }
-                throw new MySqlException( msg, code );
-            }
-            return _packet;
+            if ( !msg.InvariantStartsWith( "#" ) ) throw new MySqlException( msg, code );
+            msg.Substring( 1, 5 ); /* state code */
+            msg = msg.Substring( 6 );
+            throw new MySqlException( msg, code );
         }
 
         /// <summary>

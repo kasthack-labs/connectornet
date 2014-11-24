@@ -147,25 +147,19 @@ namespace MySql.Data.MySqlClient {
         /// Gets the delete command.
         /// </summary>
         /// <returns></returns>
-        public new MySqlCommand GetDeleteCommand() {
-            return (MySqlCommand) base.GetDeleteCommand();
-        }
+        public new MySqlCommand GetDeleteCommand() => (MySqlCommand) base.GetDeleteCommand();
 
         /// <summary>
         /// Gets the update command.
         /// </summary>
         /// <returns></returns>
-        public new MySqlCommand GetUpdateCommand() {
-            return (MySqlCommand) base.GetUpdateCommand();
-        }
+        public new MySqlCommand GetUpdateCommand() => (MySqlCommand) base.GetUpdateCommand();
 
         /// <summary>
         /// Gets the insert command.
         /// </summary>
         /// <returns></returns>
-        public new MySqlCommand GetInsertCommand() {
-            return (MySqlCommand) GetInsertCommand( false );
-        }
+        public new MySqlCommand GetInsertCommand() => (MySqlCommand) GetInsertCommand( false );
 
         public override string QuoteIdentifier( string unquotedIdentifier ) {
             if ( unquotedIdentifier == null ) throw new ArgumentNullException( "unquotedIdentifier" );
@@ -228,13 +222,9 @@ namespace MySql.Data.MySqlClient {
             ( (MySqlParameter) parameter ).MySqlDbType = (MySqlDbType) row[ "ProviderType" ];
         }
 
-        protected override string GetParameterName( int parameterOrdinal ) {
-            return String.Format( "@p{0}", parameterOrdinal.ToString( CultureInfo.InvariantCulture ) );
-        }
+        protected override string GetParameterName( int parameterOrdinal ) => String.Format( "@p{0}", parameterOrdinal.InvariantToString() );
 
-        protected override string GetParameterPlaceholder( int parameterOrdinal ) {
-            return String.Format( "@p{0}", parameterOrdinal.ToString( CultureInfo.InvariantCulture ) );
-        }
+        protected override string GetParameterPlaceholder( int parameterOrdinal ) => String.Format( "@p{0}", parameterOrdinal.InvariantToString() );
 
         protected override void SetRowUpdatingHandler( DbDataAdapter adapter ) {
             var myAdapter = ( adapter as MySqlDataAdapter );

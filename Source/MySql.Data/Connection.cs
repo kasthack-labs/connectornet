@@ -37,11 +37,11 @@ using IsolationLevel = System.Data.IsolationLevel;
 #endif
 #if !CF
 using MySql.Data.MySqlClient.Replication;
-
 #endif
 #if NET_40_OR_GREATER
 using System.Threading.Tasks;
 using System.Threading;
+
 #endif
 
 namespace MySql.Data.MySqlClient {
@@ -108,9 +108,7 @@ namespace MySql.Data.MySqlClient {
             }
         }
 
-        internal void OnInfoMessage( MySqlInfoMessageEventArgs args ) {
-            InfoMessage?.Invoke( this, args );
-        }
+        internal void OnInfoMessage( MySqlInfoMessageEventArgs args ) { InfoMessage?.Invoke( this, args ); }
 
         internal bool SoftClosed => ( State == ConnectionState.Closed ) && Driver?.CurrentTransaction != null;
 
@@ -183,7 +181,7 @@ namespace MySql.Data.MySqlClient {
 
                 Settings = newSettings;
 
-                if ( !String.IsNullOrEmpty(Settings.Database) ) _database = Settings.Database;
+                if ( !String.IsNullOrEmpty( Settings.Database ) ) _database = Settings.Database;
 
                 if ( Driver != null ) Driver.Settings = newSettings;
             }
@@ -231,7 +229,7 @@ namespace MySql.Data.MySqlClient {
                 // now we need to see if it is using the same connection string
                 var text1 = existingDriver.Settings.ConnectionString;
                 var text2 = Settings.ConnectionString;
-                if ( String.Compare(text1, text2, StringComparison.OrdinalIgnoreCase) != 0 ) Throw( new NotSupportedException( Resources.MultipleConnectionsInTransactionNotSupported ) );
+                if ( String.Compare( text1, text2, StringComparison.OrdinalIgnoreCase ) != 0 ) Throw( new NotSupportedException( Resources.MultipleConnectionsInTransactionNotSupported ) );
 
                 // close existing driver
                 // set this new driver as our existing driver
@@ -251,9 +249,7 @@ namespace MySql.Data.MySqlClient {
 #endif
 
         /// <include file='docs/MySqlConnection.xml' path='docs/BeginTransaction/*'/>
-        public new MySqlTransaction BeginTransaction() {
-            return BeginTransaction( IsolationLevel.RepeatableRead );
-        }
+        public new MySqlTransaction BeginTransaction() => BeginTransaction( IsolationLevel.RepeatableRead );
 
         /// <include file='docs/MySqlConnection.xml' path='docs/BeginTransaction1/*'/>
         public new MySqlTransaction BeginTransaction( IsolationLevel iso ) {
@@ -395,8 +391,7 @@ namespace MySql.Data.MySqlClient {
             SetState( ConnectionState.Open, false );
             Driver.Configure( this );
 
-            if ( !( Driver.SupportsPasswordExpiration && Driver.IsPasswordExpired ) )
-                if ( !string.IsNullOrEmpty( Settings.Database ) ) ChangeDatabase( Settings.Database );
+            if ( !( Driver.SupportsPasswordExpiration && Driver.IsPasswordExpired ) ) if ( !string.IsNullOrEmpty( Settings.Database ) ) ChangeDatabase( Settings.Database );
 
             // setup our schema provider
             _schemaProvider = new IsSchemaProvider( this );
@@ -641,220 +636,165 @@ namespace MySql.Data.MySqlClient {
 #endif
 
 #if NET_40_OR_GREATER
-    #region Async
-    /// <summary>
-    /// Async version of BeginTransaction
-    /// </summary>
-    /// <returns>An object representing the new transaction.</returns>
-    public Task<MySqlTransaction> BeginTransactionAsync()
-    {
-      return BeginTransactionAsync(IsolationLevel.RepeatableRead, CancellationToken.None);
-    }
 
-    public Task<MySqlTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
-    {
-      return BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken);
-    }
+        #region Async
+        /// <summary>
+        /// Async version of BeginTransaction
+        /// </summary>
+        /// <returns>An object representing the new transaction.</returns>
+        public Task<MySqlTransaction> BeginTransactionAsync()
+            => BeginTransactionAsync( IsolationLevel.RepeatableRead, CancellationToken.None );
 
-    /// <summary>
-    /// Async version of BeginTransaction
-    /// </summary>
-    /// <param name="iso">The isolation level under which the transaction should run. </param>
-    /// <returns>An object representing the new transaction.</returns>
-    public Task<MySqlTransaction> BeginTransactionAsync(IsolationLevel iso)
-    {
-      return BeginTransactionAsync(iso, CancellationToken.None);
-    }
+        public Task<MySqlTransaction> BeginTransactionAsync( CancellationToken cancellationToken )
+            => BeginTransactionAsync( IsolationLevel.RepeatableRead, cancellationToken );
 
-    public Task<MySqlTransaction> BeginTransactionAsync(IsolationLevel iso, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<MySqlTransaction>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          MySqlTransaction tranResult = BeginTransaction(iso);
-          result.SetResult(tranResult);
+        /// <summary>
+        /// Async version of BeginTransaction
+        /// </summary>
+        /// <param name="iso">The isolation level under which the transaction should run. </param>
+        /// <returns>An object representing the new transaction.</returns>
+        public Task<MySqlTransaction> BeginTransactionAsync( IsolationLevel iso ) => BeginTransactionAsync( iso, CancellationToken.None );
+
+        public Task<MySqlTransaction> BeginTransactionAsync( IsolationLevel iso, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<MySqlTransaction>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    MySqlTransaction tranResult = BeginTransaction( iso );
+                    result.SetResult( tranResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
 
-      return result.Task;
-    }
+        public Task ChangeDataBaseAsync( string databaseName ) => ChangeDataBaseAsync( databaseName, CancellationToken.None );
 
-    public Task ChangeDataBaseAsync(string databaseName)
-    {
-      return ChangeDataBaseAsync(databaseName, CancellationToken.None);
-    }
+        /// <summary>
+        /// Async version of ChangeDataBase
+        /// </summary>
+        /// <param name="databaseName">The name of the database to use.</param>
+        /// <returns></returns>
+        public Task ChangeDataBaseAsync( string databaseName, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<bool>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    ChangeDatabase( databaseName );
+                    result.SetResult( true );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            return result.Task;
+        }
 
-    /// <summary>
-    /// Async version of ChangeDataBase
-    /// </summary>
-    /// <param name="databaseName">The name of the database to use.</param>
-    /// <returns></returns>
-    public Task ChangeDataBaseAsync(string databaseName, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<bool>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          ChangeDatabase(databaseName);
-          result.SetResult(true);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      return result.Task;
-    }
+        ///// <summary>
+        ///// Async version of Open
+        ///// </summary>
+        ///// <returns></returns>
+        //public Task OpenAsync()
+        //{
+        //  return Task.Run(() =>
+        //  {
+        //    Open();
+        //  });
+        //}
 
-    ///// <summary>
-    ///// Async version of Open
-    ///// </summary>
-    ///// <returns></returns>
-    //public Task OpenAsync()
-    //{
-    //  return Task.Run(() =>
-    //  {
-    //    Open();
-    //  });
-    //}
+        /// <summary>
+        /// Async version of Close
+        /// </summary>
+        /// <returns></returns>
+        public Task CloseAsync() => CloseAsync( CancellationToken.None );
 
-    /// <summary>
-    /// Async version of Close
-    /// </summary>
-    /// <returns></returns>
-    public Task CloseAsync()
-    {
-      return CloseAsync(CancellationToken.None);
-    }
+        public Task CloseAsync( CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<bool>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    Close();
+                    result.SetResult( true );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
+        }
 
-    public Task CloseAsync(CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<bool>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          Close();
-          result.SetResult(true);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else 
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
+        /// <summary>
+        /// Async version of ClearPool
+        /// </summary>
+        /// <param name="connection">The connection associated with the pool to be cleared.</param>
+        /// <returns></returns>
+        public Task ClearPoolAsync( MySqlConnection connection ) => ClearPoolAsync( connection, CancellationToken.None );
 
-    /// <summary>
-    /// Async version of ClearPool
-    /// </summary>
-    /// <param name="connection">The connection associated with the pool to be cleared.</param>
-    /// <returns></returns>
-    public Task ClearPoolAsync(MySqlConnection connection)
-    {
-      return ClearPoolAsync(connection, CancellationToken.None);
-    }
+        public Task ClearPoolAsync( MySqlConnection connection, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<bool>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    ClearPool( connection );
+                    result.SetResult( true );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
+        }
 
-    public Task ClearPoolAsync(MySqlConnection connection, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<bool>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          ClearPool(connection);
-          result.SetResult(true);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
+        /// <summary>
+        /// Async version of ClearAllPools
+        /// </summary>
+        /// <returns></returns>
+        public Task ClearAllPoolsAsync() => ClearAllPoolsAsync( CancellationToken.None );
 
-    /// <summary>
-    /// Async version of ClearAllPools
-    /// </summary>
-    /// <returns></returns>
-    public Task ClearAllPoolsAsync()
-    {
-      return ClearAllPoolsAsync(CancellationToken.None);
-    }
+        public Task ClearAllPoolsAsync( CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<bool>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    ClearAllPools();
+                    result.SetResult( true );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
+        }
 
-    public Task ClearAllPoolsAsync(CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<bool>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          ClearAllPools();
-          result.SetResult(true);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-    /// <summary>
-    /// Async version of GetSchemaCollection
-    /// </summary>
-    /// <param name="collectionName">Name of the collection</param>
-    /// <param name="restrictionValues">Values to restrict</param>
-    /// <returns>A schema collection</returns>
-    public Task<MySqlSchemaCollection> GetSchemaCollectionAsync(string collectionName, string[] restrictionValues)
-    {
-      return GetSchemaCollectionAsync(collectionName, restrictionValues, CancellationToken.None);
-    }
+        /// <summary>
+        /// Async version of GetSchemaCollection
+        /// </summary>
+        /// <param name="collectionName">Name of the collection</param>
+        /// <param name="restrictionValues">Values to restrict</param>
+        /// <returns>A schema collection</returns>
+        public Task<MySqlSchemaCollection> GetSchemaCollectionAsync( string collectionName, string[] restrictionValues ) => GetSchemaCollectionAsync( collectionName, restrictionValues, CancellationToken.None );
 
-    public Task<MySqlSchemaCollection> GetSchemaCollectionAsync(string collectionName, string[] restrictionValues, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<MySqlSchemaCollection>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schema = GetSchemaCollection(collectionName, restrictionValues);
-          result.SetResult(schema);
+        public Task<MySqlSchemaCollection> GetSchemaCollectionAsync(
+            string collectionName,
+            string[] restrictionValues,
+            CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<MySqlSchemaCollection>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var schema = GetSchemaCollection( collectionName, restrictionValues );
+                    result.SetResult( schema );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-    #endregion
+        #endregion
+
 #endif
     }
 

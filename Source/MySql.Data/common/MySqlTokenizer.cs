@@ -156,24 +156,25 @@ namespace MySql.Data.MySqlClient {
 
             var startingIndex = Position - 1;
 
-            var index = _sql.IndexOf( endingPattern, Position );
+            int index;
+            index = _sql.IndexOf( endingPattern, Position );
             if ( endingPattern == "\n" ) index = _sql.IndexOf( '\n', Position );
             if ( index == -1 ) index = _sql.Length - 1;
             else index += endingPattern.Length;
 
             Position = index;
-            if ( ReturnComments ) {
-                StartIndex = startingIndex;
-                StopIndex = index;
-                IsComment = true;
-            }
+            if ( !ReturnComments ) return true;
+            StartIndex = startingIndex;
+            StopIndex = index;
+            IsComment = true;
             return true;
         }
 
         private void CalculatePosition( int start, int stop ) {
             StartIndex = start;
             StopIndex = stop;
-            if ( !MultiLine ) return;
+            //todo: bug?
+            //if ( !MultiLine ) return;
         }
 
         private void ReadUnquotedToken() {
@@ -229,17 +230,16 @@ namespace MySql.Data.MySqlClient {
             StopIndex = Position;
         }
 
-        private bool IsQuoteChar( char c ) { return c == '`' || c == '\'' || c == '\"'; }
+        private bool IsQuoteChar( char c ) => c == '`' || c == '\'' || c == '\"';
 
-        private bool IsParameterMarker( char c ) { return c == '@' || c == '?'; }
+        private bool IsParameterMarker( char c ) => c == '@' || c == '?';
 
         private bool IsSpecialCharacter( char c ) {
             if ( Char.IsLetterOrDigit( c )
                  || c == '$'
                  || c == '_'
                  || c == '.' ) return false;
-            if ( IsParameterMarker( c ) ) return false;
-            return true;
+            return !IsParameterMarker( c );
         }
     }
 }

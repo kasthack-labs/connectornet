@@ -25,6 +25,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
+using MySql.Data.Constants;
 #if !CF
 using System.ComponentModel.Design.Serialization;
 
@@ -298,32 +299,26 @@ namespace MySql.Data.MySqlClient {
 
 #if !CF
     internal class MySqlParameterConverter : TypeConverter {
-        public override bool CanConvertTo( ITypeDescriptorContext context, Type destinationType ) {
-            if ( destinationType == typeof( InstanceDescriptor ) ) return true;
-
-            // Always call the base to see if it can perform the conversion.
-            return base.CanConvertTo( context, destinationType );
-        }
+        // Always call the base to see if it can perform the conversion.
+        public override bool CanConvertTo( ITypeDescriptorContext context, Type destinationType ) => destinationType == Constants.Types.InstanceDescriptor || base.CanConvertTo( context, destinationType );
 
         public override object ConvertTo( ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType ) {
-            if ( destinationType == typeof( InstanceDescriptor ) ) {
-                var ci =
-                    typeof( MySqlParameter ).GetConstructor(
-                        new[] {
-                            typeof( string ), typeof( MySqlDbType ), typeof( int ), typeof( ParameterDirection ), typeof( bool ),
-                            typeof( byte ), typeof( byte ), typeof( string ), typeof( DataRowVersion ), typeof( object )
-                        } );
-                var p = (MySqlParameter) value;
-                return new InstanceDescriptor(
-                    ci,
+            if ( destinationType != Constants.Types.InstanceDescriptor ) return base.ConvertTo( context, culture, value, destinationType );
+            var ci =
+                typeof(MySqlParameter).GetConstructor(
                     new[] {
-                        p.ParameterName, p.DbType, p.Size, p.Direction, p.IsNullable, p.Precision, p.Scale, p.SourceColumn, p.SourceVersion,
-                        p.Value
+                        Constants.Types.String, Constants.Types.MySqlDbType, Constants.Types.Int32, typeof( ParameterDirection ), Constants.Types.Boolean,
+                        Constants.Types.Boolean, Constants.Types.Byte, Constants.Types.String, typeof( DataRowVersion ), Constants.Types.Object
                     } );
-            }
+            var p = (MySqlParameter) value;
+            return new InstanceDescriptor(
+                ci,
+                new[] {
+                    p.ParameterName, p.DbType, p.Size, p.Direction, p.IsNullable, p.Precision, p.Scale, p.SourceColumn, p.SourceVersion,
+                    p.Value
+                } );
 
             // Always call base, even if you can't convert.
-            return base.ConvertTo( context, culture, value, destinationType );
         }
     }
 #endif

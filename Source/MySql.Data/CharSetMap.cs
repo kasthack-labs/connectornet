@@ -58,8 +58,7 @@ namespace MySql.Data.MySqlClient {
         /// <returns>Encoding object for the given character set name</returns>
         public static Encoding GetEncoding( DbVersion version, string charSetName ) {
             try {
-                var cs = GetCharacterSet( version, charSetName );
-                return Encoding.GetEncoding( cs.Name );
+                return Encoding.GetEncoding( GetCharacterSet( version, charSetName ).Name );
             }
             catch ( NotSupportedException ) {
                 return Encoding.GetEncoding( "utf-8" );
@@ -72,67 +71,68 @@ namespace MySql.Data.MySqlClient {
         private static void InitializeMapping() { LoadCharsetMap(); }
 
         private static void LoadCharsetMap() {
-            _mapping = new Dictionary<string, CharacterSet>();
+            _mapping = new Dictionary<string, CharacterSet> {
+                { "latin1", new CharacterSet( "windows-1252", 1 ) },
+                { "big5", new CharacterSet( "big5", 2 ) },
+                { "cp850", new CharacterSet( "ibm850", 1 ) },
+                { "koi8r", new CharacterSet( "koi8-u", 1 ) },
+                { "latin2", new CharacterSet( "latin2", 1 ) },
+                { "ujis", new CharacterSet( "EUC-JP", 3 ) },
+                { "hebrew", new CharacterSet( "hebrew", 1 ) },
+                { "tis620", new CharacterSet( "windows-874", 1 ) },
+                { "euckr", new CharacterSet( "euc-kr", 2 ) },
+                { "sjis", new CharacterSet( "sjis", 2 ) },
+                { "koi8u", new CharacterSet( "koi8-u", 1 ) },
+                { "macce", new CharacterSet( "x-mac-ce", 1 ) },
+                { "macroman", new CharacterSet( "x-mac-romanian", 1 ) },
+                { "cp852", new CharacterSet( "ibm852", 2 ) },
+                { "latin7", new CharacterSet( "iso-8859-7", 1 ) },
+                { "cp1251", new CharacterSet( "windows-1251", 1 ) },
+                { "gb2312", new CharacterSet( "gb2312", 2 ) },
+                { "greek", new CharacterSet( "greek", 1 ) },
+                { "cp1250", new CharacterSet( "windows-1250", 1 ) },
+                { "utf8", new CharacterSet( "utf-8", 3 ) },
+                { "ucs2", new CharacterSet( "UTF-16BE", 2 ) },
+                { "cp866", new CharacterSet( "cp866", 1 ) },
+                { "latin5", new CharacterSet( "latin5", 1 ) },
+                { "cp1256", new CharacterSet( "cp1256", 1 ) },
+                { "cp1257", new CharacterSet( "windows-1257", 1 ) },
+                { "ascii", new CharacterSet( "us-ascii", 1 ) },
+                { "latin3", new CharacterSet( "latin3", 1 ) },
+                { "latin4", new CharacterSet( "latin4", 1 ) },
+                { "latin1_de", new CharacterSet( "iso-8859-1", 1 ) },
+                { "german1", new CharacterSet( "iso-8859-1", 1 ) },
+                { "danish", new CharacterSet( "iso-8859-1", 1 ) },
+                { "czech", new CharacterSet( "iso-8859-2", 1 ) },
+                { "hungarian", new CharacterSet( "iso-8859-2", 1 ) },
+                { "croat", new CharacterSet( "iso-8859-2", 1 ) },
+                { "latvian", new CharacterSet( "iso-8859-13", 1 ) },
+                { "latvian1", new CharacterSet( "iso-8859-13", 1 ) },
+                { "estonia", new CharacterSet( "iso-8859-13", 1 ) },
+                { "dos", new CharacterSet( "ibm437", 1 ) },
+                { "utf8mb4", new CharacterSet( "utf-8", 4 ) },
+                { "utf16", new CharacterSet( "utf-16BE", 2 ) },
+                { "utf16le", new CharacterSet( "utf-16", 2 ) },
+                { "utf32", new CharacterSet( "utf-32BE", 4 ) }
+            };
 
-            _mapping.Add( "latin1", new CharacterSet( "windows-1252", 1 ) );
-            _mapping.Add( "big5", new CharacterSet( "big5", 2 ) );
-            _mapping.Add( "dec8", _mapping[ "latin1" ] );
-            _mapping.Add( "cp850", new CharacterSet( "ibm850", 1 ) );
             _mapping.Add( "hp8", _mapping[ "latin1" ] );
-            _mapping.Add( "koi8r", new CharacterSet( "koi8-u", 1 ) );
-            _mapping.Add( "latin2", new CharacterSet( "latin2", 1 ) );
+            _mapping.Add( "dec8", _mapping[ "latin1" ] );
             _mapping.Add( "swe7", _mapping[ "latin1" ] );
-            _mapping.Add( "ujis", new CharacterSet( "EUC-JP", 3 ) );
             _mapping.Add( "eucjpms", _mapping[ "ujis" ] );
-            _mapping.Add( "sjis", new CharacterSet( "sjis", 2 ) );
             _mapping.Add( "cp932", _mapping[ "sjis" ] );
-            _mapping.Add( "hebrew", new CharacterSet( "hebrew", 1 ) );
-            _mapping.Add( "tis620", new CharacterSet( "windows-874", 1 ) );
-            _mapping.Add( "euckr", new CharacterSet( "euc-kr", 2 ) );
             _mapping.Add( "euc_kr", _mapping[ "euckr" ] );
-            _mapping.Add( "koi8u", new CharacterSet( "koi8-u", 1 ) );
             _mapping.Add( "koi8_ru", _mapping[ "koi8u" ] );
-            _mapping.Add( "gb2312", new CharacterSet( "gb2312", 2 ) );
             _mapping.Add( "gbk", _mapping[ "gb2312" ] );
-            _mapping.Add( "greek", new CharacterSet( "greek", 1 ) );
-            _mapping.Add( "cp1250", new CharacterSet( "windows-1250", 1 ) );
             _mapping.Add( "win1250", _mapping[ "cp1250" ] );
-            _mapping.Add( "latin5", new CharacterSet( "latin5", 1 ) );
             _mapping.Add( "armscii8", _mapping[ "latin1" ] );
-            _mapping.Add( "utf8", new CharacterSet( "utf-8", 3 ) );
-            _mapping.Add( "ucs2", new CharacterSet( "UTF-16BE", 2 ) );
-            _mapping.Add( "cp866", new CharacterSet( "cp866", 1 ) );
             _mapping.Add( "keybcs2", _mapping[ "latin1" ] );
-            _mapping.Add( "macce", new CharacterSet( "x-mac-ce", 1 ) );
-            _mapping.Add( "macroman", new CharacterSet( "x-mac-romanian", 1 ) );
-            _mapping.Add( "cp852", new CharacterSet( "ibm852", 2 ) );
-            _mapping.Add( "latin7", new CharacterSet( "iso-8859-7", 1 ) );
-            _mapping.Add( "cp1251", new CharacterSet( "windows-1251", 1 ) );
             _mapping.Add( "win1251ukr", _mapping[ "cp1251" ] );
             _mapping.Add( "cp1251csas", _mapping[ "cp1251" ] );
             _mapping.Add( "cp1251cias", _mapping[ "cp1251" ] );
             _mapping.Add( "win1251", _mapping[ "cp1251" ] );
-            _mapping.Add( "cp1256", new CharacterSet( "cp1256", 1 ) );
-            _mapping.Add( "cp1257", new CharacterSet( "windows-1257", 1 ) );
-            _mapping.Add( "ascii", new CharacterSet( "us-ascii", 1 ) );
             _mapping.Add( "usa7", _mapping[ "ascii" ] );
             _mapping.Add( "binary", _mapping[ "ascii" ] );
-            _mapping.Add( "latin3", new CharacterSet( "latin3", 1 ) );
-            _mapping.Add( "latin4", new CharacterSet( "latin4", 1 ) );
-            _mapping.Add( "latin1_de", new CharacterSet( "iso-8859-1", 1 ) );
-            _mapping.Add( "german1", new CharacterSet( "iso-8859-1", 1 ) );
-            _mapping.Add( "danish", new CharacterSet( "iso-8859-1", 1 ) );
-            _mapping.Add( "czech", new CharacterSet( "iso-8859-2", 1 ) );
-            _mapping.Add( "hungarian", new CharacterSet( "iso-8859-2", 1 ) );
-            _mapping.Add( "croat", new CharacterSet( "iso-8859-2", 1 ) );
-            _mapping.Add( "latvian", new CharacterSet( "iso-8859-13", 1 ) );
-            _mapping.Add( "latvian1", new CharacterSet( "iso-8859-13", 1 ) );
-            _mapping.Add( "estonia", new CharacterSet( "iso-8859-13", 1 ) );
-            _mapping.Add( "dos", new CharacterSet( "ibm437", 1 ) );
-            _mapping.Add( "utf8mb4", new CharacterSet( "utf-8", 4 ) );
-            _mapping.Add( "utf16", new CharacterSet( "utf-16BE", 2 ) );
-            _mapping.Add( "utf16le", new CharacterSet( "utf-16", 2 ) );
-            _mapping.Add( "utf32", new CharacterSet( "utf-32BE", 4 ) );
         }
 
         internal static void InitCollections( MySqlConnection connection ) {

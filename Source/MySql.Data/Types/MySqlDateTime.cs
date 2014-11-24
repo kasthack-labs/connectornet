@@ -25,6 +25,7 @@ using System;
 using System.Globalization;
 using MySql.Data.Common;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants;
 using MySql.Data.MySqlClient.Properties;
 
 namespace MySql.Data.Types {
@@ -221,7 +222,7 @@ namespace MySql.Data.Types {
         /// </summary>
         public DateTime Value => GetDateTime();
 
-        Type IMySqlValue.SystemType => typeof( DateTime );
+        Type IMySqlValue.SystemType => Constants.Types.DateTime;
 
         string IMySqlValue.MySqlTypeName {
             get {
@@ -390,7 +391,7 @@ namespace MySql.Data.Types {
         public override string ToString() {
             if ( IsValidDateTime ) {
                 var d = new DateTime( _year, _month, _day, _hour, _minute, _second ).AddTicks( _microsecond * 10 );
-                return ( _type == MySqlDbType.Date ) ? d.ToString( "d" ) : d.ToString( CultureInfo.InvariantCulture );
+                return ( _type == MySqlDbType.Date ) ? d.ToString( "d" ) : d.InvariantToString();
             }
 
             var dateString = FormatDateCustom( CultureInfo.CurrentUICulture.DateTimeFormat.ShortDatePattern, _month, _day, _year );

@@ -25,6 +25,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Text;
 using MySql.Data.Types;
+using MySql.Data.Constants;
 #if !RT
 using System.Data;
 using System.Data.Common;
@@ -92,8 +93,8 @@ namespace MySql.Data.MySqlClient {
 
         internal string BaseName {
             get {
-                if ( ParameterName.StartsWith( "@", StringComparison.Ordinal )
-                     || ParameterName.StartsWith( "?", StringComparison.Ordinal ) ) return ParameterName.Substring( 1 );
+                if ( ParameterName.InvariantStartsWith( "@")
+                     || ParameterName.InvariantStartsWith( "?") ) return ParameterName.Substring( 1 );
                 return ParameterName;
             }
         }
@@ -184,7 +185,7 @@ namespace MySql.Data.MySqlClient {
         /// Overridden. Gets a string containing the <see cref="ParameterName"/>.
         /// </summary>
         /// <returns></returns>
-        public override string ToString() { return _paramName; }
+        public override string ToString() => _paramName;
 
         internal int GetPsType() {
             switch ( _mySqlDbType ) {
@@ -243,53 +244,26 @@ namespace MySql.Data.MySqlClient {
             else if ( _paramValue is bool ) MySqlDbType = MySqlDbType.Byte;
             else {
                 var t = _paramValue.GetType();
-                switch ( t.Name ) {
-                    case "SByte":
-                        MySqlDbType = MySqlDbType.Byte;
-                        break;
-                    case "Byte":
-                        MySqlDbType = MySqlDbType.UByte;
-                        break;
-                    case "Int16":
-                        MySqlDbType = MySqlDbType.Int16;
-                        break;
-                    case "UInt16":
-                        MySqlDbType = MySqlDbType.UInt16;
-                        break;
-                    case "Int32":
-                        MySqlDbType = MySqlDbType.Int32;
-                        break;
-                    case "UInt32":
-                        MySqlDbType = MySqlDbType.UInt32;
-                        break;
-                    case "long":
-                        MySqlDbType = MySqlDbType.Int64;
-                        break;
-                    case "UInt64":
-                        MySqlDbType = MySqlDbType.UInt64;
-                        break;
-                    case "DateTime":
-                        MySqlDbType = MySqlDbType.DateTime;
-                        break;
-                    case "String":
-                        MySqlDbType = MySqlDbType.VarChar;
-                        break;
-                    case "Single":
-                        MySqlDbType = MySqlDbType.Float;
-                        break;
-                    case "Double":
-                        MySqlDbType = MySqlDbType.Double;
-                        break;
-
-                    case "Decimal":
-                        MySqlDbType = MySqlDbType.Decimal;
-                        break;
-                    case "Object":
-                    default:
+                switch ( Type.GetTypeCode( t ) ) {
+                    case TypeCode.Empty: case TypeCode.DBNull: case TypeCode.Boolean: break;
+                    case TypeCode.SByte: MySqlDbType = MySqlDbType.Byte; break;
+                    case TypeCode.Byte: MySqlDbType = MySqlDbType.UByte; break;
+                    case TypeCode.Int16: MySqlDbType = MySqlDbType.Int16; break;
+                    case TypeCode.UInt16: MySqlDbType = MySqlDbType.UInt16; break;
+                    case TypeCode.Int32: MySqlDbType = MySqlDbType.Int32; break;
+                    case TypeCode.UInt32: MySqlDbType = MySqlDbType.UInt32; break;
+                    case TypeCode.Int64: MySqlDbType = MySqlDbType.Int64; break;
+                    case TypeCode.UInt64: MySqlDbType = MySqlDbType.UInt64; break;
+                    case TypeCode.Single: MySqlDbType = MySqlDbType.Float; break;
+                    case TypeCode.Double: MySqlDbType = MySqlDbType.Double; break;
+                    case TypeCode.Decimal: MySqlDbType = MySqlDbType.Decimal; break;
+                    case TypeCode.DateTime: MySqlDbType = MySqlDbType.DateTime; break;
+                    case TypeCode.String: MySqlDbType = MySqlDbType.VarChar; break;
+                    case TypeCode.Object: default:
 #if RT
-            if (t.GetTypeInfo().BaseType == typeof(Enum))
+                        if (t.GetTypeInfo().BaseType == TypeConstants.Enum)
 #else
-                        if ( t.BaseType == typeof( Enum ) )
+                        if ( t.BaseType == Constants.Types.Enum )
 #endif
                             MySqlDbType = MySqlDbType.Int32;
                         else MySqlDbType = MySqlDbType.Blob;
@@ -310,7 +284,7 @@ namespace MySql.Data.MySqlClient {
             return clone;
         }
 
-        object ICloneable.Clone() { return Clone(); }
+        object ICloneable.Clone() => Clone();
         #endregion
 
         // this method is pretty dumb but we want it to be fast.  it doesn't return size based

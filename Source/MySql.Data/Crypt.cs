@@ -24,12 +24,7 @@
 using System;
 using System.Security.Cryptography;
 using MySql.Data.MySqlClient.Properties;
-#if RT
-using MySql.Data.MySqlClient.RT;
-#else
 using System.Text;
-
-#endif
 
 namespace MySql.Data.MySqlClient {
     /// <summary>
@@ -113,8 +108,7 @@ namespace MySql.Data.MySqlClient {
         public static String EncryptPassword( String password, String seed, bool newVer ) {
             var max = 0x3fffffff;
             if ( !newVer ) max = 0x01FFFFFF;
-            if ( password == null
-                 || password.Length == 0 ) return password;
+            if ( string.IsNullOrEmpty( password ) ) return password;
 
             var hashSeed = Hash( seed );
             var hashPass = Hash( password );
@@ -129,11 +123,10 @@ namespace MySql.Data.MySqlClient {
                 scrambled[ x ] = (char) ( Math.Floor( r * 31 ) + 64 );
             }
 
-            if ( newVer ) {
-                /* Make it harder to break */
-                var extra = (char) Math.Floor( Rand( ref seed1, ref seed2, max ) * 31 );
-                for ( var x = 0; x < scrambled.Length; x++ ) scrambled[ x ] ^= extra;
-            }
+            if ( !newVer ) return new string( scrambled );
+            /* Make it harder to break */
+            var extra = (char) Math.Floor( Rand( ref seed1, ref seed2, max ) * 31 );
+            for ( var x = 0; x < scrambled.Length; x++ ) scrambled[ x ] ^= extra;
 
             return new string( scrambled );
         }
@@ -153,7 +146,7 @@ namespace MySql.Data.MySqlClient {
             for ( var i = 0; i < p.Length; i++ ) {
                 if ( p[ i ] == ' '
                      || p[ i ] == '\t' ) continue;
-                var temp = ( 0xff & p[ i ] );
+                var temp = ( 0xff & i );
                 val1 ^= ( ( ( val1 & 63 ) + inc ) * temp ) + ( val1 << 8 );
                 val2 += ( val2 << 8 ) ^ val1;
                 inc += temp;

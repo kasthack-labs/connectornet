@@ -35,8 +35,8 @@ namespace MySql.Data.MySqlClient.Authentication {
 #if !CF && !RT
             Plugins[ "authentication_windows_client" ] =
                 new PluginInfo( "MySql.Data.MySqlClient.Authentication.MySqlWindowsAuthenticationPlugin" );
-            if ( MySqlConfiguration.Settings != null
-                 && MySqlConfiguration.Settings.AuthenticationPlugins != null ) foreach ( var e in MySqlConfiguration.Settings.AuthenticationPlugins ) Plugins[ e.Name ] = new PluginInfo( e.Type );
+            if ( MySqlConfiguration.Settings?.AuthenticationPlugins == null ) return;
+            foreach ( var e in MySqlConfiguration.Settings.AuthenticationPlugins ) Plugins[ e.Name ] = new PluginInfo( e.Type );
 #endif
         }
 
@@ -49,9 +49,7 @@ namespace MySql.Data.MySqlClient.Authentication {
             var pi = Plugins[ method ];
 
             try {
-                var t = Type.GetType( pi.Type );
-                var o = (MySqlAuthenticationPlugin) Activator.CreateInstance( t );
-                return o;
+                return (MySqlAuthenticationPlugin) Activator.CreateInstance( Type.GetType( pi.Type ) );
             }
             catch ( Exception e ) {
                 throw new MySqlException( String.Format( Resources.UnableToCreateAuthPlugin, method ), e );

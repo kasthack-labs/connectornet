@@ -22,6 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlUByte : IMySqlValue {
@@ -29,7 +30,7 @@ namespace MySql.Data.Types {
         private readonly bool _isNull;
 
         public MySqlUByte( bool isNull ) {
-            this._isNull = isNull;
+            _isNull = isNull;
             _mValue = 0;
         }
 
@@ -47,19 +48,18 @@ namespace MySql.Data.Types {
 
         public byte Value => _mValue;
 
-        Type IMySqlValue.SystemType => typeof( byte );
+        Type IMySqlValue.SystemType => Constants.Types.Byte;
 
         string IMySqlValue.MySqlTypeName => "TINYINT";
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
-            var v = ( val is byte ) ? (byte) val : Convert.ToByte( val );
+            var v = val as byte? ?? Convert.ToByte( val );
             if ( binary ) packet.WriteByte( v );
-            else packet.WriteStringNoNull( v.ToString() );
+            else packet.WriteStringNoNull( v.InvariantToString() );
         }
 
         IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {
             if ( nullVal ) return new MySqlUByte( true );
-
             if ( length == -1 ) return new MySqlUByte( packet.ReadByte() );
             return new MySqlUByte( Byte.Parse( packet.ReadString( length ) ) );
         }

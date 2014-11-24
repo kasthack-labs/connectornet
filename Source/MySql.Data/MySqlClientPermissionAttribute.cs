@@ -34,6 +34,6 @@ namespace MySql.Data.MySqlClient {
         // Methods
         public MySqlClientPermissionAttribute( SecurityAction action ) : base( action ) { }
 
-        public override IPermission CreatePermission() { return new MySqlClientPermission( this ); }
+        public override IPermission CreatePermission() => new MySqlClientPermission( this );
     }
 }

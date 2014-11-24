@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using MySql.Data.MySqlClient;
 using MySql.Data.MySqlClient.Properties;
 
 namespace MySql.Data.Common {
@@ -210,7 +211,7 @@ namespace MySql.Data.Common {
             }
         }
 
-        private bool LetterStartsComment( char c ) { return c == '#' || c == '/' || c == '-'; }
+        private bool LetterStartsComment( char c ) => c == '#' || c == '/' || c == '-';
 
         private bool IsSpecialCharacter( char c ) {
             if ( Char.IsLetterOrDigit( c )
@@ -237,7 +238,7 @@ namespace MySql.Data.Common {
             if ( index == -1 ) index = _fullSql.Length - 1;
             else index += endingPattern.Length;
             var comment = _fullSql.Substring( _pos, index - _pos );
-            if ( comment.StartsWith( "/*!", StringComparison.Ordinal ) ) _tokens.Add( new Token( TokenType.CommandComment, comment ) );
+            if ( comment.InvariantStartsWith( "/*!" ) ) _tokens.Add( new Token( TokenType.CommandComment, comment ) );
             _pos = index;
             return true;
         }
@@ -274,7 +275,7 @@ namespace MySql.Data.Common {
                     && !IsSpecialCharacter( _fullSql[ _pos ] ) ) _pos++;
             var word = _fullSql.Substring( startPos, _pos - startPos );
             double v;
-            if ( Double.TryParse( word, out v ) ) _tokens.Add( new Token( TokenType.Number, "?" ) );
+            if ( double.TryParse( word, out v ) ) _tokens.Add( new Token( TokenType.Number, "?" ) );
             else {
                 var t = new Token( TokenType.Identifier, word );
                 if ( IsKeyword( word ) ) {
@@ -291,7 +292,7 @@ namespace MySql.Data.Common {
                     && Char.IsWhiteSpace( _fullSql[ _pos ] ) ) _pos++;
         }
 
-        private bool IsKeyword( string word ) { return Keywords.Contains( word.ToUpperInvariant() ); }
+        private bool IsKeyword( string word ) => Keywords.Contains( word.ToUpperInvariant() );
     }
 
     internal class Token {

@@ -91,7 +91,7 @@
     <BaseIntermediateOutputPath>obj\$(TargetFrameworkVersion)\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>obj\$(TargetFrameworkVersion)\</IntermediateOutputPath>
     <OutputPath>bin\$(TargetFrameworkVersion)\Debug\</OutputPath>
-    <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NET_40_OR_GREATER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
@@ -155,7 +155,7 @@
     <Compile Include="common\SharedMemoryStream.cs" />
     <Compile Include="common\StreamCreator.cs" />
     <Compile Include="common\StringUtility.cs" />
-    <Compile Include="common\TypeConstants.cs" />
+    <Compile Include="Constants\TypeConstants.cs" />
     <Compile Include="common\Version.cs" />
     <Compile Include="CompressedStream.cs" />
     <Compile Include="Connection.cs" />

@@ -120,8 +120,8 @@ namespace MySql.Data.MySqlClient {
             return newElement;
         }
 
-        protected override object GetElementKey( ConfigurationElement element ) { return _elements.Find( e => e.Equals( element ) ); }
+        protected override object GetElementKey( ConfigurationElement element ) => _elements.Find( e => e.Equals( element ) );
 
-        public new IEnumerator<T> GetEnumerator() { return _elements.GetEnumerator(); }
+        public new IEnumerator<T> GetEnumerator() => _elements.GetEnumerator();
     }
 }

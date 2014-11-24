@@ -255,7 +255,7 @@
         <summary>Gets the value of the specified column as a double-precision floating point number.</summary>
         <remarks>
             <para>
-                No conversions are performed; therefore, the data retrieved must already be a <b>Double</b> object.
+                No conversions are performed; therefore, the data retrieved must already be a <b>double</b> object.
             </para>
             <para>
                 Call IsDBNull to check for null values before calling this method.
@@ -269,7 +269,7 @@
         <summary>Gets the value of the specified column as a double-precision floating point number.</summary>
         <remarks>
             <para>
-                No conversions are performed; therefore, the data retrieved must already be a <b>Double</b> object.
+                No conversions are performed; therefore, the data retrieved must already be a <b>double</b> object.
             </para>
             <para>
                 Call IsDBNull to check for null values before calling this method.

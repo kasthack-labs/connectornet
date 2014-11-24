@@ -22,7 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
-using MySql.Data.MySqlClient.common;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlString : IMySqlValue {
@@ -51,7 +51,7 @@ namespace MySql.Data.Types {
 
         public string Value => _mValue;
 
-        Type IMySqlValue.SystemType => TypeConstants.String;
+        Type IMySqlValue.SystemType => Constants.Types.String;
 
         string IMySqlValue.MySqlTypeName => _type == MySqlDbType.Set ? "SET" : _type == MySqlDbType.Enum ? "ENUM" : "VARCHAR";
 
@@ -68,12 +68,7 @@ namespace MySql.Data.Types {
 
         IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {
             if ( nullVal ) return new MySqlString( _type, true );
-
-            var s = String.Empty;
-            if ( length == -1 ) s = packet.ReadLenString();
-            else s = packet.ReadString( length );
-            var str = new MySqlString( _type, s );
-            return str;
+            return new MySqlString( _type, length == -1 ? packet.ReadLenString() : packet.ReadString( length ) );
         }
 
         void IMySqlValue.SkipValue( MySqlPacket packet ) {

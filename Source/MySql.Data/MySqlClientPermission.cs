@@ -60,9 +60,7 @@ namespace MySql.Data.MySqlClient {
         /// Returns MySqlClientPermission as an IPermission
         /// </summary>
         /// <returns></returns>
-        public override IPermission Copy() {
-            return new MySqlClientPermission( this );
-        }
+        public override IPermission Copy() => new MySqlClientPermission( this );
         #endregion
     }
 }

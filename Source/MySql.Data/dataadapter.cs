@@ -26,10 +26,10 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Drawing;
-
 #if NET_40_OR_GREATER
 using System.Threading.Tasks;
 using System.Threading;
+
 #endif
 
 namespace MySql.Data.MySqlClient {
@@ -236,9 +236,8 @@ namespace MySql.Data.MySqlClient {
             _commandBatch = null;
         }
 
-        protected override IDataParameter GetBatchedParameter( int commandIdentifier, int parameterIndex ) {
-            return (IDataParameter) _commandBatch[ commandIdentifier ].Parameters[ parameterIndex ];
-        }
+        protected override IDataParameter GetBatchedParameter( int commandIdentifier, int parameterIndex )
+            => (IDataParameter) _commandBatch[ commandIdentifier ].Parameters[ parameterIndex ];
         #endregion
 
         /// <summary>
@@ -253,9 +252,7 @@ namespace MySql.Data.MySqlClient {
             DataRow dataRow,
             IDbCommand command,
             StatementType statementType,
-            DataTableMapping tableMapping ) {
-            return new MySqlRowUpdatedEventArgs( dataRow, command, statementType, tableMapping );
-        }
+            DataTableMapping tableMapping ) => new MySqlRowUpdatedEventArgs( dataRow, command, statementType, tableMapping );
 
         /// <summary>
         /// Overridden. See <see cref="DbDataAdapter.CreateRowUpdatingEvent"/>.
@@ -269,9 +266,7 @@ namespace MySql.Data.MySqlClient {
             DataRow dataRow,
             IDbCommand command,
             StatementType statementType,
-            DataTableMapping tableMapping ) {
-            return new MySqlRowUpdatingEventArgs( dataRow, command, statementType, tableMapping );
-        }
+            DataTableMapping tableMapping ) => new MySqlRowUpdatingEventArgs( dataRow, command, statementType, tableMapping );
 
         /// <summary>
         /// Overridden. Raises the RowUpdating event.
@@ -290,760 +285,595 @@ namespace MySql.Data.MySqlClient {
         }
 
 #if NET_40_OR_GREATER
-    #region Async
-    #region Fill
-    /// <summary>
-    /// Async version of Fill
-    /// </summary>
-    /// <param name="dataSet">Dataset to use</param>
-    /// <returns>int</returns>
-    public Task<int> FillAsync(DataSet dataSet)
-    {
-      return FillAsync(dataSet, CancellationToken.None);
-    }
 
-    public Task<int> FillAsync(DataSet dataSet, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataSet);
-          result.SetResult(fillResult);
+        #region Async
+
+        #region Fill
+        /// <summary>
+        /// Async version of Fill
+        /// </summary>
+        /// <param name="dataSet">Dataset to use</param>
+        /// <returns>int</returns>
+        public Task<int> FillAsync( DataSet dataSet ) => FillAsync( dataSet, CancellationToken.None );
+
+        public Task<int> FillAsync( DataSet dataSet, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var fillResult = base.Fill( dataSet );
+                    result.SetResult( fillResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
+
+        /// <summary>
+        /// Async version of Fill
+        /// </summary>
+        /// <param name="dataTable">Datatable to use</param>
+        /// <returns>int</returns>
+        public Task<int> FillAsync( DataTable dataTable ) => FillAsync( dataTable, CancellationToken.None );
+
+        public Task<int> FillAsync( DataTable dataTable, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var fillResult = base.Fill( dataTable );
+                    result.SetResult( fillResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
 
-    /// <summary>
-    /// Async version of Fill
-    /// </summary>
-    /// <param name="dataTable">Datatable to use</param>
-    /// <returns>int</returns>
-    public Task<int> FillAsync(DataTable dataTable)
-    {
-      return FillAsync(dataTable, CancellationToken.None);
-    }
+        /// <summary>
+        /// Async version of Fill
+        /// </summary>
+        /// <param name="dataSet">DataSet to use</param>
+        /// <param name="srcTable">Source table</param>
+        /// <returns>int</returns>
+        public Task<int> FillAsync( DataSet dataSet, string srcTable ) => FillAsync( dataSet, srcTable, CancellationToken.None );
 
-    public Task<int> FillAsync(DataTable dataTable, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataTable);
-          result.SetResult(fillResult);
+        public Task<int> FillAsync( DataSet dataSet, string srcTable, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var fillResult = base.Fill( dataSet, srcTable );
+                    result.SetResult( fillResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
+
+        /// <summary>
+        /// Async version of Fill
+        /// </summary>
+        /// <param name="dataTable">Datatable to use</param>
+        /// <param name="dataReader">DataReader to use</param>
+        /// <returns>int</returns>
+        public Task<int> FillAsync( DataTable dataTable, IDataReader dataReader ) => FillAsync( dataTable, dataReader, CancellationToken.None );
+
+        public Task<int> FillAsync( DataTable dataTable, IDataReader dataReader, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var fillResult = base.Fill( dataTable, dataReader );
+                    result.SetResult( fillResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
 
-    /// <summary>
-    /// Async version of Fill
-    /// </summary>
-    /// <param name="dataSet">DataSet to use</param>
-    /// <param name="srcTable">Source table</param>
-    /// <returns>int</returns>
-    public Task<int> FillAsync(DataSet dataSet, string srcTable)
-    {
-      return FillAsync(dataSet, srcTable, CancellationToken.None);
-    }
+        /// <summary>
+        /// Async version of Fill
+        /// </summary>
+        /// <param name="dataTable">DataTable to use</param>
+        /// <param name="command">DbCommand to use</param>
+        /// <param name="behavior">Command Behavior</param>
+        /// <returns>int</returns>
+        public Task<int> FillAsync( DataTable dataTable, IDbCommand command, CommandBehavior behavior ) => FillAsync( dataTable, command, behavior, CancellationToken.None );
 
-    public Task<int> FillAsync(DataSet dataSet, string srcTable, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataSet, srcTable);
-          result.SetResult(fillResult);
+        public Task<int> FillAsync( DataTable dataTable, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var fillResult = base.Fill( dataTable, command, behavior );
+                    result.SetResult( fillResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
+
+        /// <summary>
+        /// Async version of Fill
+        /// </summary>
+        /// <param name="startRecord">Start record</param>
+        /// <param name="maxRecords">Max records</param>
+        /// <param name="dataTables">DataTable[] to use</param>
+        /// <returns>int</returns>
+        public Task<int> FillAsync( int startRecord, int maxRecords, params DataTable[] dataTables ) => FillAsync( startRecord, maxRecords, CancellationToken.None, dataTables );
+
+        public Task<int> FillAsync( int startRecord, int maxRecords, CancellationToken cancellationToken, params DataTable[] dataTables ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var fillResult = base.Fill( startRecord, maxRecords, dataTables );
+                    result.SetResult( fillResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
 
-    /// <summary>
-    /// Async version of Fill
-    /// </summary>
-    /// <param name="dataTable">Datatable to use</param>
-    /// <param name="dataReader">DataReader to use</param>
-    /// <returns>int</returns>
-    public Task<int> FillAsync(DataTable dataTable, IDataReader dataReader)
-    {
-      return FillAsync(dataTable, dataReader, CancellationToken.None);
-    }
+        /// <summary>
+        /// Async version of Fill
+        /// </summary>
+        /// <param name="dataSet">DataSet to use</param>
+        /// <param name="startRecord">Start record</param>
+        /// <param name="maxRecords">Max records</param>
+        /// <param name="srcTable">Source table</param>
+        /// <returns>int</returns>
+        public Task<int> FillAsync( DataSet dataSet, int startRecord, int maxRecords, string srcTable ) => FillAsync( dataSet, startRecord, maxRecords, srcTable, CancellationToken.None );
 
-    public Task<int> FillAsync(DataTable dataTable, IDataReader dataReader, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataTable, dataReader);
-          result.SetResult(fillResult);
+        public Task<int> FillAsync( DataSet dataSet, int startRecord, int maxRecords, string srcTable, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var fillResult = base.Fill( dataSet, startRecord, maxRecords, srcTable );
+                    result.SetResult( fillResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
+
+        /// <summary>
+        /// Async version of Fill
+        /// </summary>
+        /// <param name="dataSet">DataSet to use</param>
+        /// <param name="srcTable">Source table</param>
+        /// <param name="dataReader">DataReader to use</param>
+        /// <param name="startRecord">Start record</param>
+        /// <param name="maxRecords">Max records</param>
+        /// <returns></returns>
+        public Task<int> FillAsync( DataSet dataSet, string srcTable, IDataReader dataReader, int startRecord, int maxRecords ) => FillAsync( dataSet, srcTable, dataReader, startRecord, maxRecords, CancellationToken.None );
+
+        public Task<int> FillAsync(
+            DataSet dataSet,
+            string srcTable,
+            IDataReader dataReader,
+            int startRecord,
+            int maxRecords,
+            CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var fillResult = base.Fill( dataSet, srcTable, dataReader, startRecord, maxRecords );
+                    result.SetResult( fillResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
 
-    /// <summary>
-    /// Async version of Fill
-    /// </summary>
-    /// <param name="dataTable">DataTable to use</param>
-    /// <param name="command">DbCommand to use</param>
-    /// <param name="behavior">Command Behavior</param>
-    /// <returns>int</returns>
-    public Task<int> FillAsync(DataTable dataTable, IDbCommand command, CommandBehavior behavior)
-    {
-      return FillAsync(dataTable, command, behavior, CancellationToken.None);
-    }
+        /// <summary>
+        /// Async version of Fill
+        /// </summary>
+        /// <param name="dataTables">DataTable[] to use</param>
+        /// <param name="startRecord">Start record</param>
+        /// <param name="maxRecords">Max records</param>
+        /// <param name="command">DbCommand to use</param>
+        /// <param name="behavior">Command Behavior</param>
+        /// <returns></returns>
+        public Task<int> FillAsync( DataTable[] dataTables, int startRecord, int maxRecords, IDbCommand command, CommandBehavior behavior ) => FillAsync( dataTables, startRecord, maxRecords, command, behavior, CancellationToken.None );
 
-    public Task<int> FillAsync(DataTable dataTable, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataTable, command, behavior);
-          result.SetResult(fillResult);
+        public Task<int> FillAsync(
+            DataTable[] dataTables,
+            int startRecord,
+            int maxRecords,
+            IDbCommand command,
+            CommandBehavior behavior,
+            CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var fillResult = base.Fill( dataTables, startRecord, maxRecords, command, behavior );
+                    result.SetResult( fillResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
+
+        /// <summary>
+        /// Async version of Fill
+        /// </summary>
+        /// <param name="dataSet">DataSet to use</param>
+        /// <param name="startRecord">Start record</param>
+        /// <param name="maxRecords">Max records</param>
+        /// <param name="srcTable">Source table</param>
+        /// <param name="command">DbCommand to use</param>
+        /// <param name="behavior">Command Behavior</param>
+        /// <returns></returns>
+        public Task<int> FillAsync(
+            DataSet dataSet,
+            int startRecord,
+            int maxRecords,
+            string srcTable,
+            IDbCommand command,
+            CommandBehavior behavior ) => FillAsync( dataSet, startRecord, maxRecords, srcTable, command, behavior, CancellationToken.None );
+
+        public Task<int> FillAsync(
+            DataSet dataSet,
+            int startRecord,
+            int maxRecords,
+            string srcTable,
+            IDbCommand command,
+            CommandBehavior behavior,
+            CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var fillResult = base.Fill( dataSet, startRecord, maxRecords, srcTable, command, behavior );
+                    result.SetResult( fillResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
+        #endregion
 
-    /// <summary>
-    /// Async version of Fill
-    /// </summary>
-    /// <param name="startRecord">Start record</param>
-    /// <param name="maxRecords">Max records</param>
-    /// <param name="dataTables">DataTable[] to use</param>
-    /// <returns>int</returns>
-    public Task<int> FillAsync(int startRecord, int maxRecords, params DataTable[] dataTables)
-    {
-      return FillAsync(startRecord, maxRecords, CancellationToken.None, dataTables);
-    }
+        #region FillSchema
+        /// <summary>
+        /// Async version of FillSchema
+        /// </summary>
+        /// <param name="dataSet">DataSet to use</param>
+        /// <param name="schemaType">Schema Type</param>
+        /// <returns>DataTable[]</returns>
+        public Task<DataTable[]> FillSchemaAsync( DataSet dataSet, SchemaType schemaType ) => FillSchemaAsync( dataSet, schemaType, CancellationToken.None );
 
-    public Task<int> FillAsync(int startRecord, int maxRecords, CancellationToken cancellationToken, params DataTable[] dataTables)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(startRecord, maxRecords, dataTables);
-          result.SetResult(fillResult);
+        public Task<DataTable[]> FillSchemaAsync( DataSet dataSet, SchemaType schemaType, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<DataTable[]>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var schemaResult = base.FillSchema( dataSet, schemaType );
+                    result.SetResult( schemaResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
+
+        /// <summary>
+        /// Async version of FillSchema
+        /// </summary>
+        /// <param name="dataSet">DataSet to use</param>
+        /// <param name="schemaType">Schema Type</param>
+        /// <param name="srcTable">Source Table</param>
+        /// <returns>DataTable[]</returns>
+        public Task<DataTable[]> FillSchemaAsync( DataSet dataSet, SchemaType schemaType, string srcTable ) => FillSchemaAsync( dataSet, schemaType, srcTable, CancellationToken.None );
+
+        public Task<DataTable[]> FillSchemaAsync(
+            DataSet dataSet,
+            SchemaType schemaType,
+            string srcTable,
+            CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<DataTable[]>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var schemaResult = base.FillSchema( dataSet, schemaType, srcTable );
+                    result.SetResult( schemaResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
 
-    /// <summary>
-    /// Async version of Fill
-    /// </summary>
-    /// <param name="dataSet">DataSet to use</param>
-    /// <param name="startRecord">Start record</param>
-    /// <param name="maxRecords">Max records</param>
-    /// <param name="srcTable">Source table</param>
-    /// <returns>int</returns>
-    public Task<int> FillAsync(DataSet dataSet, int startRecord, int maxRecords, string srcTable)
-    {
-      return FillAsync(dataSet, startRecord, maxRecords, srcTable, CancellationToken.None);
-    }
+        /// <summary>
+        /// Async version of FillSchema
+        /// </summary>
+        /// <param name="dataSet">DataSet to use</param>
+        /// <param name="schemaType">Schema Type</param>
+        /// <param name="srcTable">Source Table</param>
+        /// <param name="dataReader">DataReader to use</param>
+        /// <returns>DataTable[]</returns>
+        public Task<DataTable[]> FillSchemaAsync( DataSet dataSet, SchemaType schemaType, string srcTable, IDataReader dataReader ) => FillSchemaAsync( dataSet, schemaType, srcTable, dataReader, CancellationToken.None );
 
-    public Task<int> FillAsync(DataSet dataSet, int startRecord, int maxRecords, string srcTable, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataSet, startRecord, maxRecords, srcTable);
-          result.SetResult(fillResult);
+        public Task<DataTable[]> FillSchemaAsync(
+            DataSet dataSet,
+            SchemaType schemaType,
+            string srcTable,
+            IDataReader dataReader,
+            CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<DataTable[]>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var schemaResult = base.FillSchema( dataSet, schemaType, srcTable, dataReader );
+                    result.SetResult( schemaResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
+
+        /// <summary>
+        /// Async version of FillSchema
+        /// </summary>
+        /// <param name="dataSet">DataSet to use</param>
+        /// <param name="schemaType">Schema Type</param>
+        /// <param name="command">DBCommand to use</param>
+        /// <param name="srcTable">Source Table</param>
+        /// <param name="behavior">Command Behavior</param>
+        /// <returns>DataTable[]</returns>
+        public Task<DataTable[]> FillSchemaAsync(
+            DataSet dataSet,
+            SchemaType schemaType,
+            IDbCommand command,
+            string srcTable,
+            CommandBehavior behavior ) => FillSchemaAsync( dataSet, schemaType, command, srcTable, behavior, CancellationToken.None );
+
+        public Task<DataTable[]> FillSchemaAsync(
+            DataSet dataSet,
+            SchemaType schemaType,
+            IDbCommand command,
+            string srcTable,
+            CommandBehavior behavior,
+            CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<DataTable[]>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var schemaResult = base.FillSchema( dataSet, schemaType, command, srcTable, behavior );
+                    result.SetResult( schemaResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
 
-    /// <summary>
-    /// Async version of Fill
-    /// </summary>
-    /// <param name="dataSet">DataSet to use</param>
-    /// <param name="srcTable">Source table</param>
-    /// <param name="dataReader">DataReader to use</param>
-    /// <param name="startRecord">Start record</param>
-    /// <param name="maxRecords">Max records</param>
-    /// <returns></returns>
-    public Task<int> FillAsync(DataSet dataSet, string srcTable, IDataReader dataReader, int startRecord, int maxRecords)
-    {
-      return FillAsync(dataSet, srcTable, dataReader, startRecord, maxRecords, CancellationToken.None);
-    }
+        /// <summary>
+        /// Async version of FillSchema
+        /// </summary>
+        /// <param name="dataTable">DataTable to use</param>
+        /// <param name="schemaType">Schema Type</param>
+        /// <returns>DataTable</returns>
+        public Task<DataTable> FillSchemaAsync( DataTable dataTable, SchemaType schemaType ) => FillSchemaAsync( dataTable, schemaType, CancellationToken.None );
 
-    public Task<int> FillAsync(DataSet dataSet, string srcTable, IDataReader dataReader, int startRecord, int maxRecords, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataSet, srcTable, dataReader, startRecord, maxRecords);
-          result.SetResult(fillResult);
+        public Task<DataTable> FillSchemaAsync( DataTable dataTable, SchemaType schemaType, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<DataTable>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var schemaResult = base.FillSchema( dataTable, schemaType );
+                    result.SetResult( schemaResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
+
+        /// <summary>
+        /// Async version of FillSchema
+        /// </summary>
+        /// <param name="dataTable">DataTable to use</param>
+        /// <param name="schemaType">Schema Type</param>
+        /// <param name="dataReader">DataReader to use</param>
+        /// <returns>DataTable</returns>
+        public Task<DataTable> FillSchemaAsync( DataTable dataTable, SchemaType schemaType, IDataReader dataReader ) => FillSchemaAsync( dataTable, schemaType, dataReader, CancellationToken.None );
+
+        public Task<DataTable> FillSchemaAsync(
+            DataTable dataTable,
+            SchemaType schemaType,
+            IDataReader dataReader,
+            CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<DataTable>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var schemaResult = base.FillSchema( dataTable, schemaType, dataReader );
+                    result.SetResult( schemaResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
 
-    /// <summary>
-    /// Async version of Fill
-    /// </summary>
-    /// <param name="dataTables">DataTable[] to use</param>
-    /// <param name="startRecord">Start record</param>
-    /// <param name="maxRecords">Max records</param>
-    /// <param name="command">DbCommand to use</param>
-    /// <param name="behavior">Command Behavior</param>
-    /// <returns></returns>
-    public Task<int> FillAsync(DataTable[] dataTables, int startRecord, int maxRecords, IDbCommand command, CommandBehavior behavior)
-    {
-      return FillAsync(dataTables, startRecord, maxRecords, command, behavior, CancellationToken.None);
-    }
+        /// <summary>
+        /// Async version of FillSchema
+        /// </summary>
+        /// <param name="dataTable">DataTable to use</param>
+        /// <param name="schemaType">Schema Type</param>
+        /// <param name="command">DBCommand to use</param>
+        /// <param name="behavior">Command Behavior</param>
+        /// <returns>DataTable</returns>
+        public Task<DataTable> FillSchemaAsync( DataTable dataTable, SchemaType schemaType, IDbCommand command, CommandBehavior behavior ) => FillSchemaAsync( dataTable, schemaType, command, behavior, CancellationToken.None );
 
-    public Task<int> FillAsync(DataTable[] dataTables, int startRecord, int maxRecords, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataTables, startRecord, maxRecords, command, behavior);
-          result.SetResult(fillResult);
+        public Task<DataTable> FillSchemaAsync(
+            DataTable dataTable,
+            SchemaType schemaType,
+            IDbCommand command,
+            CommandBehavior behavior,
+            CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<DataTable>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var schemaResult = base.FillSchema( dataTable, schemaType, command, behavior );
+                    result.SetResult( schemaResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
+        #endregion
+
+        #region Update
+        /// <summary>
+        /// Async version of Update
+        /// </summary>
+        /// <param name="dataRows">DataRow[] to use</param>
+        /// <returns>int</returns>
+        public Task<int> UpdateAsync( DataRow[] dataRows ) => UpdateAsync( dataRows, CancellationToken.None );
+
+        public Task<int> UpdateAsync( DataRow[] dataRows, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var update = base.Update( dataRows );
+                    result.SetResult( update );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
 
-    /// <summary>
-    /// Async version of Fill
-    /// </summary>
-    /// <param name="dataSet">DataSet to use</param>
-    /// <param name="startRecord">Start record</param>
-    /// <param name="maxRecords">Max records</param>
-    /// <param name="srcTable">Source table</param>
-    /// <param name="command">DbCommand to use</param>
-    /// <param name="behavior">Command Behavior</param>
-    /// <returns></returns>
-    public Task<int> FillAsync(DataSet dataSet, int startRecord, int maxRecords, string srcTable, IDbCommand command, CommandBehavior behavior)
-    {
-      return FillAsync(dataSet, startRecord, maxRecords, srcTable, command, behavior, CancellationToken.None);
-    }
+        /// <summary>
+        /// Async version of Update
+        /// </summary>
+        /// <param name="dataSet">DataSet to use</param>
+        /// <returns>int</returns>
+        public Task<int> UpdateAsync( DataSet dataSet ) => UpdateAsync( dataSet, CancellationToken.None );
 
-    public Task<int> FillAsync(DataSet dataSet, int startRecord, int maxRecords, string srcTable, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var fillResult = base.Fill(dataSet, startRecord, maxRecords, srcTable, command, behavior);
-          result.SetResult(fillResult);
+        public Task<int> UpdateAsync( DataSet dataSet, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var update = base.Update( dataSet );
+                    result.SetResult( update );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
+
+        /// <summary>
+        /// Async version of Update
+        /// </summary>
+        /// <param name="dataTable">DataTable to use</param>
+        /// <returns>int</returns>
+        public Task<int> UpdateAsync( DataTable dataTable ) => UpdateAsync( dataTable, CancellationToken.None );
+
+        public Task<int> UpdateAsync( DataTable dataTable, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var update = base.Update( dataTable );
+                    result.SetResult( update );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
 
-    #endregion
+        /// <summary>
+        /// Async version of Update
+        /// </summary>
+        /// <param name="dataRows">DataRow[] to use</param>
+        /// <param name="tableMapping">Data Table Mapping</param>
+        /// <returns>int</returns>
+        public Task<int> UpdateAsync( DataRow[] dataRows, DataTableMapping tableMapping ) => UpdateAsync( dataRows, tableMapping, CancellationToken.None );
 
-    #region FillSchema
-    /// <summary>
-    /// Async version of FillSchema
-    /// </summary>
-    /// <param name="dataSet">DataSet to use</param>
-    /// <param name="schemaType">Schema Type</param>
-    /// <returns>DataTable[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType)
-    {
-      return FillSchemaAsync(dataSet, schemaType, CancellationToken.None);
-    }
-
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<DataTable[]>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataSet, schemaType);
-          result.SetResult(schemaResult);
+        public Task<int> UpdateAsync( DataRow[] dataRows, DataTableMapping tableMapping, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var update = base.Update( dataRows, tableMapping );
+                    result.SetResult( update );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
+
+        /// <summary>
+        /// Async version of Update
+        /// </summary>
+        /// <param name="dataSet">DataSet to use</param>
+        /// <param name="srcTable">Source Table</param>
+        /// <returns></returns>
+        public Task<int> UpdateAsync( DataSet dataSet, string srcTable ) => UpdateAsync( dataSet, srcTable, CancellationToken.None );
+
+        public Task<int> UpdateAsync( DataSet dataSet, string srcTable, CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var update = base.Update( dataSet, srcTable );
+                    result.SetResult( update );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
+        #endregion
 
-    /// <summary>
-    /// Async version of FillSchema
-    /// </summary>
-    /// <param name="dataSet">DataSet to use</param>
-    /// <param name="schemaType">Schema Type</param>
-    /// <param name="srcTable">Source Table</param>
-    /// <returns>DataTable[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, string srcTable)
-    {
-      return FillSchemaAsync(dataSet, schemaType, srcTable, CancellationToken.None);
-    }
+        #endregion
 
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, string srcTable, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<DataTable[]>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataSet, schemaType, srcTable);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-
-    /// <summary>
-    /// Async version of FillSchema
-    /// </summary>
-    /// <param name="dataSet">DataSet to use</param>
-    /// <param name="schemaType">Schema Type</param>
-    /// <param name="srcTable">Source Table</param>
-    /// <param name="dataReader">DataReader to use</param>
-    /// <returns>DataTable[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, string srcTable, IDataReader dataReader)
-    {
-      return FillSchemaAsync(dataSet, schemaType, srcTable, dataReader, CancellationToken.None);
-    }
-
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, string srcTable, IDataReader dataReader, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<DataTable[]>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataSet, schemaType, srcTable, dataReader);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-
-    /// <summary>
-    /// Async version of FillSchema
-    /// </summary>
-    /// <param name="dataSet">DataSet to use</param>
-    /// <param name="schemaType">Schema Type</param>
-    /// <param name="command">DBCommand to use</param>
-    /// <param name="srcTable">Source Table</param>
-    /// <param name="behavior">Command Behavior</param>
-    /// <returns>DataTable[]</returns>
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, IDbCommand command, string srcTable, CommandBehavior behavior)
-    {
-      return FillSchemaAsync(dataSet, schemaType, command, srcTable, behavior, CancellationToken.None);
-    }
-
-    public Task<DataTable[]> FillSchemaAsync(DataSet dataSet, SchemaType schemaType, IDbCommand command, string srcTable, CommandBehavior behavior, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<DataTable[]>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataSet, schemaType, command, srcTable, behavior);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-
-    /// <summary>
-    /// Async version of FillSchema
-    /// </summary>
-    /// <param name="dataTable">DataTable to use</param>
-    /// <param name="schemaType">Schema Type</param>
-    /// <returns>DataTable</returns>
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType)
-    {
-      return FillSchemaAsync(dataTable, schemaType, CancellationToken.None);
-    }
-
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<DataTable>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataTable, schemaType);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-
-    /// <summary>
-    /// Async version of FillSchema
-    /// </summary>
-    /// <param name="dataTable">DataTable to use</param>
-    /// <param name="schemaType">Schema Type</param>
-    /// <param name="dataReader">DataReader to use</param>
-    /// <returns>DataTable</returns>
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType, IDataReader dataReader)
-    {
-      return FillSchemaAsync(dataTable, schemaType, dataReader, CancellationToken.None);
-    }
-
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType, IDataReader dataReader, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<DataTable>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataTable, schemaType, dataReader);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-
-    /// <summary>
-    /// Async version of FillSchema
-    /// </summary>
-    /// <param name="dataTable">DataTable to use</param>
-    /// <param name="schemaType">Schema Type</param>
-    /// <param name="command">DBCommand to use</param>
-    /// <param name="behavior">Command Behavior</param>
-    /// <returns>DataTable</returns>
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType, IDbCommand command, CommandBehavior behavior)
-    {
-      return FillSchemaAsync(dataTable, schemaType, command, behavior, CancellationToken.None);
-    }
-
-    public Task<DataTable> FillSchemaAsync(DataTable dataTable, SchemaType schemaType, IDbCommand command, CommandBehavior behavior, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<DataTable>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var schemaResult = base.FillSchema(dataTable, schemaType, command, behavior);
-          result.SetResult(schemaResult);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-
-    #endregion
-
-    #region Update
-    /// <summary>
-    /// Async version of Update
-    /// </summary>
-    /// <param name="dataRows">DataRow[] to use</param>
-    /// <returns>int</returns>
-    public Task<int> UpdateAsync(DataRow[] dataRows)
-    {
-      return UpdateAsync(dataRows, CancellationToken.None);
-    }
-
-    public Task<int> UpdateAsync(DataRow[] dataRows, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var update = base.Update(dataRows);
-          result.SetResult(update);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-
-    /// <summary>
-    /// Async version of Update
-    /// </summary>
-    /// <param name="dataSet">DataSet to use</param>
-    /// <returns>int</returns>
-    public Task<int> UpdateAsync(DataSet dataSet)
-    {
-      return UpdateAsync(dataSet, CancellationToken.None);
-    }
-
-    public Task<int> UpdateAsync(DataSet dataSet, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var update = base.Update(dataSet);
-          result.SetResult(update);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-
-    /// <summary>
-    /// Async version of Update
-    /// </summary>
-    /// <param name="dataTable">DataTable to use</param>
-    /// <returns>int</returns>
-    public Task<int> UpdateAsync(DataTable dataTable)
-    {
-      return UpdateAsync(dataTable, CancellationToken.None);
-    }
-
-    public Task<int> UpdateAsync(DataTable dataTable, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var update = base.Update(dataTable);
-          result.SetResult(update);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-
-    /// <summary>
-    /// Async version of Update
-    /// </summary>
-    /// <param name="dataRows">DataRow[] to use</param>
-    /// <param name="tableMapping">Data Table Mapping</param>
-    /// <returns>int</returns>
-    public Task<int> UpdateAsync(DataRow[] dataRows, DataTableMapping tableMapping)
-    {
-      return UpdateAsync(dataRows, tableMapping, CancellationToken.None);
-    }
-
-    public Task<int> UpdateAsync(DataRow[] dataRows, DataTableMapping tableMapping, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var update = base.Update(dataRows, tableMapping);
-          result.SetResult(update);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-
-    /// <summary>
-    /// Async version of Update
-    /// </summary>
-    /// <param name="dataSet">DataSet to use</param>
-    /// <param name="srcTable">Source Table</param>
-    /// <returns></returns>
-    public Task<int> UpdateAsync(DataSet dataSet, string srcTable)
-    {
-      return UpdateAsync(dataSet, srcTable, CancellationToken.None);
-    }
-
-    public Task<int> UpdateAsync(DataSet dataSet, string srcTable, CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var update = base.Update(dataSet, srcTable);
-          result.SetResult(update);
-        }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-
-    #endregion
-    #endregion
 #endif
     }
 

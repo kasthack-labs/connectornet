@@ -24,7 +24,7 @@ using System;
 using System.Collections;
 using System.Data;
 using System.Data.Common;
-using MySql.Data.MySqlClient.common;
+using MySql.Data.Constants;
 using MySql.Data.Types;
 
 namespace MySql.Data.MySqlClient {
@@ -48,7 +48,7 @@ namespace MySql.Data.MySqlClient {
             return new MySqlGeometry( true );
         }
 
-        public MySqlGeometry GetMySqlGeometry( string column ) { return GetMySqlGeometry( GetOrdinal( column ) ); }
+        public MySqlGeometry GetMySqlGeometry( string column ) => GetMySqlGeometry( GetOrdinal( column ) );
 #endif
 
         /// <summary>
@@ -63,30 +63,30 @@ namespace MySql.Data.MySqlClient {
 
             var dataTableSchema = new DataTable( "SchemaTable" );
 
-            dataTableSchema.Columns.Add( "ColumnName", TypeConstants.String );
-            dataTableSchema.Columns.Add( "ColumnOrdinal", TypeConstants.Int32 );
-            dataTableSchema.Columns.Add( "ColumnSize", TypeConstants.Int32 );
-            dataTableSchema.Columns.Add( "NumericPrecision", TypeConstants.Int32 );
-            dataTableSchema.Columns.Add( "NumericScale", TypeConstants.Int32 );
-            dataTableSchema.Columns.Add( "IsUnique", TypeConstants.Boolean );
-            dataTableSchema.Columns.Add( "IsKey", TypeConstants.Boolean );
+            dataTableSchema.Columns.Add( "ColumnName", Constants.Types.String );
+            dataTableSchema.Columns.Add( "ColumnOrdinal", Constants.Types.Int32 );
+            dataTableSchema.Columns.Add( "ColumnSize", Constants.Types.Int32 );
+            dataTableSchema.Columns.Add( "NumericPrecision", Constants.Types.Int32 );
+            dataTableSchema.Columns.Add( "NumericScale", Constants.Types.Int32 );
+            dataTableSchema.Columns.Add( "IsUnique", Constants.Types.Boolean );
+            dataTableSchema.Columns.Add( "IsKey", Constants.Types.Boolean );
             var dc = dataTableSchema.Columns[ "IsKey" ];
             dc.AllowDBNull = true; // IsKey can have a DBNull
-            dataTableSchema.Columns.Add( "BaseCatalogName", TypeConstants.String );
-            dataTableSchema.Columns.Add( "BaseColumnName", TypeConstants.String );
-            dataTableSchema.Columns.Add( "BaseSchemaName", TypeConstants.String );
-            dataTableSchema.Columns.Add( "BaseTableName", TypeConstants.String );
-            dataTableSchema.Columns.Add( "DataType", TypeConstants.Type );
-            dataTableSchema.Columns.Add( "AllowDBNull", TypeConstants.Boolean );
-            dataTableSchema.Columns.Add( "ProviderType", TypeConstants.Int32 );
-            dataTableSchema.Columns.Add( "IsAliased", TypeConstants.Boolean );
-            dataTableSchema.Columns.Add( "IsExpression", TypeConstants.Boolean );
-            dataTableSchema.Columns.Add( "IsIdentity", TypeConstants.Boolean );
-            dataTableSchema.Columns.Add( "IsAutoIncrement", TypeConstants.Boolean );
-            dataTableSchema.Columns.Add( "IsRowVersion", TypeConstants.Boolean );
-            dataTableSchema.Columns.Add( "IsHidden", TypeConstants.Boolean );
-            dataTableSchema.Columns.Add( "IsLong", TypeConstants.Boolean );
-            dataTableSchema.Columns.Add( "IsReadOnly", TypeConstants.Boolean );
+            dataTableSchema.Columns.Add( "BaseCatalogName", Constants.Types.String );
+            dataTableSchema.Columns.Add( "BaseColumnName", Constants.Types.String );
+            dataTableSchema.Columns.Add( "BaseSchemaName", Constants.Types.String );
+            dataTableSchema.Columns.Add( "BaseTableName", Constants.Types.String );
+            dataTableSchema.Columns.Add( "DataType", Constants.Types.Type );
+            dataTableSchema.Columns.Add( "AllowDBNull", Constants.Types.Boolean );
+            dataTableSchema.Columns.Add( "ProviderType", Constants.Types.Int32 );
+            dataTableSchema.Columns.Add( "IsAliased", Constants.Types.Boolean );
+            dataTableSchema.Columns.Add( "IsExpression", Constants.Types.Boolean );
+            dataTableSchema.Columns.Add( "IsIdentity", Constants.Types.Boolean );
+            dataTableSchema.Columns.Add( "IsAutoIncrement", Constants.Types.Boolean );
+            dataTableSchema.Columns.Add( "IsRowVersion", Constants.Types.Boolean );
+            dataTableSchema.Columns.Add( "IsHidden", Constants.Types.Boolean );
+            dataTableSchema.Columns.Add( "IsLong", Constants.Types.Boolean );
+            dataTableSchema.Columns.Add( "IsReadOnly", Constants.Types.Boolean );
 
             var ord = 1;
             for ( var i = 0; i < FieldCount; i++ ) {
@@ -123,8 +123,6 @@ namespace MySql.Data.MySqlClient {
         /// Returns an <see cref="IEnumerator"/> that iterates through the <see cref="MySqlDataReader"/>. 
         /// </summary>
         /// <returns></returns>
-        public override IEnumerator GetEnumerator() {
-            return new DbEnumerator( this, ( CommandBehavior & CommandBehavior.CloseConnection ) != 0 );
-        }
+        public override IEnumerator GetEnumerator() => new DbEnumerator( this, ( CommandBehavior & CommandBehavior.CloseConnection ) != 0 );
     }
 }

@@ -89,7 +89,7 @@ namespace MySql.Data.Common {
 
         public override int Read( byte[] buffer, int offset, int count ) {
             var retry = 0;
-            Exception exception = null;
+            Exception exception;
             do {
                 try {
                     return base.Read( buffer, offset, count );
@@ -106,7 +106,7 @@ namespace MySql.Data.Common {
 
         public override int ReadByte() {
             var retry = 0;
-            Exception exception = null;
+            Exception exception;
             do {
                 try {
                     return base.ReadByte();
@@ -121,7 +121,7 @@ namespace MySql.Data.Common {
 
         public override void Write( byte[] buffer, int offset, int count ) {
             var retry = 0;
-            Exception exception = null;
+            Exception exception;
             do {
                 try {
                     base.Write( buffer, offset, count );
@@ -137,7 +137,7 @@ namespace MySql.Data.Common {
 
         public override void Flush() {
             var retry = 0;
-            Exception exception = null;
+            Exception exception;
             do {
                 try {
                     base.Flush();
@@ -177,8 +177,7 @@ namespace MySql.Data.Common {
 #if !CF
             IPAddress addr;
             if ( IPAddress.TryParse( hostname, out addr ) ) {
-                ipHe = new IPHostEntry();
-                ipHe.AddressList = new IPAddress[1];
+                ipHe = new IPHostEntry { AddressList = new IPAddress[1] };
                 ipHe.AddressList[ 0 ] = addr;
             }
 #endif
@@ -201,7 +200,7 @@ namespace MySql.Data.Common {
             // then we need to construct a UnixEndPoint object
             var ep =
                 (EndPoint)
-                a.CreateInstance( "Mono.Posix.UnixEndPoint", false, BindingFlags.CreateInstance, null, new object[1] { host }, null, null );
+                a.CreateInstance( "Mono.Posix.UnixEndPoint", false, BindingFlags.CreateInstance, null, new object[] { host }, null, null );
             return ep;
         }
 #endif

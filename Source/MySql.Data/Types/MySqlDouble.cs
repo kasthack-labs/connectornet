@@ -23,6 +23,7 @@
 using System;
 using System.Globalization;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlDouble : IMySqlValue {
@@ -48,12 +49,12 @@ namespace MySql.Data.Types {
 
         public double Value => _mValue;
 
-        Type IMySqlValue.SystemType => typeof( double );
+        Type IMySqlValue.SystemType => Constants.Types.Double;
 
         string IMySqlValue.MySqlTypeName => "DOUBLE";
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
-            var v = ( val is double ) ? (double) val : Convert.ToDouble( val );
+            var v = val as double? ?? Convert.ToDouble( val );
             if ( binary ) packet.Write( BitConverter.GetBytes( v ) );
             else packet.WriteStringNoNull( v.ToString( "R", CultureInfo.InvariantCulture ) );
         }
@@ -69,14 +70,13 @@ namespace MySql.Data.Types {
             var s = packet.ReadString( length );
             double d;
             try {
-                d = Double.Parse( s, CultureInfo.InvariantCulture );
+                d = double.Parse( s, CultureInfo.InvariantCulture );
             }
             catch ( OverflowException ) {
                 // MySQL server < 5.5 can return values not compatible with
-                // Double.Parse(), i.e out of range for double.
+                // double.Parse(), i.e out of range for double.
 
-                if ( s.StartsWith( "-", StringComparison.Ordinal ) ) d = double.MinValue;
-                else d = double.MaxValue;
+                d = s.InvariantStartsWith( "-" ) ? double.MinValue : double.MaxValue;
             }
             return new MySqlDouble( d );
         }
@@ -94,7 +94,7 @@ namespace MySql.Data.Types {
             row[ "ColumnSize" ] = 0;
             row[ "CreateFormat" ] = "DOUBLE";
             row[ "CreateParameters" ] = null;
-            row[ "DataType" ] = "System.Double";
+            row[ "DataType" ] = "System.double";
             row[ "IsAutoincrementable" ] = false;
             row[ "IsBestMatch" ] = true;
             row[ "IsCaseSensitive" ] = false;

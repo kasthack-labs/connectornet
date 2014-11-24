@@ -38,9 +38,7 @@ namespace MySql.Data.MySqlClient {
         /// <param name="size">The length of the column.</param>
         /// <param name="sourceColumn">The name of the source column.</param>
         /// <returns>The newly added <see cref="MySqlParameter"/> object.</returns>
-        public MySqlParameter Add( string parameterName, MySqlDbType dbType, int size, string sourceColumn ) {
-            return Add( new MySqlParameter( parameterName, dbType, size, sourceColumn ) );
-        }
+        public MySqlParameter Add( string parameterName, MySqlDbType dbType, int size, string sourceColumn ) => Add( new MySqlParameter( parameterName, dbType, size, sourceColumn ) );
 
         #region DbParameterCollection Implementation
         /// <summary>
@@ -56,11 +54,9 @@ namespace MySql.Data.MySqlClient {
         /// </summary>
         /// <param name="parameterName"></param>
         /// <returns></returns>
-        protected override DbParameter GetParameter( string parameterName ) {
-            return InternalGetParameter( parameterName );
-        }
+        protected override DbParameter GetParameter( string parameterName ) => InternalGetParameter( parameterName );
 
-        protected override DbParameter GetParameter( int index ) { return InternalGetParameter( index ); }
+        protected override DbParameter GetParameter( int index ) => InternalGetParameter( index );
 
         protected override void SetParameter( string parameterName, DbParameter value ) {
             InternalSetParameter( parameterName, value as MySqlParameter );
@@ -86,9 +82,7 @@ namespace MySql.Data.MySqlClient {
         /// </summary>
         /// <param name="parameterName">The name of the <see cref="MySqlParameter"/> object to find.</param>
         /// <returns>true if the collection contains the parameter; otherwise, false.</returns>
-        public override bool Contains( string parameterName ) {
-            return IndexOf( parameterName ) != -1;
-        }
+        public override bool Contains( string parameterName ) => IndexOf( parameterName ) != -1;
 
         /// <summary>
         /// Gets a value indicating whether a MySqlParameter exists in the collection.
@@ -115,9 +109,7 @@ namespace MySql.Data.MySqlClient {
         /// Returns an enumerator that iterates through the <see cref="MySqlParameterCollection"/>. 
         /// </summary>
         /// <returns></returns>
-        public override IEnumerator GetEnumerator() {
-            return _items.GetEnumerator();
-        }
+        public override IEnumerator GetEnumerator() => _items.GetEnumerator();
 
         /// <summary>
         /// Inserts a MySqlParameter into the collection at the specified index.

@@ -151,7 +151,7 @@ namespace MySql.Data.MySqlClient {
         public bool IsPasswordExpired { get; internal set; }
         #endregion
 
-        public string Property( string key ) { return ServerProps[ key ]; }
+        public string Property( string key ) => ServerProps[ key ];
 
         public bool ConnectionLifetimeExpired() {
             var ts = DateTime.Now.Subtract( CreationTime );
@@ -193,7 +193,7 @@ namespace MySql.Data.MySqlClient {
             return d;
         }
 
-        public bool HasStatus( ServerStatusFlags flag ) { return ( Handler.ServerStatus & flag ) != 0; }
+        public bool HasStatus( ServerStatusFlags flag ) => ( Handler.ServerStatus & flag ) != 0;
 
         public virtual void Open() {
             CreationTime = DateTime.Now;
@@ -358,13 +358,11 @@ namespace MySql.Data.MySqlClient {
             return fieldCount > 0 ? new ResultSet( this, statementId, fieldCount ) : new ResultSet( affectedRows, insertedId );
         }
 
-        protected virtual int GetResult( int statementId, ref int affectedRows, ref long insertedId ) {
-            return Handler.GetResult( ref affectedRows, ref insertedId );
-        }
+        protected virtual int GetResult( int statementId, ref int affectedRows, ref long insertedId ) => Handler.GetResult( ref affectedRows, ref insertedId );
 
-        public virtual bool FetchDataRow( int statementId, int columns ) { return Handler.FetchDataRow( statementId, columns ); }
+        public virtual bool FetchDataRow( int statementId, int columns ) => Handler.FetchDataRow( statementId, columns );
 
-        public virtual bool SkipDataRow() { return FetchDataRow( -1, 0 ); }
+        public virtual bool SkipDataRow() => FetchDataRow( -1, 0 );
 
         public virtual void ExecuteDirect( string sql ) {
             var p = new MySqlPacket( Encoding );
@@ -381,19 +379,15 @@ namespace MySql.Data.MySqlClient {
             return fields;
         }
 
-        public virtual int PrepareStatement( string sql, ref MySqlField[] parameters ) {
-            return Handler.PrepareStatement( sql, ref parameters );
-        }
+        public virtual int PrepareStatement( string sql, ref MySqlField[] parameters ) => Handler.PrepareStatement( sql, ref parameters );
 
-        public IMySqlValue ReadColumnValue( int index, MySqlField field, IMySqlValue value ) {
-            return Handler.ReadColumnValue( index, field, value );
-        }
+        public IMySqlValue ReadColumnValue( int index, MySqlField field, IMySqlValue value ) => Handler.ReadColumnValue( index, field, value );
 
         public void SkipColumnValue( IMySqlValue valObject ) { Handler.SkipColumnValue( valObject ); }
 
         public void ResetTimeout( int timeoutMilliseconds ) { Handler.ResetTimeout( timeoutMilliseconds ); }
 
-        public bool Ping() { return Handler.Ping(); }
+        public bool Ping() => Handler.Ping();
 
         public virtual void SetDatabase( string dbName ) { Handler.SetDatabase( dbName ); }
 

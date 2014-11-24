@@ -25,7 +25,7 @@ using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.Text;
-using MySql.Data.MySqlClient.common;
+using MySql.Data.Constants;
 using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
 
@@ -114,20 +114,20 @@ namespace MySql.Data.MySqlClient {
             sql.Append( "ON C.table_schema=V.table_schema AND C.table_name=V.table_name " );
             if ( restrictions != null
                  && restrictions.Length >= 2
-                 && restrictions[ 1 ] != null ) where.AppendFormat( CultureInfo.InvariantCulture, "C.table_schema='{0}' ", restrictions[ 1 ] );
+                 && restrictions[ 1 ] != null ) where.InvariantAppendFormat( "C.table_schema='{0}' ", restrictions[ 1 ] );
             if ( restrictions != null
                  && restrictions.Length >= 3
                  && restrictions[ 2 ] != null ) {
                 if ( where.Length > 0 ) where.Append( "AND " );
-                where.AppendFormat( CultureInfo.InvariantCulture, "C.table_name='{0}' ", restrictions[ 2 ] );
+                where.InvariantAppendFormat( "C.table_name='{0}' ", restrictions[ 2 ] );
             }
             if ( restrictions != null
                  && restrictions.Length == 4
                  && restrictions[ 3 ] != null ) {
                 if ( where.Length > 0 ) where.Append( "AND " );
-                where.AppendFormat( CultureInfo.InvariantCulture, "C.column_name='{0}' ", restrictions[ 3 ] );
+                where.InvariantAppendFormat( "C.column_name='{0}' ", restrictions[ 3 ] );
             }
-            if ( where.Length > 0 ) sql.AppendFormat( CultureInfo.InvariantCulture, " WHERE {0}", where );
+            if ( where.Length > 0 ) sql.InvariantAppendFormat( " WHERE {0}", where );
             var dt = GetTable( sql.ToString() );
             dt.Name = "ViewColumns";
             dt.Columns[ 0 ].Name = "VIEW_CATALOG";
@@ -177,7 +177,7 @@ namespace MySql.Data.MySqlClient {
 
         private MySqlSchemaCollection GetProceduresWithParameters( string[] restrictions ) {
             var dt = GetProcedures( restrictions );
-            dt.AddColumn( "ParameterList", TypeConstants.String );
+            dt.AddColumn( "ParameterList", Constants.Types.String );
 
             foreach ( var row in dt.Rows ) row[ "ParameterList" ] = GetProcedureParameterLine( row );
             return dt;
@@ -198,8 +198,8 @@ namespace MySql.Data.MySqlClient {
 
                 var body = reader.GetString( 2 );
                 var tokenizer = new MySqlTokenizer( body ) {
-                    AnsiQuotes = sqlMode.IndexOf("ANSI_QUOTES", StringComparison.Ordinal) != -1,
-                    BackslashEscapes = sqlMode.IndexOf("NO_BACKSLASH_ESCAPES", StringComparison.Ordinal) == -1
+                    AnsiQuotes = sqlMode.InvariantIndexOf("ANSI_QUOTES") != -1,
+                    BackslashEscapes = sqlMode.InvariantIndexOf( "NO_BACKSLASH_ESCAPES") == -1
                 };
 
                 var token = tokenizer.NextToken();
@@ -233,7 +233,7 @@ namespace MySql.Data.MySqlClient {
             var sql = new StringBuilder( @"SELECT * FROM INFORMATION_SCHEMA.PARAMETERS" );
             // now get our where clause and append it if there is one
             var where = GetWhereClause( null, keys, restrictions );
-            if ( !String.IsNullOrEmpty( where ) ) sql.AppendFormat( CultureInfo.InvariantCulture, " WHERE {0}", where );
+            if ( !String.IsNullOrEmpty( where ) ) sql.InvariantAppendFormat( " WHERE {0}", where );
 
             var coll = QueryCollection( "parameters", sql.ToString() );
 
@@ -266,21 +266,21 @@ namespace MySql.Data.MySqlClient {
 
         internal MySqlSchemaCollection CreateParametersTable() {
             var dt = new MySqlSchemaCollection( "Procedure Parameters" );
-            dt.AddColumn( "SPECIFIC_CATALOG", TypeConstants.String );
-            dt.AddColumn( "SPECIFIC_SCHEMA", TypeConstants.String );
-            dt.AddColumn( "SPECIFIC_NAME", TypeConstants.String );
-            dt.AddColumn( "ORDINAL_POSITION", TypeConstants.Int32 );
-            dt.AddColumn( "PARAMETER_MODE", TypeConstants.String );
-            dt.AddColumn( "PARAMETER_NAME", TypeConstants.String );
-            dt.AddColumn( "DATA_TYPE", TypeConstants.String );
-            dt.AddColumn( "CHARACTER_MAXIMUM_LENGTH", TypeConstants.Int32 );
-            dt.AddColumn( "CHARACTER_OCTET_LENGTH", TypeConstants.Int32 );
-            dt.AddColumn( "NUMERIC_PRECISION", typeof( byte ) );
-            dt.AddColumn( "NUMERIC_SCALE", TypeConstants.Int32 );
-            dt.AddColumn( "CHARACTER_SET_NAME", TypeConstants.String );
-            dt.AddColumn( "COLLATION_NAME", TypeConstants.String );
-            dt.AddColumn( "DTD_IDENTIFIER", TypeConstants.String );
-            dt.AddColumn( "ROUTINE_TYPE", TypeConstants.String );
+            dt.AddColumn( "SPECIFIC_CATALOG", Constants.Types.String );
+            dt.AddColumn( "SPECIFIC_SCHEMA", Constants.Types.String );
+            dt.AddColumn( "SPECIFIC_NAME", Constants.Types.String );
+            dt.AddColumn( "ORDINAL_POSITION", Constants.Types.Int32 );
+            dt.AddColumn( "PARAMETER_MODE", Constants.Types.String );
+            dt.AddColumn( "PARAMETER_NAME", Constants.Types.String );
+            dt.AddColumn( "DATA_TYPE", Constants.Types.String );
+            dt.AddColumn( "CHARACTER_MAXIMUM_LENGTH", Constants.Types.Int32 );
+            dt.AddColumn( "CHARACTER_OCTET_LENGTH", Constants.Types.Int32 );
+            dt.AddColumn( "NUMERIC_PRECISION", Constants.Types.Byte );
+            dt.AddColumn( "NUMERIC_SCALE", Constants.Types.Int32 );
+            dt.AddColumn( "CHARACTER_SET_NAME", Constants.Types.String );
+            dt.AddColumn( "COLLATION_NAME", Constants.Types.String );
+            dt.AddColumn( "DTD_IDENTIFIER", Constants.Types.String );
+            dt.AddColumn( "ROUTINE_TYPE", Constants.Types.String );
             return dt;
         }
 
@@ -329,14 +329,14 @@ namespace MySql.Data.MySqlClient {
 
         private static string GetWhereClause( string initialWhere, string[] keys, string[] values ) {
             var where = new StringBuilder( initialWhere );
-            if ( values != null )
-                for ( var i = 0; i < keys.Length; i++ ) {
-                    if ( i >= values.Length ) break;
-                    if ( values[ i ] == null
-                         || values[ i ] == String.Empty ) continue;
-                    if ( where.Length > 0 ) where.Append( " AND " );
-                    where.AppendFormat( CultureInfo.InvariantCulture, "{0} LIKE '{1}'", keys[ i ], values[ i ] );
-                }
+            if ( values == null ) return @where.ToString();
+            for ( var i = 0; i < keys.Length; i++ ) {
+                if ( i >= values.Length ) break;
+                if ( values[ i ] == null
+                     || values[ i ] == String.Empty ) continue;
+                if ( @where.Length > 0 ) @where.Append( " AND " );
+                @where.InvariantAppendFormat( "{0} LIKE '{1}'", keys[ i ], values[ i ] );
+            }
             return where.ToString();
         }
 
@@ -346,7 +346,7 @@ namespace MySql.Data.MySqlClient {
 
             var where = GetWhereClause( initialWhere, keys, values );
 
-            if ( where.Length > 0 ) query.AppendFormat( CultureInfo.InvariantCulture, " WHERE {0}", where );
+            if ( where.Length > 0 ) query.InvariantAppendFormat( " WHERE {0}", where );
 
             return GetTable( query.ToString() );
         }
@@ -384,11 +384,11 @@ namespace MySql.Data.MySqlClient {
 
             var where = new StringBuilder();
             if ( restrictions.Length >= 2
-                 && !String.IsNullOrEmpty( restrictions[ 1 ] ) ) where.AppendFormat( CultureInfo.InvariantCulture, " AND rc.constraint_schema LIKE '{0}'", restrictions[ 1 ] );
+                 && !String.IsNullOrEmpty( restrictions[ 1 ] ) ) where.InvariantAppendFormat( " AND rc.constraint_schema LIKE '{0}'", restrictions[ 1 ] );
             if ( restrictions.Length >= 3
-                 && !String.IsNullOrEmpty( restrictions[ 2 ] ) ) where.AppendFormat( CultureInfo.InvariantCulture, " AND rc.table_name LIKE '{0}'", restrictions[ 2 ] );
+                 && !String.IsNullOrEmpty( restrictions[ 2 ] ) ) where.InvariantAppendFormat( " AND rc.table_name LIKE '{0}'", restrictions[ 2 ] );
             if ( restrictions.Length >= 4
-                 && !String.IsNullOrEmpty( restrictions[ 3 ] ) ) where.AppendFormat( CultureInfo.InvariantCulture, " AND rc.constraint_name LIKE '{0}'", restrictions[ 2 ] );
+                 && !String.IsNullOrEmpty( restrictions[ 3 ] ) ) where.InvariantAppendFormat( " AND rc.constraint_name LIKE '{0}'", restrictions[ 2 ] );
 
             sql += where.ToString();
 
@@ -403,11 +403,12 @@ namespace MySql.Data.MySqlClient {
 
             var where = new StringBuilder();
             if ( restrictions.Length >= 2
-                 && !String.IsNullOrEmpty( restrictions[ 1 ] ) ) where.AppendFormat( CultureInfo.InvariantCulture, " AND kcu.constraint_schema LIKE '{0}'", restrictions[ 1 ] );
+                 && !String.IsNullOrEmpty( restrictions[ 1 ] ) )
+                where.InvariantAppendFormat( " AND kcu.constraint_schema LIKE '{0}'", restrictions[ 1 ] );
             if ( restrictions.Length >= 3
-                 && !String.IsNullOrEmpty( restrictions[ 2 ] ) ) where.AppendFormat( CultureInfo.InvariantCulture, " AND kcu.table_name LIKE '{0}'", restrictions[ 2 ] );
+                 && !String.IsNullOrEmpty( restrictions[ 2 ] ) ) where.InvariantAppendFormat( " AND kcu.table_name LIKE '{0}'", restrictions[ 2 ] );
             if ( restrictions.Length >= 4
-                 && !String.IsNullOrEmpty( restrictions[ 3 ] ) ) where.AppendFormat( CultureInfo.InvariantCulture, " AND kcu.constraint_name LIKE '{0}'", restrictions[ 3 ] );
+                 && !String.IsNullOrEmpty( restrictions[ 3 ] ) ) where.InvariantAppendFormat( " AND kcu.constraint_name LIKE '{0}'", restrictions[ 3 ] );
 
             sql += where.ToString();
 
@@ -465,8 +466,8 @@ namespace MySql.Data.MySqlClient {
 
             var pos = 1;
             var tokenizer = new MySqlTokenizer( body ) {
-                AnsiQuotes = sqlMode.IndexOf("ANSI_QUOTES", StringComparison.Ordinal) != -1,
-                BackslashEscapes = sqlMode.IndexOf("NO_BACKSLASH_ESCAPES", StringComparison.Ordinal) == -1,
+                AnsiQuotes = sqlMode.InvariantIndexOf("ANSI_QUOTES") != -1,
+                BackslashEscapes = sqlMode.InvariantIndexOf( "NO_BACKSLASH_ESCAPES") == -1,
                 ReturnComments = false
             };
             var token = tokenizer.NextToken();
@@ -491,7 +492,7 @@ namespace MySql.Data.MySqlClient {
                 parmRow[ "ORDINAL_POSITION" ] = pos++;
 
                 // handle mode and name for the parameter
-                var mode = StringUtility.ToUpperInvariant( token );
+                var mode = token.InvariantToUpper();
                 if ( !tokenizer.Quoted
                      && modes.Contains( mode ) ) {
                     parmRow[ "PARAMETER_MODE" ] = mode;
@@ -512,12 +513,11 @@ namespace MySql.Data.MySqlClient {
             }
 
             // now parse out the return parameter if there is one.
-            token = StringUtility.ToUpperInvariant( tokenizer.NextToken() );
-            if ( String.Compare( token, "RETURNS", StringComparison.OrdinalIgnoreCase ) == 0 ) {
-                var parameterRow = parametersTable.Rows[ 0 ];
-                parameterRow[ "PARAMETER_NAME" ] = "RETURN_VALUE";
-                ParseDataType( parameterRow, tokenizer );
-            }
+            token = tokenizer.NextToken().InvariantToUpper();
+            if ( String.Compare( token, "RETURNS", StringComparison.OrdinalIgnoreCase ) != 0 ) return;
+            var parameterRow = parametersTable.Rows[ 0 ];
+            parameterRow[ "PARAMETER_NAME" ] = "RETURN_VALUE";
+            ParseDataType( parameterRow, tokenizer );
         }
 
         /// <summary>
@@ -536,14 +536,14 @@ namespace MySql.Data.MySqlClient {
         ///  Parses out the elements of a procedure parameter data type.
         /// </summary>
         private string ParseDataType( MySqlSchemaRow row, MySqlTokenizer tokenizer ) {
-            var dtd = new StringBuilder( StringUtility.ToUpperInvariant( tokenizer.NextToken() ) );
+            var dtd = new StringBuilder( tokenizer.NextToken().InvariantToUpper() );
             row[ "DATA_TYPE" ] = dtd.ToString();
             var type = row[ "DATA_TYPE" ].ToString();
 
             var token = tokenizer.NextToken();
             if ( token == "(" ) {
                 token = tokenizer.ReadParenthesis();
-                dtd.AppendFormat( CultureInfo.InvariantCulture, "{0}", token );
+                dtd.InvariantAppendFormat( "{0}", token );
                 if ( type != "ENUM"
                      && type != "SET" ) ParseDataTypeSize( row, token );
                 token = tokenizer.NextToken();
@@ -572,7 +572,7 @@ namespace MySql.Data.MySqlClient {
                         row[ "COLLATION_NAME" ] = tokenizer.NextToken();
                         break;
                     default:
-                        dtd.AppendFormat( CultureInfo.InvariantCulture, " {0}", token );
+                        dtd.InvariantAppendFormat( " {0}", token );
                         break;
                 }
                 token = tokenizer.NextToken();
@@ -585,11 +585,10 @@ namespace MySql.Data.MySqlClient {
                  && !string.IsNullOrEmpty( (string) row[ "CHARACTER_SET_NAME" ] ) ) row[ "COLLATION_NAME" ] = CharSetMap.GetDefaultCollation( row[ "CHARACTER_SET_NAME" ].ToString(), Connection );
 
             // now set the octet length
-            if ( row[ "CHARACTER_MAXIMUM_LENGTH" ] != null ) {
-                if ( row[ "CHARACTER_SET_NAME" ] == null ) row[ "CHARACTER_SET_NAME" ] = "";
-                row[ "CHARACTER_OCTET_LENGTH" ] = CharSetMap.GetMaxLength( (string) row[ "CHARACTER_SET_NAME" ], Connection )
-                                                  * (int) row[ "CHARACTER_MAXIMUM_LENGTH" ];
-            }
+            if ( row[ "CHARACTER_MAXIMUM_LENGTH" ] == null ) return token;
+            if ( row[ "CHARACTER_SET_NAME" ] == null ) row[ "CHARACTER_SET_NAME" ] = "";
+            row[ "CHARACTER_OCTET_LENGTH" ] = CharSetMap.GetMaxLength( (string) row[ "CHARACTER_SET_NAME" ], Connection )
+                                              * (int) row[ "CHARACTER_MAXIMUM_LENGTH" ];
 
             return token;
         }

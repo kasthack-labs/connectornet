@@ -26,8 +26,7 @@ using MySql.Data.MySqlClient;
 namespace MySql.Data.Types {
     internal class MetaData {
         public static bool IsNumericType( string typename ) {
-            var lowerType = typename.ToLower( CultureInfo.InvariantCulture );
-            switch ( lowerType ) {
+            switch ( typename.InvariantToLower() ) {
                 case "int":
                 case "integer":
                 case "numeric":
@@ -48,8 +47,7 @@ namespace MySql.Data.Types {
         }
 
         public static bool IsTextType( string typename ) {
-            var lowerType = typename.ToLower( CultureInfo.InvariantCulture );
-            switch ( lowerType ) {
+            switch ( typename.InvariantToLower() ) {
                 case "varchar":
                 case "char":
                 case "text":
@@ -66,8 +64,7 @@ namespace MySql.Data.Types {
         }
 
         public static bool SupportScale( string typename ) {
-            var lowerType = StringUtility.ToLowerInvariant( typename );
-            switch ( lowerType ) {
+            switch ( StringUtility.InvariantToLower( typename ) ) {
                 case "numeric":
                 case "decimal":
                 case "dec":
@@ -78,7 +75,7 @@ namespace MySql.Data.Types {
         }
 
         public static MySqlDbType NameToType( string typeName, bool unsigned, bool realAsFloat, MySqlConnection connection ) {
-            switch ( StringUtility.ToUpperInvariant( typeName ) ) {
+            switch ( StringUtility.InvariantToUpper( typeName ) ) {
                 case "CHAR":
                     return MySqlDbType.String;
                 case "VARCHAR":

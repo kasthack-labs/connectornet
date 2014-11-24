@@ -104,18 +104,21 @@ namespace MySql.Data.Types {
         private static void EscapeByteArray( byte[] bytes, int length, MySqlPacket packet ) {
             for ( var x = 0; x < length; x++ ) {
                 var b = bytes[ x ];
-                if ( b == '\0' ) {
-                    packet.WriteByte( (byte) '\\' );
-                    packet.WriteByte( (byte) '0' );
+                switch ( (char)b ) {
+                    case '\0':
+                        packet.WriteByte( (byte) '\\' );
+                        packet.WriteByte( (byte) '0' );
+                        break;
+                    case '\\':
+                    case '\'':
+                    case '\"':
+                        packet.WriteByte( (byte) '\\' );
+                        packet.WriteByte( b );
+                        break;
+                    default:
+                        packet.WriteByte( b );
+                        break;
                 }
-
-                else if ( b == '\\'
-                          || b == '\''
-                          || b == '\"' ) {
-                    packet.WriteByte( (byte) '\\' );
-                    packet.WriteByte( b );
-                }
-                else packet.WriteByte( b );
             }
         }
 

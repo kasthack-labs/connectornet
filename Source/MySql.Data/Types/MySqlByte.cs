@@ -23,6 +23,7 @@
 using System;
 using System.Globalization;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlByte : IMySqlValue {
@@ -31,7 +32,7 @@ namespace MySql.Data.Types {
         private bool _treatAsBool;
 
         public MySqlByte( bool isNull ) {
-            this._isNull = isNull;
+            _isNull = isNull;
             _mValue = 0;
             _treatAsBool = false;
         }
@@ -63,17 +64,12 @@ namespace MySql.Data.Types {
             }
         }
 
-        Type IMySqlValue.SystemType {
-            get {
-                if ( TreatAsBoolean ) return typeof( Boolean );
-                return typeof( sbyte );
-            }
-        }
+        Type IMySqlValue.SystemType => TreatAsBoolean ? Constants.Types.Boolean : typeof( sbyte );
 
         string IMySqlValue.MySqlTypeName => "TINYINT";
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
-            var v = ( val is sbyte ) ? (sbyte) val : Convert.ToSByte( val );
+            var v = val as sbyte? ?? Convert.ToSByte( val );
             if ( binary ) packet.WriteByte( (byte) v );
             else packet.WriteStringNoNull( v.ToString() );
         }
@@ -82,10 +78,7 @@ namespace MySql.Data.Types {
             if ( nullVal ) return new MySqlByte( true );
 
             if ( length == -1 ) return new MySqlByte( (sbyte) packet.ReadByte() );
-            var s = packet.ReadString( length );
-            var b = new MySqlByte( SByte.Parse( s, NumberStyles.Any, CultureInfo.InvariantCulture ) );
-            b.TreatAsBoolean = TreatAsBoolean;
-            return b;
+            return new MySqlByte( SByte.Parse( packet.ReadString( length ), NumberStyles.Any, CultureInfo.InvariantCulture ) ) { TreatAsBoolean = TreatAsBoolean };
         }
 
         void IMySqlValue.SkipValue( MySqlPacket packet ) { packet.ReadByte(); }

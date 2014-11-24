@@ -81,6 +81,6 @@ namespace MySql.Data.Common {
             return false;
         }
 
-        public override string ToString() { return _srcString; }
+        public override string ToString() => _srcString;
     }
 }

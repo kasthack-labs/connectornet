@@ -237,8 +237,8 @@ namespace MySql.Data.MySqlClient {
 
         private void CheckForExceptions() {
             var colName = String.Empty;
-            if ( OriginalColumnName != null ) colName = StringUtility.ToUpperInvariant( OriginalColumnName );
-            if ( colName.StartsWith( "CHAR(", StringComparison.Ordinal ) ) BinaryOk = false;
+            if ( OriginalColumnName != null ) colName = OriginalColumnName.InvariantToUpper();
+            if ( colName.InvariantStartsWith( "CHAR(") ) BinaryOk = false;
         }
 
         public IMySqlValue GetValueObject() {
@@ -336,7 +336,7 @@ namespace MySql.Data.MySqlClient {
             var cs = CharSetMap.GetCharacterSet( version, charSets[ CharacterSetIndex ] );
             // starting with 6.0.4 utf8 has a maxlen of 4 instead of 3.  The old
             // 3 byte utf8 is utf8mb3
-            if ( cs.Name.ToLower( CultureInfo.InvariantCulture ) == "utf-8"
+            if ( cs.Name.InvariantToLower() == "utf-8"
                  && version.Major >= 6 ) MaxLength = 4;
             else MaxLength = cs.ByteCount;
             Encoding = CharSetMap.GetEncoding( version, charSets[ CharacterSetIndex ] );

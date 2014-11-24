@@ -22,7 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
-using MySql.Data.MySqlClient.common;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlUInt64 : IMySqlValue {
@@ -48,14 +48,14 @@ namespace MySql.Data.Types {
 
         public ulong Value => _mValue;
 
-        Type IMySqlValue.SystemType => TypeConstants.UInt64;
+        Type IMySqlValue.SystemType => Constants.Types.UInt64;
 
         string IMySqlValue.MySqlTypeName => "BIGINT";
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
-            var v = ( val is ulong ) ? (ulong) val : Convert.ToUInt64( val );
+            var v = val as ulong? ?? Convert.ToUInt64( val );
             if ( binary ) packet.WriteInteger( (long) v, 8 );
-            else packet.WriteStringNoNull( v.ToString() );
+            else packet.WriteStringNoNull( v.InvariantToString() );
         }
 
         IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {

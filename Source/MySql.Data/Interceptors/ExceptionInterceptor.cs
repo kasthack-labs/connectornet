@@ -42,7 +42,7 @@ namespace MySql.Data.MySqlClient {
     /// It is the default action.
     /// </summary>
     internal sealed class StandardExceptionInterceptor : BaseExceptionInterceptor {
-        public override Exception InterceptException( Exception exception ) { return exception; }
+        public override Exception InterceptException( Exception exception ) => exception;
     }
 
     /// <summary>

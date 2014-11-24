@@ -27,7 +27,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using MySql.Data.MySqlClient.common;
+using MySql.Data.Constants;
 using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
 #if !RT
@@ -46,7 +46,7 @@ namespace MySql.Data.MySqlClient {
         public virtual MySqlSchemaCollection GetSchema( string collection, String[] restrictions ) {
             if ( Connection.State != ConnectionState.Open ) throw new MySqlException( "GetSchema can only be called on an open connection." );
 
-            collection = StringUtility.ToUpperInvariant( collection );
+            collection = StringUtility.InvariantToUpper( collection );
 
             var c = GetSchemaInternal( collection, restrictions );
 
@@ -74,8 +74,8 @@ namespace MySql.Data.MySqlClient {
                  && restrictions[ 0 ] != null ) regex = new Regex( restrictions[ 0 ], RegexOptions.IgnoreCase );
 
             var c2 = new MySqlSchemaCollection( "Databases" );
-            c2.AddColumn( "CATALOG_NAME", TypeConstants.String );
-            c2.AddColumn( "SCHEMA_NAME", TypeConstants.String );
+            c2.AddColumn( "CATALOG_NAME", Constants.Types.String );
+            c2.AddColumn( "SCHEMA_NAME", Constants.Types.String );
 
             foreach ( var row in c.Rows ) {
                 if ( regex != null
@@ -88,27 +88,27 @@ namespace MySql.Data.MySqlClient {
 
         public virtual MySqlSchemaCollection GetTables( string[] restrictions ) {
             var c = new MySqlSchemaCollection( "Tables" );
-            c.AddColumn( "TABLE_CATALOG", TypeConstants.String );
-            c.AddColumn( "TABLE_SCHEMA", TypeConstants.String );
-            c.AddColumn( "TABLE_NAME", TypeConstants.String );
-            c.AddColumn( "TABLE_TYPE", TypeConstants.String );
-            c.AddColumn( "ENGINE", TypeConstants.String );
-            c.AddColumn( "VERSION", TypeConstants.UInt64 );
-            c.AddColumn( "ROW_FORMAT", TypeConstants.String );
-            c.AddColumn( "TABLE_ROWS", TypeConstants.UInt64 );
-            c.AddColumn( "AVG_ROW_LENGTH", TypeConstants.UInt64 );
-            c.AddColumn( "DATA_LENGTH", TypeConstants.UInt64 );
-            c.AddColumn( "MAX_DATA_LENGTH", TypeConstants.UInt64 );
-            c.AddColumn( "INDEX_LENGTH", TypeConstants.UInt64 );
-            c.AddColumn( "DATA_FREE", TypeConstants.UInt64 );
-            c.AddColumn( "AUTO_INCREMENT", TypeConstants.UInt64 );
-            c.AddColumn( "CREATE_TIME", TypeConstants.DateTime );
-            c.AddColumn( "UPDATE_TIME", TypeConstants.DateTime );
-            c.AddColumn( "CHECK_TIME", TypeConstants.DateTime );
-            c.AddColumn( "TABLE_COLLATION", TypeConstants.String );
-            c.AddColumn( "CHECKSUM", TypeConstants.UInt64 );
-            c.AddColumn( "CREATE_OPTIONS", TypeConstants.String );
-            c.AddColumn( "TABLE_COMMENT", TypeConstants.String );
+            c.AddColumn( "TABLE_CATALOG", Constants.Types.String );
+            c.AddColumn( "TABLE_SCHEMA", Constants.Types.String );
+            c.AddColumn( "TABLE_NAME", Constants.Types.String );
+            c.AddColumn( "TABLE_TYPE", Constants.Types.String );
+            c.AddColumn( "ENGINE", Constants.Types.String );
+            c.AddColumn( "VERSION", Constants.Types.UInt64 );
+            c.AddColumn( "ROW_FORMAT", Constants.Types.String );
+            c.AddColumn( "TABLE_ROWS", Constants.Types.UInt64 );
+            c.AddColumn( "AVG_ROW_LENGTH", Constants.Types.UInt64 );
+            c.AddColumn( "DATA_LENGTH", Constants.Types.UInt64 );
+            c.AddColumn( "MAX_DATA_LENGTH", Constants.Types.UInt64 );
+            c.AddColumn( "INDEX_LENGTH", Constants.Types.UInt64 );
+            c.AddColumn( "DATA_FREE", Constants.Types.UInt64 );
+            c.AddColumn( "AUTO_INCREMENT", Constants.Types.UInt64 );
+            c.AddColumn( "CREATE_TIME", Constants.Types.DateTime );
+            c.AddColumn( "UPDATE_TIME", Constants.Types.DateTime );
+            c.AddColumn( "CHECK_TIME", Constants.Types.DateTime );
+            c.AddColumn( "TABLE_COLLATION", Constants.Types.String );
+            c.AddColumn( "CHECKSUM", Constants.Types.UInt64 );
+            c.AddColumn( "CREATE_OPTIONS", Constants.Types.String );
+            c.AddColumn( "TABLE_COMMENT", Constants.Types.String );
 
             // we have to new up a new restriction array here since
             // GetDatabases takes the database in the first slot
@@ -138,25 +138,25 @@ namespace MySql.Data.MySqlClient {
 
         public virtual MySqlSchemaCollection GetColumns( string[] restrictions ) {
             var c = new MySqlSchemaCollection( "Columns" );
-            c.AddColumn( "TABLE_CATALOG", TypeConstants.String );
-            c.AddColumn( "TABLE_SCHEMA", TypeConstants.String );
-            c.AddColumn( "TABLE_NAME", TypeConstants.String );
-            c.AddColumn( "COLUMN_NAME", TypeConstants.String );
-            c.AddColumn( "ORDINAL_POSITION", TypeConstants.UInt64 );
-            c.AddColumn( "COLUMN_DEFAULT", TypeConstants.String );
-            c.AddColumn( "IS_NULLABLE", TypeConstants.String );
-            c.AddColumn( "DATA_TYPE", TypeConstants.String );
-            c.AddColumn( "CHARACTER_MAXIMUM_LENGTH", TypeConstants.UInt64 );
-            c.AddColumn( "CHARACTER_OCTET_LENGTH", TypeConstants.UInt64 );
-            c.AddColumn( "NUMERIC_PRECISION", TypeConstants.UInt64 );
-            c.AddColumn( "NUMERIC_SCALE", TypeConstants.UInt64 );
-            c.AddColumn( "CHARACTER_SET_NAME", TypeConstants.String );
-            c.AddColumn( "COLLATION_NAME", TypeConstants.String );
-            c.AddColumn( "COLUMN_TYPE", TypeConstants.String );
-            c.AddColumn( "COLUMN_KEY", TypeConstants.String );
-            c.AddColumn( "EXTRA", TypeConstants.String );
-            c.AddColumn( "PRIVILEGES", TypeConstants.String );
-            c.AddColumn( "COLUMN_COMMENT", TypeConstants.String );
+            c.AddColumn( "TABLE_CATALOG", Constants.Types.String );
+            c.AddColumn( "TABLE_SCHEMA", Constants.Types.String );
+            c.AddColumn( "TABLE_NAME", Constants.Types.String );
+            c.AddColumn( "COLUMN_NAME", Constants.Types.String );
+            c.AddColumn( "ORDINAL_POSITION", Constants.Types.UInt64 );
+            c.AddColumn( "COLUMN_DEFAULT", Constants.Types.String );
+            c.AddColumn( "IS_NULLABLE", Constants.Types.String );
+            c.AddColumn( "DATA_TYPE", Constants.Types.String );
+            c.AddColumn( "CHARACTER_MAXIMUM_LENGTH", Constants.Types.UInt64 );
+            c.AddColumn( "CHARACTER_OCTET_LENGTH", Constants.Types.UInt64 );
+            c.AddColumn( "NUMERIC_PRECISION", Constants.Types.UInt64 );
+            c.AddColumn( "NUMERIC_SCALE", Constants.Types.UInt64 );
+            c.AddColumn( "CHARACTER_SET_NAME", Constants.Types.String );
+            c.AddColumn( "COLLATION_NAME", Constants.Types.String );
+            c.AddColumn( "COLUMN_TYPE", Constants.Types.String );
+            c.AddColumn( "COLUMN_KEY", Constants.Types.String );
+            c.AddColumn( "EXTRA", Constants.Types.String );
+            c.AddColumn( "PRIVILEGES", Constants.Types.String );
+            c.AddColumn( "COLUMN_COMMENT", Constants.Types.String );
 
             // we don't allow restricting on table type here
             string columnName = null;
@@ -233,14 +233,14 @@ namespace MySql.Data.MySqlClient {
 
         public virtual MySqlSchemaCollection GetIndexes( string[] restrictions ) {
             var dt = new MySqlSchemaCollection( "Indexes" );
-            dt.AddColumn( "INDEX_CATALOG", TypeConstants.String );
-            dt.AddColumn( "INDEX_SCHEMA", TypeConstants.String );
-            dt.AddColumn( "INDEX_NAME", TypeConstants.String );
-            dt.AddColumn( "TABLE_NAME", TypeConstants.String );
-            dt.AddColumn( "UNIQUE", TypeConstants.Boolean );
-            dt.AddColumn( "PRIMARY", TypeConstants.Boolean );
-            dt.AddColumn( "TYPE", TypeConstants.String );
-            dt.AddColumn( "COMMENT", TypeConstants.String );
+            dt.AddColumn( "INDEX_CATALOG", Constants.Types.String );
+            dt.AddColumn( "INDEX_SCHEMA", Constants.Types.String );
+            dt.AddColumn( "INDEX_NAME", Constants.Types.String );
+            dt.AddColumn( "TABLE_NAME", Constants.Types.String );
+            dt.AddColumn( "UNIQUE", Constants.Types.Boolean );
+            dt.AddColumn( "PRIMARY", Constants.Types.Boolean );
+            dt.AddColumn( "TYPE", Constants.Types.String );
+            dt.AddColumn( "COMMENT", Constants.Types.String );
 
             // Get the list of tables first
             var max = restrictions?.Length ?? 4;
@@ -280,13 +280,13 @@ namespace MySql.Data.MySqlClient {
 
         public virtual MySqlSchemaCollection GetIndexColumns( string[] restrictions ) {
             var dt = new MySqlSchemaCollection( "IndexColumns" );
-            dt.AddColumn( "INDEX_CATALOG", TypeConstants.String );
-            dt.AddColumn( "INDEX_SCHEMA", TypeConstants.String );
-            dt.AddColumn( "INDEX_NAME", TypeConstants.String );
-            dt.AddColumn( "TABLE_NAME", TypeConstants.String );
-            dt.AddColumn( "COLUMN_NAME", TypeConstants.String );
-            dt.AddColumn( "ORDINAL_POSITION", TypeConstants.Int32 );
-            dt.AddColumn( "SORT_ORDER", TypeConstants.String );
+            dt.AddColumn( "INDEX_CATALOG", Constants.Types.String );
+            dt.AddColumn( "INDEX_SCHEMA", Constants.Types.String );
+            dt.AddColumn( "INDEX_NAME", Constants.Types.String );
+            dt.AddColumn( "TABLE_NAME", Constants.Types.String );
+            dt.AddColumn( "COLUMN_NAME", Constants.Types.String );
+            dt.AddColumn( "ORDINAL_POSITION", Constants.Types.Int32 );
+            dt.AddColumn( "SORT_ORDER", Constants.Types.String );
 
             var max = restrictions?.Length ?? 4;
             var tableRestrictions = new string[Math.Max( max, 4 )];
@@ -326,18 +326,18 @@ namespace MySql.Data.MySqlClient {
 
         public virtual MySqlSchemaCollection GetForeignKeys( string[] restrictions ) {
             var dt = new MySqlSchemaCollection( "Foreign Keys" );
-            dt.AddColumn( "CONSTRAINT_CATALOG", TypeConstants.String );
-            dt.AddColumn( "CONSTRAINT_SCHEMA", TypeConstants.String );
-            dt.AddColumn( "CONSTRAINT_NAME", TypeConstants.String );
-            dt.AddColumn( "TABLE_CATALOG", TypeConstants.String );
-            dt.AddColumn( "TABLE_SCHEMA", TypeConstants.String );
-            dt.AddColumn( "TABLE_NAME", TypeConstants.String );
-            dt.AddColumn( "MATCH_OPTION", TypeConstants.String );
-            dt.AddColumn( "UPDATE_RULE", TypeConstants.String );
-            dt.AddColumn( "DELETE_RULE", TypeConstants.String );
-            dt.AddColumn( "REFERENCED_TABLE_CATALOG", TypeConstants.String );
-            dt.AddColumn( "REFERENCED_TABLE_SCHEMA", TypeConstants.String );
-            dt.AddColumn( "REFERENCED_TABLE_NAME", TypeConstants.String );
+            dt.AddColumn( "CONSTRAINT_CATALOG", Constants.Types.String );
+            dt.AddColumn( "CONSTRAINT_SCHEMA", Constants.Types.String );
+            dt.AddColumn( "CONSTRAINT_NAME", Constants.Types.String );
+            dt.AddColumn( "TABLE_CATALOG", Constants.Types.String );
+            dt.AddColumn( "TABLE_SCHEMA", Constants.Types.String );
+            dt.AddColumn( "TABLE_NAME", Constants.Types.String );
+            dt.AddColumn( "MATCH_OPTION", Constants.Types.String );
+            dt.AddColumn( "UPDATE_RULE", Constants.Types.String );
+            dt.AddColumn( "DELETE_RULE", Constants.Types.String );
+            dt.AddColumn( "REFERENCED_TABLE_CATALOG", Constants.Types.String );
+            dt.AddColumn( "REFERENCED_TABLE_SCHEMA", Constants.Types.String );
+            dt.AddColumn( "REFERENCED_TABLE_NAME", Constants.Types.String );
 
             // first we use our restrictions to get a list of tables that should be
             // consulted.  We save the keyname restriction since GetTables doesn't 
@@ -360,18 +360,18 @@ namespace MySql.Data.MySqlClient {
 
         public virtual MySqlSchemaCollection GetForeignKeyColumns( string[] restrictions ) {
             var dt = new MySqlSchemaCollection( "Foreign Keys" );
-            dt.AddColumn( "CONSTRAINT_CATALOG", TypeConstants.String );
-            dt.AddColumn( "CONSTRAINT_SCHEMA", TypeConstants.String );
-            dt.AddColumn( "CONSTRAINT_NAME", TypeConstants.String );
-            dt.AddColumn( "TABLE_CATALOG", TypeConstants.String );
-            dt.AddColumn( "TABLE_SCHEMA", TypeConstants.String );
-            dt.AddColumn( "TABLE_NAME", TypeConstants.String );
-            dt.AddColumn( "COLUMN_NAME", TypeConstants.String );
-            dt.AddColumn( "ORDINAL_POSITION", TypeConstants.Int32 );
-            dt.AddColumn( "REFERENCED_TABLE_CATALOG", TypeConstants.String );
-            dt.AddColumn( "REFERENCED_TABLE_SCHEMA", TypeConstants.String );
-            dt.AddColumn( "REFERENCED_TABLE_NAME", TypeConstants.String );
-            dt.AddColumn( "REFERENCED_COLUMN_NAME", TypeConstants.String );
+            dt.AddColumn( "CONSTRAINT_CATALOG", Constants.Types.String );
+            dt.AddColumn( "CONSTRAINT_SCHEMA", Constants.Types.String );
+            dt.AddColumn( "CONSTRAINT_NAME", Constants.Types.String );
+            dt.AddColumn( "TABLE_CATALOG", Constants.Types.String );
+            dt.AddColumn( "TABLE_SCHEMA", Constants.Types.String );
+            dt.AddColumn( "TABLE_NAME", Constants.Types.String );
+            dt.AddColumn( "COLUMN_NAME", Constants.Types.String );
+            dt.AddColumn( "ORDINAL_POSITION", Constants.Types.Int32 );
+            dt.AddColumn( "REFERENCED_TABLE_CATALOG", Constants.Types.String );
+            dt.AddColumn( "REFERENCED_TABLE_SCHEMA", Constants.Types.String );
+            dt.AddColumn( "REFERENCED_TABLE_NAME", Constants.Types.String );
+            dt.AddColumn( "REFERENCED_COLUMN_NAME", Constants.Types.String );
 
             // first we use our restrictions to get a list of tables that should be
             // consulted.  We save the keyname restriction since GetTables doesn't 
@@ -416,7 +416,7 @@ namespace MySql.Data.MySqlClient {
             var sqlMode = GetSqlMode();
 
             //todo: check not used variable
-            if ( filterName != null ) filterName = StringUtility.ToLowerInvariant( filterName );
+            if ( filterName != null ) filterName = StringUtility.InvariantToLower( filterName );
 
             var sql = string.Format( "SHOW CREATE TABLE `{0}`.`{1}`", tableToParse[ "TABLE_SCHEMA" ], tableToParse[ "TABLE_NAME" ] );
             string lowerBody;
@@ -424,12 +424,12 @@ namespace MySql.Data.MySqlClient {
             using ( var reader = cmd.ExecuteReader() ) {
                 reader.Read();
                 var body = reader.GetString( 1 );
-                lowerBody = StringUtility.ToLowerInvariant( body );
+                lowerBody = body.InvariantToLower();
             }
 
             var tokenizer = new MySqlTokenizer( lowerBody ) {
-                AnsiQuotes = sqlMode.IndexOf("ANSI_QUOTES", StringComparison.Ordinal) != -1,
-                BackslashEscapes = sqlMode.IndexOf("NO_BACKSLASH_ESCAPES", StringComparison.Ordinal) != -1
+                AnsiQuotes = sqlMode.InvariantIndexOf("ANSI_QUOTES") != -1,
+                BackslashEscapes = sqlMode.InvariantIndexOf( "NO_BACKSLASH_ESCAPES") != -1
             };
 
             while ( true ) {
@@ -473,7 +473,7 @@ namespace MySql.Data.MySqlClient {
                     || tokenizer.Quoted ) token = tokenizer.NextToken();
             var target1 = tokenizer.NextToken();
             var target2 = tokenizer.NextToken();
-            if ( target2.StartsWith( ".", StringComparison.Ordinal ) ) {
+            if ( target2.InvariantStartsWith( ".") ) {
                 row[ "REFERENCED_TABLE_SCHEMA" ] = target1;
                 row[ "REFERENCED_TABLE_NAME" ] = target2.Substring( 1 ).Trim( '\'', '`' );
                 tokenizer.NextToken(); // read off the '('
@@ -519,7 +519,7 @@ namespace MySql.Data.MySqlClient {
         public virtual MySqlSchemaCollection GetUsers( string[] restrictions ) {
             var sb = new StringBuilder( "SELECT Host, User FROM mysql.user" );
             if ( restrictions != null
-                 && restrictions.Length > 0 ) sb.AppendFormat( CultureInfo.InvariantCulture, " WHERE User LIKE '{0}'", restrictions[ 0 ] );
+                 && restrictions.Length > 0 ) sb.InvariantAppendFormat( " WHERE User LIKE '{0}'", restrictions[ 0 ] );
 
             var c = QueryCollection( "Users", sb.ToString() );
             c.Columns[ 0 ].Name = "HOST";
@@ -530,35 +530,35 @@ namespace MySql.Data.MySqlClient {
 
         public virtual MySqlSchemaCollection GetProcedures( string[] restrictions ) {
             var dt = new MySqlSchemaCollection( "Procedures" );
-            dt.AddColumn( "SPECIFIC_NAME", TypeConstants.String );
-            dt.AddColumn( "ROUTINE_CATALOG", TypeConstants.String );
-            dt.AddColumn( "ROUTINE_SCHEMA", TypeConstants.String );
-            dt.AddColumn( "ROUTINE_NAME", TypeConstants.String );
-            dt.AddColumn( "ROUTINE_TYPE", TypeConstants.String );
-            dt.AddColumn( "DTD_IDENTIFIER", TypeConstants.String );
-            dt.AddColumn( "ROUTINE_BODY", TypeConstants.String );
-            dt.AddColumn( "ROUTINE_DEFINITION", TypeConstants.String );
-            dt.AddColumn( "EXTERNAL_NAME", TypeConstants.String );
-            dt.AddColumn( "EXTERNAL_LANGUAGE", TypeConstants.String );
-            dt.AddColumn( "PARAMETER_STYLE", TypeConstants.String );
-            dt.AddColumn( "IS_DETERMINISTIC", TypeConstants.String );
-            dt.AddColumn( "SQL_DATA_ACCESS", TypeConstants.String );
-            dt.AddColumn( "SQL_PATH", TypeConstants.String );
-            dt.AddColumn( "SECURITY_TYPE", TypeConstants.String );
-            dt.AddColumn( "CREATED", TypeConstants.DateTime );
-            dt.AddColumn( "LAST_ALTERED", TypeConstants.DateTime );
-            dt.AddColumn( "SQL_MODE", TypeConstants.String );
-            dt.AddColumn( "ROUTINE_COMMENT", TypeConstants.String );
-            dt.AddColumn( "DEFINER", TypeConstants.String );
+            dt.AddColumn( "SPECIFIC_NAME", Constants.Types.String );
+            dt.AddColumn( "ROUTINE_CATALOG", Constants.Types.String );
+            dt.AddColumn( "ROUTINE_SCHEMA", Constants.Types.String );
+            dt.AddColumn( "ROUTINE_NAME", Constants.Types.String );
+            dt.AddColumn( "ROUTINE_TYPE", Constants.Types.String );
+            dt.AddColumn( "DTD_IDENTIFIER", Constants.Types.String );
+            dt.AddColumn( "ROUTINE_BODY", Constants.Types.String );
+            dt.AddColumn( "ROUTINE_DEFINITION", Constants.Types.String );
+            dt.AddColumn( "EXTERNAL_NAME", Constants.Types.String );
+            dt.AddColumn( "EXTERNAL_LANGUAGE", Constants.Types.String );
+            dt.AddColumn( "PARAMETER_STYLE", Constants.Types.String );
+            dt.AddColumn( "IS_DETERMINISTIC", Constants.Types.String );
+            dt.AddColumn( "SQL_DATA_ACCESS", Constants.Types.String );
+            dt.AddColumn( "SQL_PATH", Constants.Types.String );
+            dt.AddColumn( "SECURITY_TYPE", Constants.Types.String );
+            dt.AddColumn( "CREATED", Constants.Types.DateTime );
+            dt.AddColumn( "LAST_ALTERED", Constants.Types.DateTime );
+            dt.AddColumn( "SQL_MODE", Constants.Types.String );
+            dt.AddColumn( "ROUTINE_COMMENT", Constants.Types.String );
+            dt.AddColumn( "DEFINER", Constants.Types.String );
 
             var sql = new StringBuilder( "SELECT * FROM mysql.proc WHERE 1=1" );
             if ( restrictions != null ) {
                 if ( restrictions.Length >= 2
-                     && restrictions[ 1 ] != null ) sql.AppendFormat( CultureInfo.InvariantCulture, " AND db LIKE '{0}'", restrictions[ 1 ] );
+                     && restrictions[ 1 ] != null ) sql.InvariantAppendFormat( " AND db LIKE '{0}'", restrictions[ 1 ] );
                 if ( restrictions.Length >= 3
-                     && restrictions[ 2 ] != null ) sql.AppendFormat( CultureInfo.InvariantCulture, " AND name LIKE '{0}'", restrictions[ 2 ] );
+                     && restrictions[ 2 ] != null ) sql.InvariantAppendFormat( " AND name LIKE '{0}'", restrictions[ 2 ] );
                 if ( restrictions.Length >= 4
-                     && restrictions[ 3 ] != null ) sql.AppendFormat( CultureInfo.InvariantCulture, " AND type LIKE '{0}'", restrictions[ 3 ] );
+                     && restrictions[ 3 ] != null ) sql.InvariantAppendFormat( " AND type LIKE '{0}'", restrictions[ 3 ] );
             }
 
             var cmd = new MySqlCommand( sql.ToString(), Connection );
@@ -571,7 +571,7 @@ namespace MySql.Data.MySqlClient {
                     row[ "ROUTINE_NAME" ] = reader.GetString( "name" );
                     var routineType = reader.GetString( "type" );
                     row[ "ROUTINE_TYPE" ] = routineType;
-                    row[ "DTD_IDENTIFIER" ] = StringUtility.ToLowerInvariant( routineType ) == "function"
+                    row[ "DTD_IDENTIFIER" ] = StringUtility.InvariantToLower( routineType ) == "function"
                                                   ? (object) reader.GetString( "returns" )
                                                   : DBNull.Value;
                     row[ "ROUTINE_BODY" ] = "SQL";
@@ -603,9 +603,9 @@ namespace MySql.Data.MySqlClient {
             };
 
             var dt = new MySqlSchemaCollection( "MetaDataCollections" );
-            dt.AddColumn( "CollectionName", TypeConstants.String );
-            dt.AddColumn( "NumberOfRestrictions", TypeConstants.Int32 );
-            dt.AddColumn( "NumberOfIdentifierParts", TypeConstants.Int32 );
+            dt.AddColumn( "CollectionName", Constants.Types.String );
+            dt.AddColumn( "NumberOfRestrictions", Constants.Types.Int32 );
+            dt.AddColumn( "NumberOfIdentifierParts", Constants.Types.Int32 );
 
             FillTable( dt, collections );
 
@@ -617,23 +617,23 @@ namespace MySql.Data.MySqlClient {
       throw new NotSupportedException();
 #else
             var dt = new MySqlSchemaCollection( "DataSourceInformation" );
-            dt.AddColumn( "CompositeIdentifierSeparatorPattern", TypeConstants.String );
-            dt.AddColumn( "DataSourceProductName", TypeConstants.String );
-            dt.AddColumn( "DataSourceProductVersion", TypeConstants.String );
-            dt.AddColumn( "DataSourceProductVersionNormalized", TypeConstants.String );
-            dt.AddColumn( "GroupByBehavior", typeof( GroupByBehavior ) );
-            dt.AddColumn( "IdentifierPattern", TypeConstants.String );
-            dt.AddColumn( "IdentifierCase", typeof( IdentifierCase ) );
-            dt.AddColumn( "OrderByColumnsInSelect", TypeConstants.Boolean );
-            dt.AddColumn( "ParameterMarkerFormat", TypeConstants.String );
-            dt.AddColumn( "ParameterMarkerPattern", TypeConstants.String );
-            dt.AddColumn( "ParameterNameMaxLength", TypeConstants.Int32 );
-            dt.AddColumn( "ParameterNamePattern", TypeConstants.String );
-            dt.AddColumn( "QuotedIdentifierPattern", TypeConstants.String );
-            dt.AddColumn( "QuotedIdentifierCase", typeof( IdentifierCase ) );
-            dt.AddColumn( "StatementSeparatorPattern", TypeConstants.String );
-            dt.AddColumn( "StringLiteralPattern", TypeConstants.String );
-            dt.AddColumn( "SupportedJoinOperators", typeof( SupportedJoinOperators ) );
+            dt.AddColumn( "CompositeIdentifierSeparatorPattern", Constants.Types.String );
+            dt.AddColumn( "DataSourceProductName", Constants.Types.String );
+            dt.AddColumn( "DataSourceProductVersion", Constants.Types.String );
+            dt.AddColumn( "DataSourceProductVersionNormalized", Constants.Types.String );
+            dt.AddColumn( "GroupByBehavior", Constants.Types.GroupByBehavior );
+            dt.AddColumn( "IdentifierPattern", Constants.Types.String );
+            dt.AddColumn( "IdentifierCase", Constants.Types.IdentifierCase );
+            dt.AddColumn( "OrderByColumnsInSelect", Constants.Types.Boolean );
+            dt.AddColumn( "ParameterMarkerFormat", Constants.Types.String );
+            dt.AddColumn( "ParameterMarkerPattern", Constants.Types.String );
+            dt.AddColumn( "ParameterNameMaxLength", Constants.Types.Int32 );
+            dt.AddColumn( "ParameterNamePattern", Constants.Types.String );
+            dt.AddColumn( "QuotedIdentifierPattern", Constants.Types.String );
+            dt.AddColumn( "QuotedIdentifierCase", Constants.Types.IdentifierCase );
+            dt.AddColumn( "StatementSeparatorPattern", Constants.Types.String );
+            dt.AddColumn( "StringLiteralPattern", Constants.Types.String );
+            dt.AddColumn( "SupportedJoinOperators", Constants.Types.SupportedJoinOperators );
 
             var v = Connection.Driver.Version;
             var ver = String.Format( "{0:0}.{1:0}.{2:0}", v.Major, v.Minor, v.Build );
@@ -665,29 +665,29 @@ namespace MySql.Data.MySqlClient {
 
         private static MySqlSchemaCollection GetDataTypes() {
             var dt = new MySqlSchemaCollection( "DataTypes" );
-            dt.AddColumn( "TypeName", TypeConstants.String );
-            dt.AddColumn( "ProviderDbType", TypeConstants.Int32 );
-            dt.AddColumn( "ColumnSize", typeof( long ) );
-            dt.AddColumn( "CreateFormat", TypeConstants.String );
-            dt.AddColumn( "CreateParameters", TypeConstants.String );
-            dt.AddColumn( "DataType", TypeConstants.String );
-            dt.AddColumn( "IsAutoincrementable", TypeConstants.Boolean );
-            dt.AddColumn( "IsBestMatch", TypeConstants.Boolean );
-            dt.AddColumn( "IsCaseSensitive", TypeConstants.Boolean );
-            dt.AddColumn( "IsFixedLength", TypeConstants.Boolean );
-            dt.AddColumn( "IsFixedPrecisionScale", TypeConstants.Boolean );
-            dt.AddColumn( "IsLong", TypeConstants.Boolean );
-            dt.AddColumn( "IsNullable", TypeConstants.Boolean );
-            dt.AddColumn( "IsSearchable", TypeConstants.Boolean );
-            dt.AddColumn( "IsSearchableWithLike", TypeConstants.Boolean );
-            dt.AddColumn( "IsUnsigned", TypeConstants.Boolean );
-            dt.AddColumn( "MaximumScale", typeof( short ) );
-            dt.AddColumn( "MinimumScale", typeof( short ) );
-            dt.AddColumn( "IsConcurrencyType", TypeConstants.Boolean );
-            dt.AddColumn( "IsLiteralSupported", TypeConstants.Boolean );
-            dt.AddColumn( "LiteralPrefix", TypeConstants.String );
-            dt.AddColumn( "LiteralSuffix", TypeConstants.String );
-            dt.AddColumn( "NativeDataType", TypeConstants.String );
+            dt.AddColumn( "TypeName", Constants.Types.String );
+            dt.AddColumn( "ProviderDbType", Constants.Types.Int32 );
+            dt.AddColumn( "ColumnSize", Constants.Types.Int64 );
+            dt.AddColumn( "CreateFormat", Constants.Types.String );
+            dt.AddColumn( "CreateParameters", Constants.Types.String );
+            dt.AddColumn( "DataType", Constants.Types.String );
+            dt.AddColumn( "IsAutoincrementable", Constants.Types.Boolean );
+            dt.AddColumn( "IsBestMatch", Constants.Types.Boolean );
+            dt.AddColumn( "IsCaseSensitive", Constants.Types.Boolean );
+            dt.AddColumn( "IsFixedLength", Constants.Types.Boolean );
+            dt.AddColumn( "IsFixedPrecisionScale", Constants.Types.Boolean );
+            dt.AddColumn( "IsLong", Constants.Types.Boolean );
+            dt.AddColumn( "IsNullable", Constants.Types.Boolean );
+            dt.AddColumn( "IsSearchable", Constants.Types.Boolean );
+            dt.AddColumn( "IsSearchableWithLike", Constants.Types.Boolean );
+            dt.AddColumn( "IsUnsigned", Constants.Types.Boolean );
+            dt.AddColumn( "MaximumScale", Constants.Types.Int16 );
+            dt.AddColumn( "MinimumScale", Constants.Types.Int16 );
+            dt.AddColumn( "IsConcurrencyType", Constants.Types.Boolean );
+            dt.AddColumn( "IsLiteralSupported", Constants.Types.Boolean );
+            dt.AddColumn( "LiteralPrefix", Constants.Types.String );
+            dt.AddColumn( "LiteralSuffix", Constants.Types.String );
+            dt.AddColumn( "NativeDataType", Constants.Types.String );
 
             // have each one of the types contribute to the datatypes collection
             MySqlBit.SetDsInfo( dt );
@@ -729,10 +729,10 @@ namespace MySql.Data.MySqlClient {
             };
 
             var dt = new MySqlSchemaCollection( "Restrictions" );
-            dt.AddColumn( "CollectionName", TypeConstants.String );
-            dt.AddColumn( "RestrictionName", TypeConstants.String );
-            dt.AddColumn( "RestrictionDefault", TypeConstants.String );
-            dt.AddColumn( "RestrictionNumber", TypeConstants.Int32 );
+            dt.AddColumn( "CollectionName", Constants.Types.String );
+            dt.AddColumn( "RestrictionName", Constants.Types.String );
+            dt.AddColumn( "RestrictionDefault", Constants.Types.String );
+            dt.AddColumn( "RestrictionNumber", Constants.Types.Int32 );
 
             FillTable( dt, restrictions );
 
@@ -742,7 +742,7 @@ namespace MySql.Data.MySqlClient {
         private static MySqlSchemaCollection GetReservedWords() {
             var dt = new MySqlSchemaCollection( "ReservedWords" );
 #if !RT
-            dt.AddColumn( DbMetaDataColumnNames.ReservedWord, TypeConstants.String );
+            dt.AddColumn( DbMetaDataColumnNames.ReservedWord, Constants.Types.String );
             var str = Assembly.GetExecutingAssembly().GetManifestResourceStream( "MySql.Data.MySqlClient.Properties.ReservedWords.txt" );
 #else
       dt.AddColumn("ReservedWord", TypeConstants.String);
@@ -779,9 +779,9 @@ namespace MySql.Data.MySqlClient {
         private void FindTables( MySqlSchemaCollection schema, string[] restrictions ) {
             var sql = new StringBuilder();
             var where = new StringBuilder();
-            sql.AppendFormat( CultureInfo.InvariantCulture, "SHOW TABLE STATUS FROM `{0}`", restrictions[ 1 ] );
+            sql.InvariantAppendFormat( "SHOW TABLE STATUS FROM `{0}`", restrictions[ 1 ] );
             if ( restrictions.Length >= 3
-                 && restrictions[ 2 ] != null ) where.AppendFormat( CultureInfo.InvariantCulture, " LIKE '{0}'", restrictions[ 2 ] );
+                 && restrictions[ 2 ] != null ) where.InvariantAppendFormat( " LIKE '{0}'", restrictions[ 2 ] );
             sql.Append( @where );
 
             var tableType = restrictions[ 1 ].ToLower() == "information_schema" ? "SYSTEM VIEW" : "BASE TABLE";
@@ -814,9 +814,7 @@ namespace MySql.Data.MySqlClient {
                 }
         }
 
-        private static string GetString( MySqlDataReader reader, int index ) {
-            return reader.IsDBNull( index ) ? null : reader.GetString( index );
-        }
+        private static string GetString( MySqlDataReader reader, int index ) => reader.IsDBNull( index ) ? null : reader.GetString( index );
 
         public virtual MySqlSchemaCollection GetUdf( string[] restrictions ) {
             var sql = "SELECT name,ret,dl FROM mysql.func";
@@ -824,9 +822,9 @@ namespace MySql.Data.MySqlClient {
                  && !String.IsNullOrEmpty( restrictions[ 0 ] ) ) sql += String.Format( " WHERE name LIKE '{0}'", restrictions[ 0 ] );
 
             var dt = new MySqlSchemaCollection( "User-defined Functions" );
-            dt.AddColumn( "NAME", TypeConstants.String );
-            dt.AddColumn( "RETURN_TYPE", TypeConstants.Int32 );
-            dt.AddColumn( "LIBRARY_NAME", TypeConstants.String );
+            dt.AddColumn( "NAME", Constants.Types.String );
+            dt.AddColumn( "RETURN_TYPE", Constants.Types.Int32 );
+            dt.AddColumn( "LIBRARY_NAME", Constants.Types.String );
 
             var cmd = new MySqlCommand( sql, Connection );
             try {

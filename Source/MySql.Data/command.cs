@@ -24,12 +24,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing.Design;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Transactions;
+using MySql.Data.Constants;
 using MySql.Data.MySqlClient.Properties;
+using System.Drawing.Design;
 #if !RT
 using System.Data;
 #endif
@@ -100,7 +101,7 @@ namespace MySql.Data.MySqlClient {
         /// <include file='docs/mysqlcommand.xml' path='docs/CommandText/*'/>
         [Category( "Data" )]
         [Description( "Command text to execute" )]
-        [Editor( "MySql.Data.Common.Design.SqlCommandTextEditor,MySqlClient.Design", typeof( UITypeEditor ) )]
+        [Editor( "MySql.Data.Common.Design.SqlCommandTextEditor,MySqlClient.Design", typeof(UITypeEditor))]
         public override string CommandText {
             get {
                 return _cmdText;
@@ -109,11 +110,10 @@ namespace MySql.Data.MySqlClient {
                 _cmdText = value ?? string.Empty;
                 _statement = null;
                 _batchableCommandText = null;
-                if ( _cmdText != null
-                     && _cmdText.EndsWith( "DEFAULT VALUES", StringComparison.OrdinalIgnoreCase ) ) {
-                    _cmdText = _cmdText.Substring( 0, _cmdText.Length - 14 );
-                    _cmdText = _cmdText + "() VALUES ()";
-                }
+                if ( _cmdText == null
+                     || !_cmdText.EndsWith( "DEFAULT VALUES", StringComparison.OrdinalIgnoreCase ) ) return;
+                _cmdText = _cmdText.Substring( 0, _cmdText.Length - 14 );
+                _cmdText = _cmdText + "() VALUES ()";
             }
         }
 
@@ -238,9 +238,7 @@ namespace MySql.Data.MySqlClient {
         /// </remarks>
         /// <returns>A <see cref="MySqlParameter"/> object.</returns>
         /// 
-        public new MySqlParameter CreateParameter() {
-            return (MySqlParameter) CreateDbParameter();
-        }
+        public new MySqlParameter CreateParameter() => (MySqlParameter) CreateDbParameter();
 
         /// <summary>
         /// Check the connection to make sure
@@ -312,9 +310,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         /// <include file='docs/mysqlcommand.xml' path='docs/ExecuteReader/*'/>
-        public new MySqlDataReader ExecuteReader() {
-            return ExecuteReader( CommandBehavior.Default );
-        }
+        public new MySqlDataReader ExecuteReader() => ExecuteReader( CommandBehavior.Default );
 
         /// <include file='docs/mysqlcommand.xml' path='docs/ExecuteReader1/*'/>
         public new MySqlDataReader ExecuteReader( CommandBehavior behavior ) {
@@ -374,7 +370,7 @@ namespace MySql.Data.MySqlClient {
                         sql = "SELECT * FROM " + sql;
                         break;
                     case CommandType.Text:
-                        if ( sql.IndexOf(" ", StringComparison.Ordinal) == -1 ) if ( AddCallStatement( sql ) ) sql = "call " + sql;
+                        if ( sql.InvariantIndexOf(" ") == -1 ) if ( AddCallStatement( sql ) ) sql = "call " + sql;
                         break;
                 }
 
@@ -453,7 +449,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         private void EnsureCommandIsReadOnly( string sql ) {
-            sql = StringUtility.ToLowerInvariant( sql );
+            sql = StringUtility.InvariantToLower( sql );
             if ( !sql.StartsWith( "select" )
                  && !sql.StartsWith( "show" ) ) Throw( new MySqlException( Resources.ReplicatedConnectionsAllowOnlyReadonlyStatements ) );
             if ( sql.EndsWith( "for update" )
@@ -546,9 +542,7 @@ namespace MySql.Data.MySqlClient {
         /// or both; this value is also needed when invoking EndExecuteReader, 
         /// which returns a <see cref="MySqlDataReader"/> instance that can be used to retrieve 
         /// the returned rows. </returns>
-        public IAsyncResult BeginExecuteReader() {
-            return BeginExecuteReader( CommandBehavior.Default );
-        }
+        public IAsyncResult BeginExecuteReader() => BeginExecuteReader( CommandBehavior.Default );
 
         /// <summary>
         /// Initiates the asynchronous execution of the SQL statement or stored procedure 
@@ -730,7 +724,7 @@ namespace MySql.Data.MySqlClient {
 
         partial void PartialClone( MySqlCommand clone );
 
-        object ICloneable.Clone() { return Clone(); }
+        object ICloneable.Clone() => Clone();
         #endregion
 
         #region Batching support
@@ -743,14 +737,14 @@ namespace MySql.Data.MySqlClient {
             if ( _batchableCommandText != null ) return _batchableCommandText;
             if ( String.Compare( CommandText.Substring( 0, 6 ), "INSERT", StringComparison.OrdinalIgnoreCase ) == 0 ) {
                 var cmd = new MySqlCommand( "SELECT @@sql_mode", Connection );
-                var sqlMode = StringUtility.ToUpperInvariant( cmd.ExecuteScalar().ToString() );
+                var sqlMode = cmd.ExecuteScalar().ToString().InvariantToUpper();
                 var tokenizer = new MySqlTokenizer( CommandText ) {
-                    AnsiQuotes = sqlMode.IndexOf( "ANSI_QUOTES", StringComparison.Ordinal ) != -1,
-                    BackslashEscapes = sqlMode.IndexOf( "NO_BACKSLASH_ESCAPES", StringComparison.Ordinal ) == -1
+                    AnsiQuotes = sqlMode.InvariantIndexOf( "ANSI_QUOTES") != -1,
+                    BackslashEscapes = sqlMode.InvariantIndexOf( "NO_BACKSLASH_ESCAPES" ) == -1
                 };
-                var token = StringUtility.ToLowerInvariant( tokenizer.NextToken() );
+                var token = tokenizer.NextToken().InvariantToLower() ;
                 while ( token != null ) {
-                    if ( StringUtility.ToUpperInvariant( token ) == "VALUES"
+                    if ( token.InvariantToUpper() == "VALUES"
                          && !tokenizer.Quoted ) {
                         token = tokenizer.NextToken();
                         Debug.Assert( token == "(" );
@@ -777,7 +771,7 @@ namespace MySql.Data.MySqlClient {
                         if ( token != null ) _batchableCommandText += token;
                         token = tokenizer.NextToken();
                         if ( token != null
-                             && ( token == "," || StringUtility.ToUpperInvariant( token ) == "ON" ) ) {
+                             && ( token == "," || StringUtility.InvariantToUpper( token ) == "ON" ) ) {
                             _batchableCommandText = null;
                             break;
                         }

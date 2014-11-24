@@ -30,7 +30,7 @@ namespace MySql.Data.Types {
         private readonly bool _isNull;
 
         public MySqlSingle( bool isNull ) {
-            this._isNull = isNull;
+            _isNull = isNull;
             _mValue = 0.0f;
         }
 
@@ -53,7 +53,7 @@ namespace MySql.Data.Types {
         string IMySqlValue.MySqlTypeName => "FLOAT";
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
-            var v = ( val is Single ) ? (Single) val : Convert.ToSingle( val );
+            var v = val as float? ?? Convert.ToSingle( val );
             if ( binary ) packet.Write( BitConverter.GetBytes( v ) );
             else packet.WriteStringNoNull( v.ToString( "R", CultureInfo.InvariantCulture ) );
         }
@@ -61,12 +61,10 @@ namespace MySql.Data.Types {
         IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {
             if ( nullVal ) return new MySqlSingle( true );
 
-            if ( length == -1 ) {
-                var b = new byte[4];
-                packet.Read( b, 0, 4 );
-                return new MySqlSingle( BitConverter.ToSingle( b, 0 ) );
-            }
-            return new MySqlSingle( Single.Parse( packet.ReadString( length ), CultureInfo.InvariantCulture ) );
+            if ( length != -1 ) return new MySqlSingle( Single.Parse( packet.ReadString( length ), CultureInfo.InvariantCulture ) );
+            var b = new byte[4];
+            packet.Read( b, 0, 4 );
+            return new MySqlSingle( BitConverter.ToSingle( b, 0 ) );
         }
 
         void IMySqlValue.SkipValue( MySqlPacket packet ) { packet.Position += 4; }

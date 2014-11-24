@@ -23,7 +23,7 @@
 using System;
 using System.Globalization;
 using MySql.Data.MySqlClient;
-using MySql.Data.MySqlClient.common;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlInt32 : IMySqlValue {
@@ -53,7 +53,7 @@ namespace MySql.Data.Types {
 
         public int Value => _mValue;
 
-        Type IMySqlValue.SystemType => TypeConstants.Int32;
+        Type IMySqlValue.SystemType => Constants.Types.Int32;
 
         string IMySqlValue.MySqlTypeName => _is24Bit ? "MEDIUMINT" : "INT";
 

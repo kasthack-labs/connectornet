@@ -91,7 +91,7 @@ namespace MySql.Data.MySqlClient {
             Stream.SendEntirePacketDirectly( buffer, 0 );
         }
 
-        internal MySqlPacket ReadPacket() { return Packet = Stream.ReadPacket(); }
+        internal MySqlPacket ReadPacket() => Packet = Stream.ReadPacket();
 
         internal void ReadOk( bool read ) {
             try {

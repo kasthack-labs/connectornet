@@ -23,7 +23,7 @@
 using System;
 using System.Collections;
 using System.Text;
-using MySql.Data.MySqlClient.common;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Common {
     internal class ContextString {
@@ -31,19 +31,19 @@ namespace MySql.Data.Common {
 
         // Create a private ctor so the compiler doesn't give us a default one
         public ContextString( string contextMarkers, bool escapeBackslash ) {
-            this.ContextMarkers = contextMarkers;
-            this._escapeBackslash = escapeBackslash;
+            ContextMarkers = contextMarkers;
+            _escapeBackslash = escapeBackslash;
         }
 
         public string ContextMarkers { get; set; }
 
-        public int IndexOf( string src, string target ) { return IndexOf( src, target, 0 ); }
+        public int IndexOf( string src, string target ) => IndexOf( src, target, 0 );
 
         public int IndexOf( string src, string target, int startIndex ) {
-            var index = src.IndexOf( target, startIndex );
+            var index = src.IndexOf(target, startIndex, StringComparison.Ordinal);
             while ( index != -1 ) {
                 if ( !IndexInQuotes( src, index, startIndex ) ) break;
-                index = src.IndexOf( target, index + 1 );
+                index = src.IndexOf(target, index + 1, StringComparison.Ordinal);
             }
             return index;
         }
@@ -134,7 +134,7 @@ namespace MySql.Data.Common {
                     sb.Append( c );
                 }
             if ( sb.Length > 0 ) parts.Add( sb.ToString() );
-            return (string[]) parts.ToArray( TypeConstants.String );
+            return (string[]) parts.ToArray( Constants.Types.String );
         }
     }
 }

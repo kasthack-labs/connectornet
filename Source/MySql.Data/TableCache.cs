@@ -31,9 +31,7 @@ namespace MySql.Data.MySqlClient {
 
         public static void AddToCache( string commandText, ResultSet resultSet ) { Cache.AddToCache( commandText, resultSet ); }
 
-        public static ResultSet RetrieveFromCache( string commandText, int cacheAge ) {
-            return (ResultSet) Cache.RetrieveFromCache( commandText, cacheAge );
-        }
+        public static ResultSet RetrieveFromCache( string commandText, int cacheAge ) => (ResultSet) Cache.RetrieveFromCache( commandText, cacheAge );
 
         public static void RemoveFromCache( string commandText ) { Cache.RemoveFromCache( commandText ); }
 

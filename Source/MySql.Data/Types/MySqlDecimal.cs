@@ -32,7 +32,7 @@ namespace MySql.Data.Types {
         private readonly bool _isNull;
 
         internal MySqlDecimal( bool isNull ) {
-            this._isNull = isNull;
+            _isNull = isNull;
             _mValue = null;
             _precision = _scale = 0;
         }
@@ -70,28 +70,24 @@ namespace MySql.Data.Types {
 
         public decimal Value => Convert.ToDecimal( _mValue, CultureInfo.InvariantCulture );
 
-        public double ToDouble() { return Double.Parse( _mValue ); }
+        public double ToDouble() => double.Parse( _mValue );
 
-        public override string ToString() { return _mValue; }
+        public override string ToString() => _mValue;
 
         Type IMySqlValue.SystemType => typeof( decimal );
 
         string IMySqlValue.MySqlTypeName => "DECIMAL";
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
-            var v = ( val is decimal ) ? (decimal) val : Convert.ToDecimal( val );
-            var valStr = v.ToString( CultureInfo.InvariantCulture );
+            var v = val as decimal? ?? Convert.ToDecimal( val );
+            var valStr = v.InvariantToString();
             if ( binary ) packet.WriteLenString( valStr );
             else packet.WriteStringNoNull( valStr );
         }
 
         IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {
             if ( nullVal ) return new MySqlDecimal( true );
-
-            var s = String.Empty;
-            if ( length == -1 ) s = packet.ReadLenString();
-            else s = packet.ReadString( length );
-            return new MySqlDecimal( s );
+            return new MySqlDecimal( length == -1 ? packet.ReadLenString() : packet.ReadString( length ) );
         }
 
         void IMySqlValue.SkipValue( MySqlPacket packet ) {

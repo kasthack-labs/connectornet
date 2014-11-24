@@ -25,6 +25,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
+using MySql.Data.Constants;
 using MySql.Data.MySqlClient.Properties;
 
 namespace MySql.Data.MySqlClient.Authentication {
@@ -56,8 +57,7 @@ namespace MySql.Data.MySqlClient.Authentication {
 
         public override string GetUsername() {
             var username = base.GetUsername();
-            if ( String.IsNullOrEmpty( username ) ) return "auth_windows";
-            return username;
+            return String.IsNullOrEmpty( username ) ?"auth_windows" : username;
         }
 
         public override string PluginName => "authentication_windows_client";
@@ -147,7 +147,7 @@ namespace MySql.Data.MySqlClient.Authentication {
         /// </summary>
         /// <returns></returns>
         private string GetTargetName() {
-            return null;
+            //return null;
             if ( AuthenticationData == null ) return String.Empty;
 
             var index = -1;
@@ -280,7 +280,7 @@ namespace MySql.Data.MySqlClient.Authentication {
         public void Dispose() {
             if ( pBuffers != IntPtr.Zero ) {
                 Debug.Assert( cBuffers == 1 );
-                var thisSecBuffer = (SecBuffer) Marshal.PtrToStructure( pBuffers, typeof( SecBuffer ) );
+                var thisSecBuffer = (SecBuffer)Marshal.PtrToStructure( pBuffers, Constants.Types.SecBuffer );
                 thisSecBuffer.Dispose();
                 Marshal.FreeHGlobal( pBuffers );
                 pBuffers = IntPtr.Zero;
@@ -292,7 +292,7 @@ namespace MySql.Data.MySqlClient.Authentication {
 
             if ( pBuffers == IntPtr.Zero ) throw new InvalidOperationException( "Object has already been disposed!!!" );
             Debug.Assert( cBuffers == 1 );
-            var secBuffer = (SecBuffer) Marshal.PtrToStructure( pBuffers, typeof( SecBuffer ) );
+            var secBuffer = (SecBuffer)Marshal.PtrToStructure( pBuffers, Constants.Types.SecBuffer );
             if ( secBuffer.cbBuffer > 0 ) {
                 buffer = new byte[secBuffer.cbBuffer];
                 Marshal.Copy( secBuffer.pvBuffer, buffer, 0, secBuffer.cbBuffer );

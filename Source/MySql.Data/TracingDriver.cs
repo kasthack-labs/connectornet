@@ -273,24 +273,24 @@ namespace MySql.Data.MySqlClient {
             }
 
             // report type conversions if any
-            if ( rs.Fields != null )
-                foreach ( var f in rs.Fields ) {
-                    var s = new StringBuilder();
-                    var delimiter = "";
-                    foreach ( var t in f.TypeConversions ) {
-                        s.AppendFormat( "{0}{1}", delimiter, t.Name );
-                        delimiter = ",";
-                    }
-                    if ( s.Length > 0 )
-                        MySqlTrace.TraceEvent(
-                            TraceEventType.Warning,
-                            MySqlTraceEventType.UsageAdvisorWarning,
-                            Resources.TraceUAWarningFieldConversion,
-                            _driverId,
-                            UsageAdvisorWarningFlags.FieldConversion,
-                            f.ColumnName,
-                            s.ToString() );
+            if ( rs.Fields == null ) return;
+            foreach ( var f in rs.Fields ) {
+                var s = new StringBuilder();
+                var delimiter = "";
+                foreach ( var t in f.TypeConversions ) {
+                    s.AppendFormat( "{0}{1}", delimiter, t.Name );
+                    delimiter = ",";
                 }
+                if ( s.Length > 0 )
+                    MySqlTrace.TraceEvent(
+                        TraceEventType.Warning,
+                        MySqlTraceEventType.UsageAdvisorWarning,
+                        Resources.TraceUAWarningFieldConversion,
+                        _driverId,
+                        UsageAdvisorWarningFlags.FieldConversion,
+                        f.ColumnName,
+                        s.ToString() );
+            }
 #endif
         }
     }

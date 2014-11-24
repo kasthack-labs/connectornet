@@ -23,6 +23,7 @@
 using System;
 using System.Globalization;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlUInt32 : IMySqlValue {
@@ -31,7 +32,7 @@ namespace MySql.Data.Types {
         private readonly bool _is24Bit;
 
         private MySqlUInt32( MySqlDbType type ) {
-            _is24Bit = type == MySqlDbType.Int24 ? true : false;
+            _is24Bit = type == MySqlDbType.Int24;
             _isNull = true;
             _mValue = 0;
         }
@@ -52,14 +53,14 @@ namespace MySql.Data.Types {
 
         public uint Value => _mValue;
 
-        Type IMySqlValue.SystemType => typeof( UInt32 );
+        Type IMySqlValue.SystemType => Constants.Types.UInt32;
 
         string IMySqlValue.MySqlTypeName => _is24Bit ? "MEDIUMINT" : "INT";
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object v, int length ) {
-            var val = ( v is uint ) ? (uint) v : Convert.ToUInt32( v );
+            var val = v as uint? ?? Convert.ToUInt32( v );
             if ( binary ) packet.WriteInteger( val, _is24Bit ? 3 : 4 );
-            else packet.WriteStringNoNull( val.ToString() );
+            else packet.WriteStringNoNull( val.InvariantToString() );
         }
 
         IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {

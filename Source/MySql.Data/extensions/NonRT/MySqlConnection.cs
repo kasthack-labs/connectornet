@@ -37,7 +37,7 @@ namespace MySql.Data.MySqlClient {
         /// Returns schema information for the data source of this <see cref="DbConnection"/>. 
         /// </summary>
         /// <returns>A <see cref="DataTable"/> that contains schema information. </returns>
-        public override DataTable GetSchema() { return GetSchema( null ); }
+        public override DataTable GetSchema() => GetSchema( null );
 
         /// <summary>
         /// Returns schema information for the data source of this 
@@ -72,7 +72,7 @@ namespace MySql.Data.MySqlClient {
             return BeginTransaction( isolationLevel );
         }
 
-        protected override DbCommand CreateDbCommand() { return CreateCommand(); }
+        protected override DbCommand CreateDbCommand() => CreateCommand();
 
 #if !CF
         partial void AssertPermissions() {

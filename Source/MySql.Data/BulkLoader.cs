@@ -27,10 +27,10 @@ using System.Data;
 using System.Text;
 using MySql.Data.Common;
 using MySql.Data.MySqlClient.Properties;
-
 #if NET_40_OR_GREATER
 using System.Threading.Tasks;
 using System.Threading;
+
 #endif
 
 namespace MySql.Data.MySqlClient {
@@ -190,52 +190,54 @@ namespace MySql.Data.MySqlClient {
         }
 
 #if NET_40_OR_GREATER
-    #region Async
-    /// <summary>
-    /// Async version of Load
-    /// </summary>
-    /// <returns>The number of rows inserted.</returns>
-    public Task<int> LoadAsync()
-    {
-      return LoadAsync(CancellationToken.None);
-    }
 
-    public Task<int> LoadAsync(CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          int loadResult = Load();
-          result.SetResult(loadResult);
+        #region Async
+        /// <summary>
+        /// Async version of Load
+        /// </summary>
+        /// <returns>The number of rows inserted.</returns>
+        public Task<int> LoadAsync() => LoadAsync( CancellationToken.None );
+
+        public Task<int> LoadAsync( CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    result.SetResult( Load() );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-    #endregion
+        #endregion
+
 #endif
 
         private string BuildSqlCommand() {
             var sql = new StringBuilder( "LOAD DATA " );
-            if ( Priority == MySqlBulkLoaderPriority.Low ) sql.Append( "LOW_PRIORITY " );
-            else if ( Priority == MySqlBulkLoaderPriority.Concurrent ) sql.Append( "CONCURRENT " );
+            switch ( Priority ) {
+                case MySqlBulkLoaderPriority.Low:
+                    sql.Append( "LOW_PRIORITY " );
+                    break;
+                case MySqlBulkLoaderPriority.Concurrent:
+                    sql.Append( "CONCURRENT " );
+                    break;
+            }
 
             if ( Local ) sql.Append( "LOCAL " );
             sql.Append( "INFILE " );
-            if ( Platform.DirectorySeparatorChar == '\\' ) sql.AppendFormat( "'{0}' ", FileName.Replace( @"\", @"\\" ) );
-            else sql.AppendFormat( "'{0}' ", FileName );
+            sql.AppendFormat( "'{0}' ", Platform.DirectorySeparatorChar == '\\' ? FileName.Replace( @"\", @"\\" ) : FileName );
 
-            if ( ConflictOption == MySqlBulkLoaderConflictOption.Ignore ) sql.Append( "IGNORE " );
-            else if ( ConflictOption == MySqlBulkLoaderConflictOption.Replace ) sql.Append( "REPLACE " );
+            switch ( ConflictOption ) {
+                case MySqlBulkLoaderConflictOption.Ignore:
+                    sql.Append( "IGNORE " );
+                    break;
+                case MySqlBulkLoaderConflictOption.Replace:
+                    sql.Append( "REPLACE " );
+                    break;
+            }
 
             sql.AppendFormat( "INTO TABLE {0} ", TableName );
 
@@ -249,8 +251,7 @@ namespace MySql.Data.MySqlClient {
             if ( optionSql.Length > 0 ) sql.AppendFormat( "FIELDS {0}", optionSql );
 
             optionSql = new StringBuilder( String.Empty );
-            if ( LinePrefix != null
-                 && LinePrefix.Length > 0 ) optionSql.AppendFormat( "STARTING BY '{0}' ", LinePrefix );
+            if ( !string.IsNullOrEmpty( LinePrefix ) ) optionSql.AppendFormat( "STARTING BY '{0}' ", LinePrefix );
             if ( LineTerminator != DefaultLineTerminator ) optionSql.AppendFormat( "TERMINATED BY '{0}' ", LineTerminator );
             if ( optionSql.Length > 0 ) sql.AppendFormat( "LINES {0}", optionSql );
 

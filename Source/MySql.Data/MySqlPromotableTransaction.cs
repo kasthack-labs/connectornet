@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Threading;
 using System.Transactions;
+using MySql.Data.Constants;
 using IsolationLevel = System.Transactions.IsolationLevel;
 
 namespace MySql.Data.MySqlClient {
@@ -74,7 +75,7 @@ namespace MySql.Data.MySqlClient {
         }
     }
 
-    internal sealed class MySqlPromotableTransaction : IPromotableSinglePhaseNotification, ITransactionPromoter {
+    internal sealed class MySqlPromotableTransaction : IPromotableSinglePhaseNotification {
         // Per-thread stack to manage nested transaction scopes
         [ThreadStatic]
         private static Stack<MySqlTransactionScope> _globalScopeStack;
@@ -84,30 +85,17 @@ namespace MySql.Data.MySqlClient {
         private Stack<MySqlTransactionScope> _scopeStack;
 
         public MySqlPromotableTransaction( MySqlConnection connection, Transaction baseTransaction ) {
-            this._connection = connection;
-            this._baseTransaction = baseTransaction;
+            _connection = connection;
+            _baseTransaction = baseTransaction;
         }
 
-        public Transaction BaseTransaction {
-            get {
-                if ( _scopeStack.Count > 0 ) return _scopeStack.Peek().BaseTransaction;
-                return null;
-            }
-        }
+        public Transaction BaseTransaction => _scopeStack.Count > 0 ? _scopeStack.Peek().BaseTransaction : null;
 
-        public bool InRollback {
-            get {
-                if ( _scopeStack.Count > 0 ) {
-                    var currentScope = _scopeStack.Peek();
-                    if ( currentScope.RollbackThreadId == Thread.CurrentThread.ManagedThreadId ) return true;
-                }
-                return false;
-            }
-        }
+        public bool InRollback => _scopeStack.Count > 0 && _scopeStack.Peek().RollbackThreadId == Thread.CurrentThread.ManagedThreadId;
 
         void IPromotableSinglePhaseNotification.Initialize() {
-            var valueName = Enum.GetName( typeof( IsolationLevel ), _baseTransaction.IsolationLevel );
-            var dataLevel = (System.Data.IsolationLevel) Enum.Parse( typeof( System.Data.IsolationLevel ), valueName );
+            var valueName = Enum.GetName( Constants.Types.IsolationLevel, _baseTransaction.IsolationLevel );
+            var dataLevel = (System.Data.IsolationLevel)Enum.Parse( Constants.Types.IsolationLevel, valueName );
             var simpleTransaction = _connection.BeginTransaction( dataLevel );
 
             // We need to save the per-thread scope stack locally.

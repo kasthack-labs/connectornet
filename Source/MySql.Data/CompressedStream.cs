@@ -130,18 +130,16 @@ namespace MySql.Data.MySqlClient {
             if ( _inPos == _maxInPos ) PrepareNextPacket();
 
             var countToRead = Math.Min( count, _maxInPos - _inPos );
-            int countRead;
-            if ( _zInStream != null ) countRead = _zInStream.Read( buffer, offset, countToRead );
-            else countRead = _baseStream.Read( buffer, offset, countToRead );
+            var countRead = (_zInStream ?? _baseStream).Read( buffer, offset, countToRead );
             _inPos += countRead;
 
             // release the weak reference
+
             if ( _inPos == _maxInPos ) {
                 _zInStream = null;
-                if ( !Platform.IsMono() ) {
-                    _inBufferRef = new WeakReference( _inBuffer, false );
-                    _inBuffer = null;
-                }
+                if ( Platform.IsMono() ) return countRead;
+                _inBufferRef = new WeakReference( _inBuffer, false );
+                _inBuffer = null;
             }
 
             return countRead;
@@ -187,8 +185,7 @@ namespace MySql.Data.MySqlClient {
             zos.Flush();
 
             // if the compression hasn't helped, then just return null
-            if ( compressedBuffer.Length >= _cache.Length ) return null;
-            return compressedBuffer;
+            return compressedBuffer.Length >= _cache.Length ? null : compressedBuffer;
         }
 
         private void CompressAndSendCache() {
@@ -268,6 +265,6 @@ namespace MySql.Data.MySqlClient {
 
         public override void Write( byte[] buffer, int offset, int count ) { _cache.Write( buffer, offset, count ); }
 
-        public override long Seek( long offset, SeekOrigin origin ) { return _baseStream.Seek( offset, origin ); }
+        public override long Seek( long offset, SeekOrigin origin ) => _baseStream.Seek( offset, origin );
     }
 }

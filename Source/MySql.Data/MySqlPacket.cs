@@ -85,9 +85,9 @@ namespace MySql.Data.MySqlClient {
         public void Clear() { Position = 4; }
 
         #region Byte methods
-        public byte ReadByte() { return (byte) _buffer.ReadByte(); }
+        public byte ReadByte() => (byte) _buffer.ReadByte();
 
-        public int Read( byte[] byteBuffer, int offset, int count ) { return _buffer.Read( byteBuffer, offset, count ); }
+        public int Read( byte[] byteBuffer, int offset, int count ) => _buffer.Read( byteBuffer, offset, count );
 
         public void WriteByte( byte b ) { _buffer.WriteByte( b ); }
 
@@ -286,7 +286,7 @@ namespace MySql.Data.MySqlClient {
             return _encoding.GetString( _tempBuffer, 0, (int) length );
         }
 
-        public string ReadString() { return ReadString( _encoding ); }
+        public string ReadString() => ReadString( _encoding );
 
         public string ReadString( Encoding theEncoding ) {
             var bits = _buffer.GetBuffer();

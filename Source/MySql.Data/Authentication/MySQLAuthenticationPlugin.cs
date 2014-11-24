@@ -69,7 +69,7 @@ namespace MySql.Data.MySqlClient.Authentication {
 
         protected virtual void AuthenticationSuccessful() { }
 
-        protected virtual byte[] MoreData( byte[] data ) { return null; }
+        protected virtual byte[] MoreData( byte[] data ) => null;
 
         internal void Authenticate( bool reset ) {
             CheckConstraints();
@@ -107,9 +107,10 @@ namespace MySql.Data.MySqlClient.Authentication {
         private void WritePassword( MySqlPacket packet ) {
             var secure = ( Flags & ClientFlags.SecureConnection ) != 0;
             var password = GetPassword();
-            if ( password is string )
-                if ( secure ) packet.WriteLenString( (string) password );
-                else packet.WriteString( (string) password );
+            var s = password as string;
+            if ( s != null )
+                if ( secure ) packet.WriteLenString( s );
+                else packet.WriteString( s );
             else if ( password == null ) packet.WriteByte( 0 );
             else if ( password is byte[] ) packet.Write( password as byte[] );
             else throw new MySqlException( "Unexpected password format: " + password.GetType() );
@@ -164,8 +165,8 @@ namespace MySql.Data.MySqlClient.Authentication {
 
         public abstract string PluginName { get; }
 
-        public virtual string GetUsername() { return Settings.UserId; }
+        public virtual string GetUsername() => Settings.UserId;
 
-        public virtual object GetPassword() { return null; }
+        public virtual object GetPassword() => null;
     }
 }

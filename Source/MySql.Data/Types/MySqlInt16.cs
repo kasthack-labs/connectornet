@@ -22,6 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlInt16 : IMySqlValue {
@@ -29,7 +30,7 @@ namespace MySql.Data.Types {
         private readonly bool _isNull;
 
         public MySqlInt16( bool isNull ) {
-            this._isNull = isNull;
+            _isNull = isNull;
             _mValue = 0;
         }
 
@@ -47,21 +48,19 @@ namespace MySql.Data.Types {
 
         public short Value => _mValue;
 
-        Type IMySqlValue.SystemType => typeof( short );
+        Type IMySqlValue.SystemType => Constants.Types.Int16;
 
         string IMySqlValue.MySqlTypeName => "SMALLINT";
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
-            var v = ( val is Int32 ) ? (int) val : Convert.ToInt32( val );
+            var v = val as int? ?? Convert.ToInt32( val );
             if ( binary ) packet.WriteInteger( v, 2 );
             else packet.WriteStringNoNull( v.ToString() );
         }
 
         IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {
             if ( nullVal ) return new MySqlInt16( true );
-
-            if ( length == -1 ) return new MySqlInt16( (short) packet.ReadInteger( 2 ) );
-            return new MySqlInt16( Int16.Parse( packet.ReadString( length ) ) );
+            return new MySqlInt16( ( length == -1 )? (short)packet.ReadInteger( 2 ) : Int16.Parse( packet.ReadString( length ) ) );
         }
 
         void IMySqlValue.SkipValue( MySqlPacket packet ) { packet.Position += 2; }

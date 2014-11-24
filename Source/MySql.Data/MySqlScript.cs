@@ -25,11 +25,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using MySql.Data.MySqlClient.Properties;
-
 #if NET_40_OR_GREATER
 using System.Threading.Tasks;
 using System.Threading;
+
 #endif
 
 namespace MySql.Data.MySqlClient {
@@ -48,21 +49,27 @@ namespace MySql.Data.MySqlClient {
         /// Initializes a new instance of the 
         /// <see cref="MySqlScript"/> class.
         /// </summary>
-        public MySqlScript() { Delimiter = ";"; }
+        public MySqlScript() {
+            Delimiter = ";";
+        }
 
         /// <summary>
         /// Initializes a new instance of the 
         /// <see cref="MySqlScript"/> class.
         /// </summary>
         /// <param name="connection">The connection.</param>
-        public MySqlScript( MySqlConnection connection ) : this() { Connection = connection; }
+        public MySqlScript( MySqlConnection connection ) : this() {
+            Connection = connection;
+        }
 
         /// <summary>
         /// Initializes a new instance of the 
         /// <see cref="MySqlScript"/> class.
         /// </summary>
         /// <param name="query">The query.</param>
-        public MySqlScript( string query ) : this() { Query = query; }
+        public MySqlScript( string query ) : this() {
+            Query = query;
+        }
 
         /// <summary>
         /// Initializes a new instance of the 
@@ -122,17 +129,16 @@ namespace MySql.Data.MySqlClient {
 
             try {
                 var mode = Connection.Driver.Property( "sql_mode" );
-                mode = StringUtility.ToUpperInvariant( mode );
-                var ansiQuotes = mode.IndexOf("ANSI_QUOTES", StringComparison.Ordinal) != -1;
-                var noBackslashEscapes = mode.IndexOf("NO_BACKSLASH_ESCAPES", StringComparison.Ordinal) != -1;
+                mode = mode.InvariantToUpper();
+                var ansiQuotes = mode.InvariantIndexOf( "ANSI_QUOTES" ) != -1;
+                var noBackslashEscapes = mode.InvariantIndexOf( "NO_BACKSLASH_ESCAPES" ) != -1;
 
                 // first we break the query up into smaller queries
                 var statements = BreakIntoStatements( ansiQuotes, noBackslashEscapes );
 
                 var count = 0;
                 var cmd = new MySqlCommand( null, Connection );
-                foreach ( var statement in statements ) {
-                    if ( String.IsNullOrEmpty( statement.Text ) ) continue;
+                foreach ( var statement in statements.Where( statement => !String.IsNullOrEmpty( statement.Text ) ) ) {
                     cmd.CommandText = statement.Text;
                     try {
                         cmd.ExecuteNonQuery();
@@ -158,9 +164,7 @@ namespace MySql.Data.MySqlClient {
             StatementExecuted?.Invoke( this, new MySqlScriptEventArgs { Statement = statement } );
         }
 
-        private void OnScriptCompleted() {
-            ScriptCompleted?.Invoke( this, EventArgs.Empty );
-        }
+        private void OnScriptCompleted() { ScriptCompleted?.Invoke( this, EventArgs.Empty ); }
 
         private bool OnScriptError( Exception ex ) {
             if ( Error == null ) return false;
@@ -197,11 +201,10 @@ namespace MySql.Data.MySqlClient {
             var lineNumbers = BreakScriptIntoLines();
             var tokenizer = new MySqlTokenizer( Query ) { AnsiQuotes = ansiQuotes, BackslashEscapes = !noBackslashEscapes };
 
-
             var token = tokenizer.NextToken();
             while ( token != null ) {
                 if ( !tokenizer.Quoted )
-                    if ( token.ToLower( CultureInfo.InvariantCulture ) == "delimiter" ) {
+                    if ( token.InvariantToLower() == "delimiter" ) {
                         tokenizer.NextToken();
                         AdjustDelimiterEnd( tokenizer );
                         currentDelimiter = Query.Substring( tokenizer.StartIndex, tokenizer.StopIndex - tokenizer.StartIndex ).Trim();
@@ -259,38 +262,30 @@ namespace MySql.Data.MySqlClient {
         }
 
 #if NET_40_OR_GREATER
-    #region Async
-    /// <summary>
-    /// Async version of Execute
-    /// </summary>
-    /// <returns>The number of statements executed as part of the script inside.</returns>
-    public Task<int> ExecuteAsync()
-    {
-      return ExecuteAsync(CancellationToken.None);
-    }
 
-    public Task<int> ExecuteAsync(CancellationToken cancellationToken)
-    {
-      var result = new TaskCompletionSource<int>();
-      if (cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested)
-      {
-        try
-        {
-          var executeResult = Execute();
-          result.SetResult(executeResult);
+        #region Async
+        /// <summary>
+        /// Async version of Execute
+        /// </summary>
+        /// <returns>The number of statements executed as part of the script inside.</returns>
+        public Task<int> ExecuteAsync() => ExecuteAsync( CancellationToken.None );
+
+        public Task<int> ExecuteAsync( CancellationToken cancellationToken ) {
+            var result = new TaskCompletionSource<int>();
+            if ( cancellationToken == CancellationToken.None
+                 || !cancellationToken.IsCancellationRequested )
+                try {
+                    var executeResult = Execute();
+                    result.SetResult( executeResult );
+                }
+                catch ( Exception ex ) {
+                    result.SetException( ex );
+                }
+            else result.SetCanceled();
+            return result.Task;
         }
-        catch (Exception ex)
-        {
-          result.SetException(ex);
-        }
-      }
-      else
-      {
-        result.SetCanceled();
-      }
-      return result.Task;
-    }
-    #endregion
+        #endregion
+
 #endif
     }
 
@@ -343,7 +338,9 @@ namespace MySql.Data.MySqlClient {
         /// Initializes a new instance of the <see cref="MySqlScriptErrorEventArgs"/> class.
         /// </summary>
         /// <param name="exception">The exception.</param>
-        public MySqlScriptErrorEventArgs( Exception exception ) { Exception = exception; }
+        public MySqlScriptErrorEventArgs( Exception exception ) {
+            Exception = exception;
+        }
 
         /// <summary>
         /// Gets the exception.

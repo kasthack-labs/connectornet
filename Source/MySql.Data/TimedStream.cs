@@ -177,7 +177,7 @@ namespace MySql.Data.MySqlClient {
             }
         }
 
-        public override long Seek( long offset, SeekOrigin origin ) { return _baseStream.Seek( offset, origin ); }
+        public override long Seek( long offset, SeekOrigin origin ) => _baseStream.Seek( offset, origin );
 
         public override void SetLength( long value ) { _baseStream.SetLength( value ); }
 

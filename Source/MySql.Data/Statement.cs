@@ -95,15 +95,13 @@ namespace MySql.Data.MySqlClient {
 
                     // and attempt to stream the next command
                     var text = ResolvedCommandText;
-                    if ( text.StartsWith( "(", StringComparison.Ordinal ) ) packet.WriteStringNoNull( ", " );
-                    else packet.WriteStringNoNull( "; " );
+                    packet.WriteStringNoNull( text.InvariantStartsWith( "(" ) ? ", " : "; " );
                     InternalBindParameters( text, batchedCmd.Parameters, packet );
-                    if ( ( packet.Length - 4 ) > Connection.Driver.MaxPacketSize ) {
-                        //TODO
-                        //stream.InternalBuffer.SetLength(originalLength);
-                        parameters = batchedCmd.Parameters;
-                        break;
-                    }
+                    if ( ( packet.Length - 4 ) <= Connection.Driver.MaxPacketSize ) continue;
+                    //TODO
+                    //stream.InternalBuffer.SetLength(originalLength);
+                    parameters = batchedCmd.Parameters;
+                    break;
                 }
                 if ( index == Command.Batch.Count ) return;
             }
@@ -113,14 +111,11 @@ namespace MySql.Data.MySqlClient {
             var sqlServerMode = Command.Connection.Settings.SqlServerMode;
 
             if ( packet == null ) {
-                packet = new MySqlPacket( Driver.Encoding );
-                packet.Version = Driver.Version;
+                packet = new MySqlPacket( Driver.Encoding ) { Version = Driver.Version };
                 packet.WriteByte( 0 );
             }
 
-            var tokenizer = new MySqlTokenizer( sql );
-            tokenizer.ReturnComments = true;
-            tokenizer.SqlServerMode = sqlServerMode;
+            var tokenizer = new MySqlTokenizer( sql ) { ReturnComments = true, SqlServerMode = sqlServerMode };
 
             var pos = 0;
             var token = tokenizer.NextToken();
@@ -140,7 +135,7 @@ namespace MySql.Data.MySqlClient {
                 if ( token != null ) {
                     if ( sqlServerMode
                          && tokenizer.Quoted
-                         && token.StartsWith( "[", StringComparison.Ordinal ) ) token = String.Format( "`{0}`", token.Substring( 1, token.Length - 2 ) );
+                         && token.InvariantStartsWith( "[" ) ) token = String.Format( "`{0}`", token.Substring( 1, token.Length - 2 ) );
                     packet.WriteStringNoNull( token );
                 }
                 token = tokenizer.NextToken();
@@ -151,9 +146,7 @@ namespace MySql.Data.MySqlClient {
         protected virtual bool ShouldIgnoreMissingParameter( string parameterName ) {
             if ( Connection.Settings.AllowUserVariables ) return true;
             if ( parameterName.StartsWith( "@" + StoredProcedure.ParameterPrefix, StringComparison.OrdinalIgnoreCase ) ) return true;
-            if ( parameterName.Length > 1
-                 && ( parameterName[ 1 ] == '`' || parameterName[ 1 ] == '\'' ) ) return true;
-            return false;
+            return parameterName.Length > 1 && ( parameterName[ 1 ] == '`' || parameterName[ 1 ] == '\'' );
         }
 
         /// <summary>
@@ -166,7 +159,7 @@ namespace MySql.Data.MySqlClient {
         /// </remarks>
         /// <returns>True if the parameter was successfully serialized, false otherwise.</returns>
         private bool SerializeParameter( MySqlParameterCollection parameters, MySqlPacket packet, string parmName, int parameterIndex ) {
-            MySqlParameter parameter = null;
+            MySqlParameter parameter;
 
             if ( !parameters.ContainsUnnamedParameters ) parameter = parameters.GetParameterFlexible( parmName, false );
             else if ( parameterIndex <= parameters.Count ) parameter = parameters[ parameterIndex ];
@@ -175,7 +168,7 @@ namespace MySql.Data.MySqlClient {
             if ( parameter == null ) {
                 // if we are allowing user variables and the parameter name starts with @
                 // then we can't throw an exception
-                if ( parmName.StartsWith( "@", StringComparison.Ordinal )
+                if ( parmName.InvariantStartsWith( "@")
                      && ShouldIgnoreMissingParameter( parmName ) ) return false;
                 throw new MySqlException( String.Format( Resources.ParameterMustBeDefined, parmName ) );
             }

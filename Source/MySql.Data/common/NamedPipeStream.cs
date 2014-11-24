@@ -55,8 +55,7 @@ namespace MySql.Data.Common {
             IntPtr nativeHandle;
 
             for ( ;; ) {
-                var security = new NativeMethods.SecurityAttributes();
-                security.inheritHandle = true;
+                var security = new NativeMethods.SecurityAttributes { inheritHandle = true };
                 security.Length = Marshal.SizeOf( security );
 
                 nativeHandle = NativeMethods.CreateFile(
@@ -114,12 +113,9 @@ namespace MySql.Data.Common {
             if ( _readTimeout == Timeout.Infinite ) return _fileStream.Read( buffer, offset, count );
             var result = _fileStream.BeginRead( buffer, offset, count, null, null );
             if ( result.CompletedSynchronously ) return _fileStream.EndRead( result );
-
-            if ( !result.AsyncWaitHandle.WaitOne( _readTimeout ) ) {
-                CancelIo();
-                throw new TimeoutException( "Timeout in named pipe read" );
-            }
-            return _fileStream.EndRead( result );
+            if ( result.AsyncWaitHandle.WaitOne( _readTimeout ) ) return _fileStream.EndRead( result );
+            CancelIo();
+            throw new TimeoutException( "Timeout in named pipe read" );
         }
 
         public override void Write( byte[] buffer, int offset, int count ) {
@@ -138,15 +134,12 @@ namespace MySql.Data.Common {
         }
 
         public override void Close() {
-            if ( _handle != null
-                 && !_handle.IsInvalid
-                 && !_handle.IsClosed ) {
-                _fileStream.Close();
-                try {
-                    _handle.Close();
-                }
-                catch ( Exception ) {}
-            }
+            if ( _handle == null
+                 || _handle.IsInvalid
+                 || _handle.IsClosed ) return;
+            _fileStream.Close();
+            try { _handle.Close(); }
+            catch ( Exception ) {}
         }
 
         public override void SetLength( long length ) { throw new NotSupportedException( Resources.NamedPipeNoSetLength ); }
@@ -175,7 +168,7 @@ namespace MySql.Data.Common {
 
         internal static Stream Create( string pipeName, string hostname, uint timeout ) {
             string pipePath;
-            if ( 0 == String.Compare( hostname, "localhost", true ) ) pipePath = @"\\.\pipe\" + pipeName;
+            if ( 0 == String.Compare(hostname, "localhost", StringComparison.OrdinalIgnoreCase) ) pipePath = @"\\.\pipe\" + pipeName;
             else pipePath = String.Format( @"\\{0}\pipe\{1}", hostname, pipeName );
             return new NamedPipeStream( pipePath, FileAccess.ReadWrite, timeout );
         }

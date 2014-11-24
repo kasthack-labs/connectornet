@@ -30,13 +30,13 @@ namespace MySql.Data.Types {
         private readonly bool _isNull;
 
         public MySqlBinary( MySqlDbType type, bool isNull ) {
-            this._type = type;
-            this._isNull = isNull;
+            _type = type;
+            _isNull = isNull;
             _mValue = null;
         }
 
         public MySqlBinary( MySqlDbType type, byte[] val ) {
-            this._type = type;
+            _type = type;
             _isNull = false;
             _mValue = val;
         }
@@ -61,7 +61,7 @@ namespace MySql.Data.Types {
                         return "MEDIUM_BLOB";
                     case MySqlDbType.LongBlob:
                         return "LONG_BLOB";
-                    case MySqlDbType.Blob:
+                    case MySqlDbType.Blob://?
                     default:
                         return "BLOB";
                 }
@@ -101,18 +101,21 @@ namespace MySql.Data.Types {
         private static void EscapeByteArray( byte[] bytes, int length, MySqlPacket packet ) {
             for ( var x = 0; x < length; x++ ) {
                 var b = bytes[ x ];
-                if ( b == '\0' ) {
-                    packet.WriteByte( (byte) '\\' );
-                    packet.WriteByte( (byte) '0' );
+                switch ( (char)b ) {
+                    case '\0':
+                        packet.WriteByte( (byte) '\\' );
+                        packet.WriteByte( (byte) '0' );
+                        break;
+                    case '\\':
+                    case '\'':
+                    case '\"':
+                        packet.WriteByte( (byte) '\\' );
+                        packet.WriteByte( b );
+                        break;
+                    default:
+                        packet.WriteByte( b );
+                        break;
                 }
-
-                else if ( b == '\\'
-                          || b == '\''
-                          || b == '\"' ) {
-                    packet.WriteByte( (byte) '\\' );
-                    packet.WriteByte( b );
-                }
-                else packet.WriteByte( b );
             }
         }
 
@@ -159,7 +162,7 @@ namespace MySql.Data.Types {
                 row[ "IsAutoincrementable" ] = false;
                 row[ "IsBestMatch" ] = true;
                 row[ "IsCaseSensitive" ] = false;
-                row[ "IsFixedLength" ] = x < 4 ? false : true;
+                row[ "IsFixedLength" ] = x >= 4;
                 row[ "IsFixedPrecisionScale" ] = false;
                 row[ "IsLong" ] = sizes[ x ] > 255;
                 row[ "IsNullable" ] = true;

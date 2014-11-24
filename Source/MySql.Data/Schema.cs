@@ -92,7 +92,7 @@ namespace MySql.Data.MySqlClient {
             for ( var i = index; i < Columns.Count; i++ ) LogicalMappings[ i ] = LogicalMappings[ i ] + 1;
         }
 
-        internal bool ContainsColumn( string name ) { return ColumnIndex( name ) >= 0; }
+        internal bool ContainsColumn( string name ) => ColumnIndex( name ) >= 0;
 
         internal MySqlSchemaRow AddRow() {
             var r = new MySqlSchemaRow( this );
@@ -112,7 +112,7 @@ namespace MySql.Data.MySqlClient {
             foreach ( var col in Columns ) dt.Columns.Add( col.Name, col.Type );
             foreach ( var row in Rows ) {
                 var newRow = dt.NewRow();
-                for ( var i = 0; i < dt.Columns.Count; i++ ) newRow[ i ] = row[ i ] == null ? DBNull.Value : row[ i ];
+                for ( var i = 0; i < dt.Columns.Count; i++ ) newRow[ i ] = row[ i ] ?? DBNull.Value;
                 dt.Rows.Add( newRow );
             }
             return dt;

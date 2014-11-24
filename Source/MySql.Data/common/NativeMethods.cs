@@ -29,18 +29,18 @@ namespace MySql.Data.Common {
         private NativeMethods() { }
 
         //Constants for dwDesiredAccess:
-        public const UInt32 GenericRead = 0x80000000;
-        public const UInt32 GenericWrite = 0x40000000;
+        public const uint GenericRead = 0x80000000;
+        public const uint GenericWrite = 0x40000000;
 
         //Constants for return value:
-        public const Int32 InvaliDpipeHandleValue = -1;
+        public const int InvaliDpipeHandleValue = -1;
 
         //Constants for dwFlagsAndAttributes:
-        public const UInt32 FileFlagOverlapped = 0x40000000;
-        public const UInt32 FileFlagNoBuffering = 0x20000000;
+        public const uint FileFlagOverlapped = 0x40000000;
+        public const uint FileFlagNoBuffering = 0x20000000;
 
         //Constants for dwCreationDisposition:
-        public const UInt32 OpenExisting = 3;
+        public const uint OpenExisting = 3;
 
         [StructLayout( LayoutKind.Sequential )]
         public class SecurityAttributes {

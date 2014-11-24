@@ -45,7 +45,7 @@ namespace MySql.Data.MySqlClient {
         [Browsable( false )]
         public override bool DesignTimeVisible { get; set; }
 
-        protected override DbParameter CreateDbParameter() { return new MySqlParameter(); }
+        protected override DbParameter CreateDbParameter() => new MySqlParameter();
 
         protected override DbConnection DbConnection {
             get {
@@ -67,6 +67,6 @@ namespace MySql.Data.MySqlClient {
             }
         }
 
-        protected override DbDataReader ExecuteDbDataReader( CommandBehavior behavior ) { return ExecuteReader( behavior ); }
+        protected override DbDataReader ExecuteDbDataReader( CommandBehavior behavior ) => ExecuteReader( behavior );
     }
 }

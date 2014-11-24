@@ -28,7 +28,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using MySql.Data.Common;
-using MySql.Data.MySqlClient.common;
+using MySql.Data.Constants;
 using MySql.Data.MySqlClient.Properties;
 
 namespace MySql.Data.MySqlClient {
@@ -47,10 +47,10 @@ namespace MySql.Data.MySqlClient {
                 new MySqlConnectionStringOption(
                     "server",
                     "host,data source,datasource,address,addr,network address",
-                    TypeConstants.String,
+                    Constants.Types.String,
                     "" /*"localhost"*/,
                     false ) );
-            Options.Add( new MySqlConnectionStringOption( "database", "initial catalog", TypeConstants.String, string.Empty, false ) );
+            Options.Add( new MySqlConnectionStringOption( "database", "initial catalog", Constants.Types.String, string.Empty, false ) );
             Options.Add(
                 new MySqlConnectionStringOption(
                     "protocol",
@@ -58,18 +58,18 @@ namespace MySql.Data.MySqlClient {
                     typeof( MySqlConnectionProtocol ),
                     MySqlConnectionProtocol.Sockets,
                     false ) );
-            Options.Add( new MySqlConnectionStringOption( "port", null, TypeConstants.UInt32, (uint) 3306, false ) );
-            Options.Add( new MySqlConnectionStringOption( "pipe", "pipe name,pipename", TypeConstants.String, "MYSQL", false ) );
+            Options.Add( new MySqlConnectionStringOption( "port", null, Constants.Types.UInt32, (uint) 3306, false ) );
+            Options.Add( new MySqlConnectionStringOption( "pipe", "pipe name,pipename", Constants.Types.String, "MYSQL", false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "compress", "use compression,usecompression", TypeConstants.Boolean, false, false ) );
-            Options.Add( new MySqlConnectionStringOption( "allowbatch", "allow batch", TypeConstants.Boolean, true, false ) );
-            Options.Add( new MySqlConnectionStringOption( "logging", null, TypeConstants.Boolean, false, false ) );
-            Options.Add( new MySqlConnectionStringOption( "sharedmemoryname", "shared memory name", TypeConstants.String, "MYSQL", false ) );
+                new MySqlConnectionStringOption( "compress", "use compression,usecompression", Constants.Types.Boolean, false, false ) );
+            Options.Add( new MySqlConnectionStringOption( "allowbatch", "allow batch", Constants.Types.Boolean, true, false ) );
+            Options.Add( new MySqlConnectionStringOption( "logging", null, Constants.Types.Boolean, false, false ) );
+            Options.Add( new MySqlConnectionStringOption( "sharedmemoryname", "shared memory name", Constants.Types.String, "MYSQL", false ) );
             Options.Add(
                 new MySqlConnectionStringOption(
                     "useoldsyntax",
                     "old syntax,oldsyntax,use old syntax",
-                    TypeConstants.Boolean,
+                    Constants.Types.Boolean,
                     false,
                     true,
                     delegate( MySqlConnectionStringBuilder msb, MySqlConnectionStringOption sender, object value ) {
@@ -81,12 +81,12 @@ namespace MySql.Data.MySqlClient {
                 new MySqlConnectionStringOption(
                     "connectiontimeout",
                     "connection timeout,connect timeout",
-                    TypeConstants.UInt32,
+                    Constants.Types.UInt32,
                     (uint) 15,
                     false,
                     delegate( MySqlConnectionStringBuilder msb, MySqlConnectionStringOption sender, object Value ) {
 #if !CF
-                        var value = (uint) Convert.ChangeType( Value, sender.BaseType );
+                        var value = (uint)Convert.ChangeType( Value, sender.BaseType );
 #else
           uint value = (uint)Convert.ChangeType(Value, sender.BaseType, System.Globalization.CultureInfo.CurrentCulture);
 #endif
@@ -106,29 +106,29 @@ namespace MySql.Data.MySqlClient {
                 new MySqlConnectionStringOption(
                     "defaultcommandtimeout",
                     "command timeout,default command timeout",
-                    TypeConstants.UInt32,
+                    Constants.Types.UInt32,
                     (uint) 30,
                     false ) );
             Options.Add(
                 new MySqlConnectionStringOption(
                     "usedefaultcommandtimeoutforef",
                     "use default command timeout for ef",
-                    TypeConstants.Boolean,
+                    Constants.Types.Boolean,
                     false,
                     false ) );
 
             // authentication options
             Options.Add(
-                new MySqlConnectionStringOption( "user id", "uid,username,user name,user,userid", TypeConstants.String, "", false ) );
-            Options.Add( new MySqlConnectionStringOption( "password", "pwd", TypeConstants.String, "", false ) );
+                new MySqlConnectionStringOption( "user id", "uid,username,user name,user,userid", Constants.Types.String, "", false ) );
+            Options.Add( new MySqlConnectionStringOption( "password", "pwd", Constants.Types.String, "", false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "persistsecurityinfo", "persist security info", TypeConstants.Boolean, false, false ) );
+                new MySqlConnectionStringOption( "persistsecurityinfo", "persist security info", Constants.Types.Boolean, false, false ) );
 #if !CF
             Options.Add(
                 new MySqlConnectionStringOption(
                     "encrypt",
                     null,
-                    TypeConstants.Boolean,
+                    Constants.Types.Boolean,
                     false,
                     true,
                     delegate( MySqlConnectionStringBuilder msb, MySqlConnectionStringOption sender, object value ) {
@@ -138,9 +138,9 @@ namespace MySql.Data.MySqlClient {
                         msb.SetValue( "Ssl Mode", (bool) value ? MySqlSslMode.Prefered : MySqlSslMode.None );
                     },
                     ( msb, sender ) => msb.SslMode != MySqlSslMode.None ) );
-            Options.Add( new MySqlConnectionStringOption( "certificatefile", "certificate file", TypeConstants.String, null, false ) );
+            Options.Add( new MySqlConnectionStringOption( "certificatefile", "certificate file", Constants.Types.String, null, false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "certificatepassword", "certificate password", TypeConstants.String, null, false ) );
+                new MySqlConnectionStringOption( "certificatepassword", "certificate password", Constants.Types.String, null, false ) );
             Options.Add(
                 new MySqlConnectionStringOption(
                     "certificatestorelocation",
@@ -149,13 +149,13 @@ namespace MySql.Data.MySqlClient {
                     MySqlCertificateStoreLocation.None,
                     false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "certificatethumbprint", "certificate thumb print", TypeConstants.String, null, false ) );
+                new MySqlConnectionStringOption( "certificatethumbprint", "certificate thumb print", Constants.Types.String, null, false ) );
 #endif
             Options.Add(
                 new MySqlConnectionStringOption(
                     "integratedsecurity",
                     "integrated security",
-                    TypeConstants.Boolean,
+                    Constants.Types.Boolean,
                     false,
                     false,
                     delegate( MySqlConnectionStringBuilder msb, MySqlConnectionStringOption sender, object value ) {
@@ -170,31 +170,31 @@ namespace MySql.Data.MySqlClient {
 
             // Other properties
             Options.Add(
-                new MySqlConnectionStringOption( "allowzerodatetime", "allow zero datetime", TypeConstants.Boolean, false, false ) );
+                new MySqlConnectionStringOption( "allowzerodatetime", "allow zero datetime", Constants.Types.Boolean, false, false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "convertzerodatetime", "convert zero datetime", TypeConstants.Boolean, false, false ) );
+                new MySqlConnectionStringOption( "convertzerodatetime", "convert zero datetime", Constants.Types.Boolean, false, false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "useusageadvisor", "use usage advisor,usage advisor", TypeConstants.Boolean, false, false ) );
+                new MySqlConnectionStringOption( "useusageadvisor", "use usage advisor,usage advisor", Constants.Types.Boolean, false, false ) );
             Options.Add(
                 new MySqlConnectionStringOption(
                     "procedurecachesize",
                     "procedure cache size,procedure cache,procedurecache",
-                    TypeConstants.UInt32,
+                    Constants.Types.UInt32,
                     (uint) 25,
                     false ) );
             Options.Add(
                 new MySqlConnectionStringOption(
                     "useperformancemonitor",
                     "use performance monitor,useperfmon,perfmon",
-                    TypeConstants.Boolean,
+                    Constants.Types.Boolean,
                     false,
                     false ) );
-            Options.Add( new MySqlConnectionStringOption( "ignoreprepare", "ignore prepare", TypeConstants.Boolean, true, false ) );
+            Options.Add( new MySqlConnectionStringOption( "ignoreprepare", "ignore prepare", Constants.Types.Boolean, true, false ) );
             Options.Add(
                 new MySqlConnectionStringOption(
                     "useprocedurebodies",
                     "use procedure bodies,procedure bodies",
-                    TypeConstants.Boolean,
+                    Constants.Types.Boolean,
                     true,
                     true,
                     delegate( MySqlConnectionStringBuilder msb, MySqlConnectionStringOption sender, object value ) {
@@ -204,67 +204,67 @@ namespace MySql.Data.MySqlClient {
                         msb.SetValue( "useprocedurebodies", value );
                     },
                     ( msb, sender ) => (bool) msb.values[ "useprocedurebodies" ] ) );
-            Options.Add( new MySqlConnectionStringOption( "autoenlist", "auto enlist", TypeConstants.Boolean, true, false ) );
+            Options.Add( new MySqlConnectionStringOption( "autoenlist", "auto enlist", Constants.Types.Boolean, true, false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "respectbinaryflags", "respect binary flags", TypeConstants.Boolean, true, false ) );
+                new MySqlConnectionStringOption( "respectbinaryflags", "respect binary flags", Constants.Types.Boolean, true, false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "treattinyasboolean", "treat tiny as boolean", TypeConstants.Boolean, true, false ) );
+                new MySqlConnectionStringOption( "treattinyasboolean", "treat tiny as boolean", Constants.Types.Boolean, true, false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "allowuservariables", "allow user variables", TypeConstants.Boolean, false, false ) );
+                new MySqlConnectionStringOption( "allowuservariables", "allow user variables", Constants.Types.Boolean, false, false ) );
             Options.Add(
                 new MySqlConnectionStringOption(
                     "interactivesession",
                     "interactive session,interactive",
-                    TypeConstants.Boolean,
+                    Constants.Types.Boolean,
                     false,
                     false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "functionsreturnstring", "functions return string", TypeConstants.Boolean, false, false ) );
-            Options.Add( new MySqlConnectionStringOption( "useaffectedrows", "use affected rows", TypeConstants.Boolean, false, false ) );
-            Options.Add( new MySqlConnectionStringOption( "oldguids", "old guids", TypeConstants.Boolean, false, false ) );
-            Options.Add( new MySqlConnectionStringOption( "keepalive", "keep alive", TypeConstants.UInt32, (uint) 0, false ) );
-            Options.Add( new MySqlConnectionStringOption( "sqlservermode", "sql server mode", TypeConstants.Boolean, false, false ) );
-            Options.Add( new MySqlConnectionStringOption( "tablecaching", "table cache,tablecache", TypeConstants.Boolean, false, false ) );
+                new MySqlConnectionStringOption( "functionsreturnstring", "functions return string", Constants.Types.Boolean, false, false ) );
+            Options.Add( new MySqlConnectionStringOption( "useaffectedrows", "use affected rows", Constants.Types.Boolean, false, false ) );
+            Options.Add( new MySqlConnectionStringOption( "oldguids", "old guids", Constants.Types.Boolean, false, false ) );
+            Options.Add( new MySqlConnectionStringOption( "keepalive", "keep alive", Constants.Types.UInt32, (uint) 0, false ) );
+            Options.Add( new MySqlConnectionStringOption( "sqlservermode", "sql server mode", Constants.Types.Boolean, false, false ) );
+            Options.Add( new MySqlConnectionStringOption( "tablecaching", "table cache,tablecache", Constants.Types.Boolean, false, false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "defaulttablecacheage", "default table cache age", TypeConstants.Int32, 60, false ) );
-            Options.Add( new MySqlConnectionStringOption( "checkparameters", "check parameters", TypeConstants.Boolean, true, false ) );
-            Options.Add( new MySqlConnectionStringOption( "replication", null, TypeConstants.Boolean, false, false ) );
+                new MySqlConnectionStringOption( "defaulttablecacheage", "default table cache age", Constants.Types.Int32, 60, false ) );
+            Options.Add( new MySqlConnectionStringOption( "checkparameters", "check parameters", Constants.Types.Boolean, true, false ) );
+            Options.Add( new MySqlConnectionStringOption( "replication", null, Constants.Types.Boolean, false, false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "exceptioninterceptors", "exception interceptors", TypeConstants.String, null, false ) );
+                new MySqlConnectionStringOption( "exceptioninterceptors", "exception interceptors", Constants.Types.String, null, false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "commandinterceptors", "command interceptors", TypeConstants.String, null, false ) );
+                new MySqlConnectionStringOption( "commandinterceptors", "command interceptors", Constants.Types.String, null, false ) );
 #if !CF
             Options.Add(
-                new MySqlConnectionStringOption( "includesecurityasserts", "include security asserts", TypeConstants.Boolean, false, false ) );
+                new MySqlConnectionStringOption( "includesecurityasserts", "include security asserts", Constants.Types.Boolean, false, false ) );
 #endif
 
             // pooling options
             Options.Add(
-                new MySqlConnectionStringOption( "connectionlifetime", "connection lifetime", TypeConstants.UInt32, (uint) 0, false ) );
-            Options.Add( new MySqlConnectionStringOption( "pooling", null, TypeConstants.Boolean, true, false ) );
+                new MySqlConnectionStringOption( "connectionlifetime", "connection lifetime", Constants.Types.UInt32, (uint) 0, false ) );
+            Options.Add( new MySqlConnectionStringOption( "pooling", null, Constants.Types.Boolean, true, false ) );
             Options.Add(
                 new MySqlConnectionStringOption(
                     "minpoolsize",
                     "minimumpoolsize,min pool size,minimum pool size",
-                    TypeConstants.UInt32,
+                    Constants.Types.UInt32,
                     (uint) 0,
                     false ) );
             Options.Add(
                 new MySqlConnectionStringOption(
                     "maxpoolsize",
                     "maximumpoolsize,max pool size,maximum pool size",
-                    TypeConstants.UInt32,
+                    Constants.Types.UInt32,
                     (uint) 100,
                     false ) );
-            Options.Add( new MySqlConnectionStringOption( "connectionreset", "connection reset", TypeConstants.Boolean, false, false ) );
+            Options.Add( new MySqlConnectionStringOption( "connectionreset", "connection reset", Constants.Types.Boolean, false, false ) );
             Options.Add(
-                new MySqlConnectionStringOption( "cacheserverproperties", "cache server properties", TypeConstants.Boolean, false, false ) );
+                new MySqlConnectionStringOption( "cacheserverproperties", "cache server properties", Constants.Types.Boolean, false, false ) );
 
             // language and charset options
-            Options.Add( new MySqlConnectionStringOption( "characterset", "character set,charset", TypeConstants.String, "", false ) );
-            Options.Add( new MySqlConnectionStringOption( "treatblobsasutf8", "treat blobs as utf8", TypeConstants.Boolean, false, false ) );
-            Options.Add( new MySqlConnectionStringOption( "blobasutf8includepattern", null, TypeConstants.String, "", false ) );
-            Options.Add( new MySqlConnectionStringOption( "blobasutf8excludepattern", null, TypeConstants.String, "", false ) );
+            Options.Add( new MySqlConnectionStringOption( "characterset", "character set,charset", Constants.Types.String, "", false ) );
+            Options.Add( new MySqlConnectionStringOption( "treatblobsasutf8", "treat blobs as utf8", Constants.Types.Boolean, false, false ) );
+            Options.Add( new MySqlConnectionStringOption( "blobasutf8includepattern", null, Constants.Types.String, "", false ) );
+            Options.Add( new MySqlConnectionStringOption( "blobasutf8excludepattern", null, Constants.Types.String, "", false ) );
 #if !CF
             Options.Add( new MySqlConnectionStringOption( "sslmode", "ssl mode", typeof( MySqlSslMode ), MySqlSslMode.None, false ) );
 #endif
@@ -1312,8 +1312,8 @@ namespace MySql.Data.MySqlClient {
             bool obsolete,
             SetterDelegate setter,
             GetterDelegate getter ) {
-            Keyword = StringUtility.ToLowerInvariant( keyword );
-            if ( synonyms != null ) Synonyms = StringUtility.ToLowerInvariant( synonyms ).Split( ',' );
+            Keyword = StringUtility.InvariantToLower( keyword );
+            if ( synonyms != null ) Synonyms = StringUtility.InvariantToLower( synonyms ).Split( ',' );
             BaseType = baseType;
             Obsolete = obsolete;
             DefaultValue = defaultValue;
@@ -1371,7 +1371,7 @@ namespace MySql.Data.MySqlClient {
             var valueType = value.GetType();
             if ( valueType.Name == "String" ) {
                 if ( BaseType == valueType ) return;
-                if ( BaseType == TypeConstants.Boolean ) {
+                if ( BaseType == Constants.Types.Boolean ) {
                     if ( string.Compare( "yes", (string) value, StringComparison.OrdinalIgnoreCase ) == 0 ) value = true;
                     else if ( string.Compare( "no", (string) value, StringComparison.OrdinalIgnoreCase ) == 0 ) value = false;
 #if !CF
@@ -1412,7 +1412,7 @@ namespace MySql.Data.MySqlClient {
                 return;
             }
 
-            Int32 intVal32;
+            int intVal32;
             if ( typeName.StartsWith( "Int32" )
                  && Int32.TryParse( value.ToString(), out intVal32 ) ) {
                 value = intVal32;

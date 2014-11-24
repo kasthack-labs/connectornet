@@ -81,9 +81,7 @@ namespace MySql.Data.MySqlClient {
         /// </summary>
         /// <param name="value">The <see cref="MySqlParameter"/> to add to the collection.</param>
         /// <returns>The newly added <see cref="MySqlParameter"/> object.</returns>
-        public MySqlParameter Add( MySqlParameter value ) {
-            return InternalAdd( value, -1 );
-        }
+        public MySqlParameter Add( MySqlParameter value ) => InternalAdd( value, -1 );
 
         /// <summary>
         /// Adds a <see cref="MySqlParameter"/> to the <see cref="MySqlParameterCollection"/> given the specified parameter name and value.
@@ -92,13 +90,9 @@ namespace MySql.Data.MySqlClient {
         /// <param name="value">The <see cref="MySqlParameter.Value"/> of the <see cref="MySqlParameter"/> to add to the collection.</param>
         /// <returns>The newly added <see cref="MySqlParameter"/> object.</returns>
         [Obsolete( "Add(String parameterName, Object value) has been deprecated.  Use AddWithValue(String parameterName, Object value)" )]
-        public MySqlParameter Add( string parameterName, object value ) {
-            return Add( new MySqlParameter( parameterName, value ) );
-        }
+        public MySqlParameter Add( string parameterName, object value ) => Add( new MySqlParameter( parameterName, value ) );
 
-        public MySqlParameter AddWithValue( string parameterName, object value ) {
-            return Add( new MySqlParameter( parameterName, value ) );
-        }
+        public MySqlParameter AddWithValue( string parameterName, object value ) => Add( new MySqlParameter( parameterName, value ) );
 
         /// <summary>
         /// Adds a <see cref="MySqlParameter"/> to the <see cref="MySqlParameterCollection"/> given the parameter name and the data type.
@@ -106,9 +100,7 @@ namespace MySql.Data.MySqlClient {
         /// <param name="parameterName">The name of the parameter.</param>
         /// <param name="dbType">One of the <see cref="MySqlDbType"/> values. </param>
         /// <returns>The newly added <see cref="MySqlParameter"/> object.</returns>
-        public MySqlParameter Add( string parameterName, MySqlDbType dbType ) {
-            return Add( new MySqlParameter( parameterName, dbType ) );
-        }
+        public MySqlParameter Add( string parameterName, MySqlDbType dbType ) => Add( new MySqlParameter( parameterName, dbType ) );
 
         /// <summary>
         /// Adds a <see cref="MySqlParameter"/> to the <see cref="MySqlParameterCollection"/> with the parameter name, the data type, and the column length.
@@ -117,9 +109,7 @@ namespace MySql.Data.MySqlClient {
         /// <param name="dbType">One of the <see cref="MySqlDbType"/> values. </param>
         /// <param name="size">The length of the column.</param>
         /// <returns>The newly added <see cref="MySqlParameter"/> object.</returns>
-        public MySqlParameter Add( string parameterName, MySqlDbType dbType, int size ) {
-            return Add( new MySqlParameter( parameterName, dbType, size ) );
-        }
+        public MySqlParameter Add( string parameterName, MySqlDbType dbType, int size ) => Add( new MySqlParameter( parameterName, dbType, size ) );
         #endregion
 
         /// <summary>
@@ -144,18 +134,16 @@ namespace MySql.Data.MySqlClient {
 
         private MySqlParameter InternalGetParameter( string parameterName ) {
             var index = IndexOf( parameterName );
-            if ( index < 0 ) {
-                // check to see if the user has added the parameter without a
-                // parameter marker.  If so, kindly tell them what they did.
-                if ( parameterName.StartsWith( "@", StringComparison.Ordinal )
-                     || parameterName.StartsWith( "?", StringComparison.Ordinal ) ) {
-                    var newParameterName = parameterName.Substring( 1 );
-                    index = IndexOf( newParameterName );
-                    if ( index != -1 ) return _items[ index ];
-                }
-                throw new ArgumentException( "Parameter '" + parameterName + "' not found in the collection." );
-            }
-            return _items[ index ];
+            if ( index >= 0 ) return _items[ index ];
+            // check to see if the user has added the parameter without a
+            // parameter marker.  If so, kindly tell them what they did.
+            if ( !parameterName.InvariantStartsWith( "@" )
+                 && !parameterName.InvariantStartsWith( "?") )
+                throw new ArgumentException( string.Format( "Parameter '{0}' not found in the collection.", parameterName ) );
+            var newParameterName = parameterName.Substring( 1 );
+            index = IndexOf( newParameterName );
+            if ( index != -1 ) return _items[ index ];
+            throw new ArgumentException( string.Format( "Parameter '{0}' not found in the collection.", parameterName ) );
         }
 
         private void InternalSetParameter( string parameterName, MySqlParameter value ) {
@@ -279,8 +267,7 @@ namespace MySql.Data.MySqlClient {
             var index = IndexOf( baseName );
             if ( -1 == index ) index = IndexOf( "?" + baseName );
             if ( -1 == index ) index = IndexOf( "@" + baseName );
-            if ( -1 != index ) return this[ index ];
-            return null;
+            return -1 != index ? this[ index ] : null;
         }
 
         internal MySqlParameter GetParameterFlexible( string parameterName, bool throwOnNotFound ) {
@@ -288,12 +275,12 @@ namespace MySql.Data.MySqlClient {
             var p = GetParameterFlexibleInternal( baseName );
             if ( p != null ) return p;
 
-            if ( parameterName.StartsWith( "@", StringComparison.Ordinal )
-                 || parameterName.StartsWith( "?", StringComparison.Ordinal ) ) baseName = parameterName.Substring( 1 );
+            if ( parameterName.InvariantStartsWith( "@" )
+                 || parameterName.InvariantStartsWith( "?") ) baseName = parameterName.Substring( 1 );
             p = GetParameterFlexibleInternal( baseName );
             if ( p != null ) return p;
 
-            if ( throwOnNotFound ) throw new ArgumentException( "Parameter '" + parameterName + "' not found in the collection." );
+            if ( throwOnNotFound ) throw new ArgumentException( string.Format( "Parameter '{0}' not found in the collection.", parameterName ) );
             return null;
         }
     }

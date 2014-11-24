@@ -78,7 +78,7 @@ namespace MySql.Data.MySqlClient {
                 foreach ( var row in proc.Parameters.Rows )
                     if ( row[ "ORDINAL_POSITION" ].Equals( 0 ) ) retValue = "?=";
                     else {
-                        key.AppendFormat( CultureInfo.InvariantCulture, "{0}?", delimiter );
+                        key.InvariantAppendFormat( "{0}?", delimiter );
                         delimiter = ",";
                     }
             key.Append( ")" );

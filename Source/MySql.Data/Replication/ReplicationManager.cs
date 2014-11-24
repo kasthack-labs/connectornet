@@ -58,7 +58,7 @@ namespace MySql.Data.MySqlClient.Replication {
         /// <param name="name">Group name</param>
         /// <param name="retryTime">Time between reconnections for failed servers</param>
         /// <returns>Replication Server Group added</returns>
-        internal static ReplicationServerGroup AddGroup( string name, int retryTime ) { return AddGroup( name, null, retryTime ); }
+        internal static ReplicationServerGroup AddGroup( string name, int retryTime ) => AddGroup( name, null, retryTime );
 
         /// <summary>
         /// Adds a Server Group to the list

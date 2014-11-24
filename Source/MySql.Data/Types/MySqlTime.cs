@@ -23,6 +23,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlTimeSpan : IMySqlValue {
@@ -48,7 +49,7 @@ namespace MySql.Data.Types {
 
         public TimeSpan Value => _mValue;
 
-        Type IMySqlValue.SystemType => typeof( TimeSpan );
+        Type IMySqlValue.SystemType => Constants.Types.TimeSpan;
 
         string IMySqlValue.MySqlTypeName => "TIME";
 
@@ -60,18 +61,16 @@ namespace MySql.Data.Types {
             ts = ts.Duration();
 
             if ( binary ) {
-                if ( ts.Milliseconds > 0 ) packet.WriteByte( 12 );
-                else packet.WriteByte( 8 );
+                packet.WriteByte( (byte) ( ts.Milliseconds > 0 ? 12 : 8 ) );
 
                 packet.WriteByte( (byte) ( negative ? 1 : 0 ) );
                 packet.WriteInteger( ts.Days, 4 );
                 packet.WriteByte( (byte) ts.Hours );
                 packet.WriteByte( (byte) ts.Minutes );
                 packet.WriteByte( (byte) ts.Seconds );
-                if ( ts.Milliseconds > 0 ) {
-                    var mval = ts.Milliseconds * 1000;
-                    packet.WriteInteger( mval, 4 );
-                }
+                if ( ts.Milliseconds <= 0 ) return;
+                var mval = ts.Milliseconds * 1000;
+                packet.WriteInteger( mval, 4 );
             }
             else {
                 var s = String.Format(
@@ -101,16 +100,25 @@ namespace MySql.Data.Types {
             if ( bufLength > 0 ) negate = packet.ReadByte();
 
             _isNull = false;
-            if ( bufLength == 0 ) _isNull = true;
-            else if ( bufLength == 5 ) _mValue = new TimeSpan( packet.ReadInteger( 4 ), 0, 0, 0 );
-            else if ( bufLength == 8 ) _mValue = new TimeSpan( packet.ReadInteger( 4 ), packet.ReadByte(), packet.ReadByte(), packet.ReadByte() );
-            else
-                _mValue = new TimeSpan(
-                    packet.ReadInteger( 4 ),
-                    packet.ReadByte(),
-                    packet.ReadByte(),
-                    packet.ReadByte(),
-                    packet.ReadInteger( 4 ) / 1000000 );
+            switch ( bufLength ) {
+                case 0:
+                    _isNull = true;
+                    break;
+                case 5:
+                    _mValue = new TimeSpan( packet.ReadInteger( 4 ), 0, 0, 0 );
+                    break;
+                case 8:
+                    _mValue = new TimeSpan( packet.ReadInteger( 4 ), packet.ReadByte(), packet.ReadByte(), packet.ReadByte() );
+                    break;
+                default:
+                    _mValue = new TimeSpan(
+                        packet.ReadInteger( 4 ),
+                        packet.ReadByte(),
+                        packet.ReadByte(),
+                        packet.ReadByte(),
+                        packet.ReadInteger( 4 ) / 1000000 );
+                    break;
+            }
 
             if ( negate == 1 ) _mValue = _mValue.Negate();
             return this;
@@ -152,9 +160,7 @@ namespace MySql.Data.Types {
             row[ "NativeDataType" ] = null;
         }
 
-        public override string ToString() {
-            return String.Format( "{0} {1:00}:{2:00}:{3:00}", _mValue.Days, _mValue.Hours, _mValue.Minutes, _mValue.Seconds );
-        }
+        public override string ToString() => String.Format( "{0} {1:00}:{2:00}:{3:00}", _mValue.Days, _mValue.Hours, _mValue.Minutes, _mValue.Seconds );
 
         private void ParseMySql( string s ) {
             var parts = s.Split( ':', '.' );
@@ -170,7 +176,7 @@ namespace MySql.Data.Types {
             }
 
             if ( hours < 0
-                 || parts[ 0 ].StartsWith( "-", StringComparison.Ordinal ) ) {
+                 || parts[ 0 ].InvariantStartsWith( "-" ) ) {
                 mins *= -1;
                 secs *= -1;
                 nanoseconds *= -1;

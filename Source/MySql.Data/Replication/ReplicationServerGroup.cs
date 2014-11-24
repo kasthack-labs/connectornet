@@ -98,9 +98,7 @@ namespace MySql.Data.MySqlClient.Replication {
         /// </returns>
         protected internal abstract ReplicationServer GetServer( bool isMaster );
 
-        protected internal virtual ReplicationServer GetServer( bool isMaster, MySqlConnectionStringBuilder settings ) {
-            return GetServer( isMaster );
-        }
+        protected internal virtual ReplicationServer GetServer( bool isMaster, MySqlConnectionStringBuilder settings ) => GetServer( isMaster );
 
         /// <summary>
         /// Handles a failed connection to a server.
