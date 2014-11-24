@@ -22,72 +22,46 @@
 
 using System;
 
-namespace MySql.Data.Common
-{
-  /// <summary>
-  /// This class is modeled after .NET Stopwatch. It provides better
-  /// performance (no system calls).It is however less precise than
-  /// .NET Stopwatch, measuring in milliseconds. It is adequate to use
-  /// when high-precision is not required (e.g for measuring IO timeouts),
-  /// but not for other tasks.
-  /// </summary>
-  class LowResolutionStopwatch
-  {
-    long millis;
-    long startTime;
-    public static readonly long Frequency = 1000; // measure in milliseconds
-    public static readonly bool isHighResolution = false;
+namespace MySql.Data.Common {
+    /// <summary>
+    /// This class is modeled after .NET Stopwatch. It provides better
+    /// performance (no system calls).It is however less precise than
+    /// .NET Stopwatch, measuring in milliseconds. It is adequate to use
+    /// when high-precision is not required (e.g for measuring IO timeouts),
+    /// but not for other tasks.
+    /// </summary>
+    internal class LowResolutionStopwatch {
+        private long _startTime;
+        public static readonly long Frequency = 1000; // measure in milliseconds
+        public static readonly bool IsHighResolution = false;
 
-    public LowResolutionStopwatch()
-    {
-      millis = 0;
-    }
-    public long ElapsedMilliseconds
-    {
-      get { return millis; }
-    }
-    public void Start()
-    {
-      startTime = Environment.TickCount;
-    }
+        public LowResolutionStopwatch() { ElapsedMilliseconds = 0; }
+        public long ElapsedMilliseconds { get; private set; }
 
-    public void Stop()
-    {
-      long now = Environment.TickCount;
-      // Calculate time different, handle possible overflow
-      long elapsed = (now < startTime) ? Int32.MaxValue - startTime + now : now - startTime;
-      millis += elapsed;
-    }
+        public void Start() { _startTime = Environment.TickCount; }
 
-    public void Reset()
-    {
-      millis = 0;
-      startTime = 0;
-    }
+        public void Stop() {
+            var now = Environment.TickCount;
+            // Calculate time different, handle possible overflow
+            var elapsed = ( now < _startTime ) ? Int32.MaxValue - _startTime + now : now - _startTime;
+            ElapsedMilliseconds += elapsed;
+        }
 
-    public TimeSpan Elapsed
-    {
-      get
-      {
-        return new TimeSpan(0, 0, 0, 0, (int)millis);
-      }
-    }
+        public void Reset() {
+            ElapsedMilliseconds = 0;
+            _startTime = 0;
+        }
 
-    public static LowResolutionStopwatch StartNew()
-    {
-      LowResolutionStopwatch sw = new LowResolutionStopwatch();
-      sw.Start();
-      return sw;
-    }
+        public TimeSpan Elapsed => new TimeSpan( 0, 0, 0, 0, (int) ElapsedMilliseconds );
 
-    public static long GetTimestamp()
-    {
-      return Environment.TickCount;
-    }
+        public static LowResolutionStopwatch StartNew() {
+            var sw = new LowResolutionStopwatch();
+            sw.Start();
+            return sw;
+        }
 
-    bool IsRunning()
-    {
-      return (startTime != 0);
+        public static long GetTimestamp() { return Environment.TickCount; }
+
+        private bool IsRunning() { return ( _startTime != 0 ); }
     }
-  }
 }

@@ -21,116 +21,98 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Diagnostics;
 using System.Reflection;
 using MySql.Data.MySqlClient.Properties;
 
-namespace MySql.Data.MySqlClient
-{
-    public sealed partial class MySqlTrace  
-    {
+namespace MySql.Data.MySqlClient {
+    public sealed class MySqlTrace {
 #if !CF
-        private static TraceSource source = new TraceSource("mysql");
-        protected static string qaHost;
-        protected static bool qaEnabled = false;
+        protected static string QaHost;
 
-        static MySqlTrace()
-        {
-
-            foreach (TraceListener listener in source.Listeners)
-            {
-                if (listener.GetType().ToString().Contains("MySql.EMTrace.EMTraceListener"))
-                {
-                    qaEnabled = true;
+        static MySqlTrace() {
+            foreach ( var listener in Source.Listeners )
+                if ( listener.GetType().ToString().Contains( "MySql.EMTrace.EMTraceListener" ) ) {
+                    QueryAnalysisEnabled = true;
                     break;
                 }
+        }
+
+        public static TraceListenerCollection Listeners => Source.Listeners;
+
+        public static SourceSwitch Switch {
+            get {
+                return Source.Switch;
+            }
+            set {
+                Source.Switch = value;
             }
         }
 
-        public static TraceListenerCollection Listeners
-        {
-            get { return source.Listeners; }
-        }
+        public static bool QueryAnalysisEnabled { get; protected set; }
 
-        public static SourceSwitch Switch
-        {
-            get { return source.Switch; }
-            set { source.Switch = value; }
-        }
-
-        public static bool QueryAnalysisEnabled
-        {
-            get { return qaEnabled; }
-        }
-
-        public static void EnableQueryAnalyzer(string host, int postInterval)
-        {
-            if (qaEnabled) return;
+        public static void EnableQueryAnalyzer( string host, int postInterval ) {
+            if ( QueryAnalysisEnabled ) return;
             // create a EMTraceListener and add it to our source
-            TraceListener l = (TraceListener)Activator.CreateInstance("MySql.EMTrace",
-                "MySql.EMTrace.EMTraceListener", false, BindingFlags.CreateInstance,
-                null, new object[] { host, postInterval }, null, null, null).Unwrap();
-            if (l == null)
-                throw new MySqlException(Resources.UnableToEnableQueryAnalysis);
-            source.Listeners.Add(l);
+            var l =
+                (TraceListener)
+                Activator.CreateInstance(
+                    "MySql.EMTrace",
+                    "MySql.EMTrace.EMTraceListener",
+                    false,
+                    BindingFlags.CreateInstance,
+                    null,
+                    new object[] { host, postInterval }, null, null).Unwrap();
+            if ( l == null ) throw new MySqlException( Resources.UnableToEnableQueryAnalysis );
+            Source.Listeners.Add( l );
             Switch.Level = SourceLevels.All;
         }
 
-        public static void DisableQueryAnalyzer()
-        {
-            qaEnabled = false;
-            foreach (TraceListener l in source.Listeners)
-                if (l.GetType().ToString().Contains("EMTraceListener"))
-                {
-                    source.Listeners.Remove(l);
+        public static void DisableQueryAnalyzer() {
+            QueryAnalysisEnabled = false;
+            foreach ( TraceListener l in Source.Listeners )
+                if ( l.GetType().ToString().Contains( "EMTraceListener" ) ) {
+                    Source.Listeners.Remove( l );
                     break;
                 }
         }
 
-        internal static TraceSource Source
-        {
-            get { return source; }
-        }
+        internal static TraceSource Source { get; } = new TraceSource( "mysql" );
 #endif
 
-        internal static void LogInformation(int id, string msg)
-        {
+        internal static void LogInformation( int id, string msg ) {
 #if !CF
-            Source.TraceEvent(TraceEventType.Information, id, msg, MySqlTraceEventType.NonQuery, -1);
-            Trace.TraceInformation(msg);
+            Source.TraceEvent( TraceEventType.Information, id, msg, MySqlTraceEventType.NonQuery, -1 );
+            Trace.TraceInformation( msg );
 #endif
         }
 
-        internal static void LogWarning(int id, string msg)
-        {
+        internal static void LogWarning( int id, string msg ) {
 #if !CF
-            Source.TraceEvent(TraceEventType.Warning, id, msg, MySqlTraceEventType.NonQuery, -1);
-            Trace.TraceWarning(msg);
+            Source.TraceEvent( TraceEventType.Warning, id, msg, MySqlTraceEventType.NonQuery, -1 );
+            Trace.TraceWarning( msg );
 #endif
         }
 
-        internal static void LogError(int id, string msg)
-        {
+        internal static void LogError( int id, string msg ) {
 #if !CF
-            Source.TraceEvent(TraceEventType.Error, id, msg, MySqlTraceEventType.NonQuery, -1);
-            Trace.TraceError(msg);
+            Source.TraceEvent( TraceEventType.Error, id, msg, MySqlTraceEventType.NonQuery, -1 );
+            Trace.TraceError( msg );
 #endif
         }
 
 #if !CF
-        internal static void TraceEvent(TraceEventType eventType,
-            MySqlTraceEventType mysqlEventType, string msgFormat, params object[] args)
-        {
-            Source.TraceEvent(eventType, (int)mysqlEventType, msgFormat, args);
+        internal static void TraceEvent(
+            TraceEventType eventType,
+            MySqlTraceEventType mysqlEventType,
+            string msgFormat,
+            params object[] args ) {
+            Source.TraceEvent( eventType, (int) mysqlEventType, msgFormat, args );
         }
 #endif
-
     }
 
-    public enum UsageAdvisorWarningFlags
-    {
+    public enum UsageAdvisorWarningFlags {
         NoIndex = 1,
         BadIndex,
         SkippedRows,
@@ -138,8 +120,7 @@ namespace MySql.Data.MySqlClient
         FieldConversion
     }
 
-    public enum MySqlTraceEventType : int
-    {
+    public enum MySqlTraceEventType {
         ConnectionOpened = 1,
         ConnectionClosed,
         QueryOpened,

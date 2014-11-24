@@ -23,61 +23,42 @@
 using System;
 using System.IO;
 
-namespace MySql.Data.Common
-{
-  internal class Platform
-  {
-    private static bool inited;
-    private static bool isMono;
+namespace MySql.Data.Common {
+    internal class Platform {
+        private static bool _inited;
+        private static bool _isMono;
 
-    /// <summary>
-    /// By creating a private ctor, we keep the compiler from creating a default ctor
-    /// </summary>
-    private Platform()
-    {
-    }
+        /// <summary>
+        /// By creating a private ctor, we keep the compiler from creating a default ctor
+        /// </summary>
+        private Platform() { }
 
-    public static bool IsWindows()
-    {
+        public static bool IsWindows() {
 #if NETFX_CORE
       return true;
 #else
-      OperatingSystem os = Environment.OSVersion;
-      switch (os.Platform)
-      {
-        case PlatformID.Win32NT:
-        case PlatformID.Win32S:
-        case PlatformID.Win32Windows:
-          return true;
-      }
-      return false;
+            var os = Environment.OSVersion;
+            switch ( os.Platform ) {
+                case PlatformID.Win32NT:
+                case PlatformID.Win32S:
+                case PlatformID.Win32Windows:
+                    return true;
+            }
+            return false;
 #endif
-    }
+        }
 
-    public static char DirectorySeparatorChar
-    {
-      get
-      {
-#if NETFX_CORE
-        return '\\';
-#else
-          return Path.DirectorySeparatorChar;
-#endif
-      }
-    }
+        public static char DirectorySeparatorChar => Path.DirectorySeparatorChar;
 
-    public static bool IsMono()
-    {
-      if (!inited)
-        Init();
-      return isMono;
-    }
+        public static bool IsMono() {
+            if ( !_inited ) Init();
+            return _isMono;
+        }
 
-    private static void Init()
-    {
-      inited = true;
-      Type t = Type.GetType("Mono.Runtime");
-      isMono = t != null;
+        private static void Init() {
+            _inited = true;
+            var t = Type.GetType( "Mono.Runtime" );
+            _isMono = t != null;
+        }
     }
-  }
 }

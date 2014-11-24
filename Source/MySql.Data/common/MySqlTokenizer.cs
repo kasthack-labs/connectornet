@@ -21,313 +21,225 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 using System;
-using System.Text;
-using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
-namespace MySql.Data.MySqlClient
-{
-  internal class MySqlTokenizer
-  {
-    private string sql;
+namespace MySql.Data.MySqlClient {
+    internal class MySqlTokenizer {
+        private string _sql;
 
-    private int startIndex;
-    private int stopIndex;
-
-    private bool ansiQuotes;
-    private bool backslashEscapes;
-    private bool returnComments;
-    private bool multiLine;
-    private bool sqlServerMode;
-
-    private bool quoted;
-    private bool isComment;
-
-    private int pos;
-
-    public MySqlTokenizer()
-    {
-      backslashEscapes = true;
-      multiLine = true;
-      pos = 0;
-    }
-
-    public MySqlTokenizer(string input)
-      : this()
-    {
-      sql = input;
-    }
-
-    #region Properties
-
-    public string Text
-    {
-      get { return sql; }
-      set { sql = value; pos = 0; }
-    }
-
-    public bool AnsiQuotes
-    {
-      get { return ansiQuotes; }
-      set { ansiQuotes = value; }
-    }
-
-    public bool BackslashEscapes
-    {
-      get { return backslashEscapes; }
-      set { backslashEscapes = value; }
-    }
-
-    public bool MultiLine
-    {
-      get { return multiLine; }
-      set { multiLine = value; }
-    }
-
-    public bool SqlServerMode
-    {
-      get { return sqlServerMode; }
-      set { sqlServerMode = value; }
-    }
-
-    public bool Quoted
-    {
-      get { return quoted; }
-      private set { quoted = value; }
-    }
-
-    public bool IsComment
-    {
-      get { return isComment; }
-    }
-
-    public int StartIndex
-    {
-      get { return startIndex; }
-      set { startIndex = value; }
-    }
-
-    public int StopIndex
-    {
-      get { return stopIndex; }
-      set { stopIndex = value; }
-    }
-
-    public int Position
-    {
-      get { return pos; }
-      set { pos = value; }
-    }
-
-    public bool ReturnComments
-    {
-      get { return returnComments; }
-      set { returnComments = value; }
-    }
-
-    #endregion
-
-    public List<string> GetAllTokens()
-    {
-      List<string> tokens = new List<string>();
-      string token = NextToken();
-      while (token != null)
-      {
-        tokens.Add(token);
-        token = NextToken();
-      }
-      return tokens;
-    }
-
-    public string NextToken()
-    {
-      while (FindToken())
-      {
-        string token = sql.Substring(startIndex, stopIndex - startIndex);
-        return token;
-      }
-      return null;
-    }
-
-    public static bool IsParameter(string s)
-    {
-      if (String.IsNullOrEmpty(s)) return false;
-      if (s[0] == '?') return true;
-      if (s.Length > 1 && s[0] == '@' && s[1] != '@') return true;
-      return false;
-    }
-
-    public string NextParameter()
-    {
-      while (FindToken())
-      {
-        if ((stopIndex - startIndex) < 2) continue;
-        char c1 = sql[startIndex];
-        char c2 = sql[startIndex + 1];
-        if (c1 == '?' ||
-            (c1 == '@' && c2 != '@'))
-          return sql.Substring(startIndex, stopIndex - startIndex);
-      }
-      return null;
-    }
-
-    public bool FindToken()
-    {
-      isComment = quoted = false;  // reset our flags
-      startIndex = stopIndex = -1;
-
-      while (pos < sql.Length)
-      {
-        char c = sql[pos++];
-        if (Char.IsWhiteSpace(c)) continue;
-
-        if (c == '`' || c == '\'' || c == '"' || (c == '[' && SqlServerMode))
-          ReadQuotedToken(c);
-        else if (c == '#' || c == '-' || c == '/')
-        {
-          if (!ReadComment(c))
-            ReadSpecialToken();
-        }
-        else
-          ReadUnquotedToken();
-        if (startIndex != -1) return true;
-      }
-      return false;
-    }
-
-    public string ReadParenthesis()
-    {
-      StringBuilder sb = new StringBuilder("(");
-      int start = StartIndex;
-      string token = NextToken();
-      while (true)
-      {
-        if (token == null)
-          throw new InvalidOperationException("Unable to parse SQL");
-        sb.Append(token);
-        if (token == ")" && !Quoted) break;
-        token = NextToken();
-      }
-      return sb.ToString();
-    }
-
-    private bool ReadComment(char c)
-    {
-      // make sure the comment starts correctly
-      if (c == '/' && (pos >= sql.Length || sql[pos] != '*')) return false;
-      if (c == '-' && ((pos + 1) >= sql.Length || sql[pos] != '-' || sql[pos + 1] != ' ')) return false;
-
-      string endingPattern = "\n";
-      if (sql[pos] == '*')
-        endingPattern = "*/";
-
-      int startingIndex = pos - 1;
-
-      int index = sql.IndexOf(endingPattern, pos);
-      if (endingPattern == "\n")
-        index = sql.IndexOf('\n', pos);
-      if (index == -1)
-        index = sql.Length - 1;
-      else
-        index += endingPattern.Length;
-
-      pos = index;
-      if (ReturnComments)
-      {
-        startIndex = startingIndex;
-        stopIndex = index;
-        isComment = true;
-      }
-      return true;
-    }
-
-    private void CalculatePosition(int start, int stop)
-    {
-      startIndex = start;
-      stopIndex = stop;
-      if (!MultiLine) return;
-    }
-
-    private void ReadUnquotedToken()
-    {
-      startIndex = pos - 1;
-
-      if (!IsSpecialCharacter(sql[startIndex]))
-      {
-        while (pos < sql.Length)
-        {
-          char c = sql[pos];
-          if (Char.IsWhiteSpace(c)) break;
-          if (IsSpecialCharacter(c)) break;
-          pos++;
-        }
-      }
-
-      Quoted = false;
-      stopIndex = pos;
-    }
-
-    private void ReadSpecialToken()
-    {
-      startIndex = pos - 1;
-
-      Debug.Assert(IsSpecialCharacter(sql[startIndex]));
-
-      stopIndex = pos;
-      Quoted = false;
-    }
-
-    /// <summary>
-    ///  Read a single quoted identifier from the stream
-    /// </summary>
-    /// <param name="quoteChar"></param>
-    /// <returns></returns>
-    private void ReadQuotedToken(char quoteChar)
-    {
-      if (quoteChar == '[')
-        quoteChar = ']';
-      startIndex = pos - 1;
-      bool escaped = false;
-
-      bool found = false;
-      while (pos < sql.Length)
-      {
-        char c = sql[pos];
-
-        if (c == quoteChar && !escaped)
-        {
-          found = true;
-          break;
+        public MySqlTokenizer() {
+            BackslashEscapes = true;
+            MultiLine = true;
+            Position = 0;
         }
 
-        if (escaped)
-          escaped = false;
-        else if (c == '\\' && BackslashEscapes)
-          escaped = true;
-        pos++;
-      }
-      if (found) pos++;
-      Quoted = found;
-      stopIndex = pos;
-    }
+        public MySqlTokenizer( string input ) : this() { _sql = input; }
 
-    private bool IsQuoteChar(char c)
-    {
-      return c == '`' || c == '\'' || c == '\"';
-    }
+        #region Properties
+        public string Text {
+            get {
+                return _sql;
+            }
+            set {
+                _sql = value;
+                Position = 0;
+            }
+        }
 
-    private bool IsParameterMarker(char c)
-    {
-      return c == '@' || c == '?';
-    }
+        public bool AnsiQuotes { get; set; }
 
-    private bool IsSpecialCharacter(char c)
-    {
-      if (Char.IsLetterOrDigit(c) ||
-          c == '$' || c == '_' || c == '.') return false;
-      if (IsParameterMarker(c)) return false;
-      return true;
+        public bool BackslashEscapes { get; set; }
+
+        public bool MultiLine { get; set; }
+
+        public bool SqlServerMode { get; set; }
+
+        public bool Quoted { get; private set; }
+
+        public bool IsComment { get; private set; }
+
+        public int StartIndex { get; set; }
+
+        public int StopIndex { get; set; }
+
+        public int Position { get; set; }
+
+        public bool ReturnComments { get; set; }
+        #endregion
+
+        public List<string> GetAllTokens() {
+            var tokens = new List<string>();
+            var token = NextToken();
+            while ( token != null ) {
+                tokens.Add( token );
+                token = NextToken();
+            }
+            return tokens;
+        }
+
+        public string NextToken() {
+            while ( FindToken() ) {
+                var token = _sql.Substring( StartIndex, StopIndex - StartIndex );
+                return token;
+            }
+            return null;
+        }
+
+        public static bool IsParameter( string s ) {
+            if ( String.IsNullOrEmpty( s ) ) return false;
+            if ( s[ 0 ] == '?' ) return true;
+            if ( s.Length > 1
+                 && s[ 0 ] == '@'
+                 && s[ 1 ] != '@' ) return true;
+            return false;
+        }
+
+        public string NextParameter() {
+            while ( FindToken() ) {
+                if ( ( StopIndex - StartIndex ) < 2 ) continue;
+                var c1 = _sql[ StartIndex ];
+                var c2 = _sql[ StartIndex + 1 ];
+                if ( c1 == '?'
+                     || ( c1 == '@' && c2 != '@' ) ) return _sql.Substring( StartIndex, StopIndex - StartIndex );
+            }
+            return null;
+        }
+
+        public bool FindToken() {
+            IsComment = Quoted = false; // reset our flags
+            StartIndex = StopIndex = -1;
+
+            while ( Position < _sql.Length ) {
+                var c = _sql[ Position++ ];
+                if ( Char.IsWhiteSpace( c ) ) continue;
+
+                if ( c == '`'
+                     || c == '\''
+                     || c == '"'
+                     || ( c == '[' && SqlServerMode ) ) ReadQuotedToken( c );
+                else if ( c == '#'
+                          || c == '-'
+                          || c == '/' ) {
+                    if ( !ReadComment( c ) ) ReadSpecialToken();
+                }
+                else ReadUnquotedToken();
+                if ( StartIndex != -1 ) return true;
+            }
+            return false;
+        }
+
+        public string ReadParenthesis() {
+            var sb = new StringBuilder( "(" );
+            var start = StartIndex;
+            var token = NextToken();
+            while ( true ) {
+                if ( token == null ) throw new InvalidOperationException( "Unable to parse SQL" );
+                sb.Append( token );
+                if ( token == ")"
+                     && !Quoted ) break;
+                token = NextToken();
+            }
+            return sb.ToString();
+        }
+
+        private bool ReadComment( char c ) {
+            // make sure the comment starts correctly
+            if ( c == '/'
+                 && ( Position >= _sql.Length || _sql[ Position ] != '*' ) ) return false;
+            if ( c == '-'
+                 && ( ( Position + 1 ) >= _sql.Length || _sql[ Position ] != '-' || _sql[ Position + 1 ] != ' ' ) ) return false;
+
+            var endingPattern = "\n";
+            if ( _sql[ Position ] == '*' ) endingPattern = "*/";
+
+            var startingIndex = Position - 1;
+
+            var index = _sql.IndexOf( endingPattern, Position );
+            if ( endingPattern == "\n" ) index = _sql.IndexOf( '\n', Position );
+            if ( index == -1 ) index = _sql.Length - 1;
+            else index += endingPattern.Length;
+
+            Position = index;
+            if ( ReturnComments ) {
+                StartIndex = startingIndex;
+                StopIndex = index;
+                IsComment = true;
+            }
+            return true;
+        }
+
+        private void CalculatePosition( int start, int stop ) {
+            StartIndex = start;
+            StopIndex = stop;
+            if ( !MultiLine ) return;
+        }
+
+        private void ReadUnquotedToken() {
+            StartIndex = Position - 1;
+
+            if ( !IsSpecialCharacter( _sql[ StartIndex ] ) )
+                while ( Position < _sql.Length ) {
+                    var c = _sql[ Position ];
+                    if ( Char.IsWhiteSpace( c ) ) break;
+                    if ( IsSpecialCharacter( c ) ) break;
+                    Position++;
+                }
+
+            Quoted = false;
+            StopIndex = Position;
+        }
+
+        private void ReadSpecialToken() {
+            StartIndex = Position - 1;
+
+            Debug.Assert( IsSpecialCharacter( _sql[ StartIndex ] ) );
+
+            StopIndex = Position;
+            Quoted = false;
+        }
+
+        /// <summary>
+        ///  Read a single quoted identifier from the stream
+        /// </summary>
+        /// <param name="quoteChar"></param>
+        /// <returns></returns>
+        private void ReadQuotedToken( char quoteChar ) {
+            if ( quoteChar == '[' ) quoteChar = ']';
+            StartIndex = Position - 1;
+            var escaped = false;
+
+            var found = false;
+            while ( Position < _sql.Length ) {
+                var c = _sql[ Position ];
+
+                if ( c == quoteChar
+                     && !escaped ) {
+                    found = true;
+                    break;
+                }
+
+                if ( escaped ) escaped = false;
+                else if ( c == '\\' && BackslashEscapes ) escaped = true;
+                Position++;
+            }
+            if ( found ) Position++;
+            Quoted = found;
+            StopIndex = Position;
+        }
+
+        private bool IsQuoteChar( char c ) { return c == '`' || c == '\'' || c == '\"'; }
+
+        private bool IsParameterMarker( char c ) { return c == '@' || c == '?'; }
+
+        private bool IsSpecialCharacter( char c ) {
+            if ( Char.IsLetterOrDigit( c )
+                 || c == '$'
+                 || c == '_'
+                 || c == '.' ) return false;
+            if ( IsParameterMarker( c ) ) return false;
+            return true;
+        }
     }
-  }
 }

@@ -23,62 +23,49 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using MySql.Data.MySqlClient.Properties;
 
-namespace MySql.Data.MySqlClient.Authentication
-{
-    internal class AuthenticationPluginManager
-    {
-      static Dictionary<string, PluginInfo> plugins = new Dictionary<string, PluginInfo>();
+namespace MySql.Data.MySqlClient.Authentication {
+    internal class AuthenticationPluginManager {
+        private static readonly Dictionary<string, PluginInfo> Plugins = new Dictionary<string, PluginInfo>();
 
-      static AuthenticationPluginManager()
-      {
-        plugins["mysql_native_password"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.MySqlNativePasswordPlugin");
-        plugins["sha256_password"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.Sha256AuthenticationPlugin");
+        static AuthenticationPluginManager() {
+            Plugins[ "mysql_native_password" ] = new PluginInfo( "MySql.Data.MySqlClient.Authentication.MySqlNativePasswordPlugin" );
+            Plugins[ "sha256_password" ] = new PluginInfo( "MySql.Data.MySqlClient.Authentication.Sha256AuthenticationPlugin" );
 #if !CF && !RT
-        plugins["authentication_windows_client"] = new PluginInfo("MySql.Data.MySqlClient.Authentication.MySqlWindowsAuthenticationPlugin");
-        if (MySqlConfiguration.Settings != null && MySqlConfiguration.Settings.AuthenticationPlugins != null)
-        {
-          foreach (AuthenticationPluginConfigurationElement e in MySqlConfiguration.Settings.AuthenticationPlugins)
-            plugins[e.Name] = new PluginInfo(e.Type);
-        }
+            Plugins[ "authentication_windows_client" ] =
+                new PluginInfo( "MySql.Data.MySqlClient.Authentication.MySqlWindowsAuthenticationPlugin" );
+            if ( MySqlConfiguration.Settings != null
+                 && MySqlConfiguration.Settings.AuthenticationPlugins != null ) foreach ( var e in MySqlConfiguration.Settings.AuthenticationPlugins ) Plugins[ e.Name ] = new PluginInfo( e.Type );
 #endif
-      }
-
-      public static MySqlAuthenticationPlugin GetPlugin(string method)
-      {
-        if (!plugins.ContainsKey(method))
-          throw new MySqlException(String.Format(Resources.AuthenticationMethodNotSupported, method));
-        return CreatePlugin(method);
-      }
-
-      private static MySqlAuthenticationPlugin CreatePlugin(string method)
-      {
-        PluginInfo pi = plugins[method];
-
-        try
-        {
-          Type t = Type.GetType(pi.Type);
-          MySqlAuthenticationPlugin o = (MySqlAuthenticationPlugin)Activator.CreateInstance(t);
-          return o;
         }
-        catch (Exception e)
-        {
-          throw new MySqlException(String.Format(Resources.UnableToCreateAuthPlugin, method), e);
+
+        public static MySqlAuthenticationPlugin GetPlugin( string method ) {
+            if ( !Plugins.ContainsKey( method ) ) throw new MySqlException( String.Format( Resources.AuthenticationMethodNotSupported, method ) );
+            return CreatePlugin( method );
         }
-      }
+
+        private static MySqlAuthenticationPlugin CreatePlugin( string method ) {
+            var pi = Plugins[ method ];
+
+            try {
+                var t = Type.GetType( pi.Type );
+                var o = (MySqlAuthenticationPlugin) Activator.CreateInstance( t );
+                return o;
+            }
+            catch ( Exception e ) {
+                throw new MySqlException( String.Format( Resources.UnableToCreateAuthPlugin, method ), e );
+            }
+        }
     }
 
-    struct PluginInfo
-    {
-      public string Type;
-      public Assembly Assembly;
+    internal struct PluginInfo {
+        public string Type;
+        public Assembly Assembly;
 
-      public PluginInfo(string type)
-      {
-        Type = type;
-        Assembly = null;
-      }
+        public PluginInfo( string type ) {
+            Type = type;
+            Assembly = null;
+        }
     }
 }

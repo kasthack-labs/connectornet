@@ -20,196 +20,157 @@
 // with this program; if not, write to the Free Software Foundation, Inc., 
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.MySqlClient.Properties;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Text;
 
-namespace MySql.Data.MySqlClient
-{
-  public class MySqlSchemaCollection 
-  {
-    private List<SchemaColumn> columns = new List<SchemaColumn>();
-    private List<MySqlSchemaRow> rows = new List<MySqlSchemaRow>();
+namespace MySql.Data.MySqlClient {
+    public class MySqlSchemaCollection {
+        private readonly List<SchemaColumn> _columns = new List<SchemaColumn>();
+        private readonly List<MySqlSchemaRow> _rows = new List<MySqlSchemaRow>();
 #if !RT
-    private DataTable _table = null;
+        private readonly DataTable _table;
 #endif
 
-    public MySqlSchemaCollection()
-    {
-      Mapping = new Dictionary<string,int>( StringComparer.OrdinalIgnoreCase );
-      LogicalMappings = new Dictionary<int, int>();
-    }
-
-    public MySqlSchemaCollection(string name) : this()
-    {
-      Name = name;
-    }
-
-#if !RT
-    public MySqlSchemaCollection(DataTable dt) : this()
-    {
-      // cache the original datatable to avoid the overhead of creating again whenever possible.
-      _table = dt;
-      int i = 0;
-      foreach (DataColumn dc in dt.Columns)
-      {
-        columns.Add(new SchemaColumn() { Name = dc.ColumnName, Type = dc.DataType });
-        Mapping.Add(dc.ColumnName, i++);
-        LogicalMappings[columns.Count - 1] = columns.Count - 1;
-      }
-
-      foreach (DataRow dr in dt.Rows)
-      {
-        MySqlSchemaRow row = new MySqlSchemaRow(this);
-        for (i = 0; i < columns.Count; i++)
-        {
-          row[i] = dr[i];
+        public MySqlSchemaCollection() {
+            Mapping = new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase );
+            LogicalMappings = new Dictionary<int, int>();
         }
-        rows.Add(row);
-      }
-    }
-#endif
 
-    internal Dictionary<string, int> Mapping;
-    internal Dictionary<int, int> LogicalMappings;
-    public string Name { get; set; }
-    public IList<SchemaColumn> Columns { get { return columns; } }
-    public IList<MySqlSchemaRow> Rows { get { return rows; } }
-
-    internal SchemaColumn AddColumn(string name, Type t)
-    {
-      SchemaColumn c = new SchemaColumn();
-      c.Name = name;
-      c.Type = t;
-      columns.Add(c);
-      Mapping.Add(name, columns.Count-1);
-      LogicalMappings[columns.Count - 1] = columns.Count - 1;
-      return c;
-    }
-
-    internal int ColumnIndex(string name)
-    {
-      int index = -1;
-      for (int i = 0; i < columns.Count; i++)
-      {
-        SchemaColumn c = columns[i];
-        if (String.Compare(c.Name, name, StringComparison.OrdinalIgnoreCase) != 0) continue;
-        index = i;
-        break;
-      }
-      return index;
-    }
-
-    internal void RemoveColumn(string name)
-    {
-      int index = ColumnIndex(name);
-      if (index == -1)
-        throw new InvalidOperationException();
-      columns.RemoveAt(index);
-      for (int i = index; i < Columns.Count; i++)
-        LogicalMappings[i] = LogicalMappings[i] + 1;
-    }
-
-    internal bool ContainsColumn(string name)
-    {
-      return ColumnIndex(name) >= 0;
-    }
-
-    internal MySqlSchemaRow AddRow()
-    {
-      MySqlSchemaRow r = new MySqlSchemaRow(this);
-      rows.Add(r);
-      return r;
-    }
-
-    internal MySqlSchemaRow NewRow()
-    {
-      MySqlSchemaRow r = new MySqlSchemaRow(this);
-      return r;
-    }
+        public MySqlSchemaCollection( string name ) : this() { Name = name; }
 
 #if !RT
-    internal DataTable AsDataTable()
-    {
-      if (_table != null) return _table;
-      DataTable dt = new DataTable(Name);
-      foreach (SchemaColumn col in Columns)
-        dt.Columns.Add(col.Name, col.Type);
-      foreach (MySqlSchemaRow row in Rows)
-      {
-        DataRow newRow = dt.NewRow();
-        for (int i = 0; i < dt.Columns.Count; i++)
-          newRow[i] = row[i] == null ? DBNull.Value : row[i];
-        dt.Rows.Add(newRow);
-      }
-      return dt;
-    }
+        public MySqlSchemaCollection( DataTable dt ) : this() {
+            // cache the original datatable to avoid the overhead of creating again whenever possible.
+            _table = dt;
+            var i = 0;
+            foreach ( DataColumn dc in dt.Columns ) {
+                _columns.Add( new SchemaColumn { Name = dc.ColumnName, Type = dc.DataType } );
+                Mapping.Add( dc.ColumnName, i++ );
+                LogicalMappings[ _columns.Count - 1 ] = _columns.Count - 1;
+            }
+            //todo:check types
+            foreach ( DataRow dr in dt.Rows ) {
+                var row = new MySqlSchemaRow( this );
+                for ( i = 0; i < _columns.Count; i++ ) row[ i ] = dr[ i ];
+                _rows.Add( row );
+            }
+        }
 #endif
-  }
 
-  public class MySqlSchemaRow
-  {
-    private Dictionary<int,object> data;
+        internal Dictionary<string, int> Mapping;
+        internal Dictionary<int, int> LogicalMappings;
+        public string Name { get; set; }
+        public IList<SchemaColumn> Columns => _columns;
+        public IList<MySqlSchemaRow> Rows => _rows;
 
-    public MySqlSchemaRow(MySqlSchemaCollection c)
-    {
-      Collection = c;
-      InitMetadata();
+        internal SchemaColumn AddColumn( string name, Type t ) {
+            var c = new SchemaColumn();
+            c.Name = name;
+            c.Type = t;
+            _columns.Add( c );
+            Mapping.Add( name, _columns.Count - 1 );
+            LogicalMappings[ _columns.Count - 1 ] = _columns.Count - 1;
+            return c;
+        }
+
+        internal int ColumnIndex( string name ) {
+            var index = -1;
+            for ( var i = 0; i < _columns.Count; i++ ) {
+                var c = _columns[ i ];
+                if ( String.Compare( c.Name, name, StringComparison.OrdinalIgnoreCase ) != 0 ) continue;
+                index = i;
+                break;
+            }
+            return index;
+        }
+
+        internal void RemoveColumn( string name ) {
+            var index = ColumnIndex( name );
+            if ( index == -1 ) throw new InvalidOperationException();
+            _columns.RemoveAt( index );
+            for ( var i = index; i < Columns.Count; i++ ) LogicalMappings[ i ] = LogicalMappings[ i ] + 1;
+        }
+
+        internal bool ContainsColumn( string name ) { return ColumnIndex( name ) >= 0; }
+
+        internal MySqlSchemaRow AddRow() {
+            var r = new MySqlSchemaRow( this );
+            _rows.Add( r );
+            return r;
+        }
+
+        internal MySqlSchemaRow NewRow() {
+            var r = new MySqlSchemaRow( this );
+            return r;
+        }
+
+#if !RT
+        internal DataTable AsDataTable() {
+            if ( _table != null ) return _table;
+            var dt = new DataTable( Name );
+            foreach ( var col in Columns ) dt.Columns.Add( col.Name, col.Type );
+            foreach ( var row in Rows ) {
+                var newRow = dt.NewRow();
+                for ( var i = 0; i < dt.Columns.Count; i++ ) newRow[ i ] = row[ i ] == null ? DBNull.Value : row[ i ];
+                dt.Rows.Add( newRow );
+            }
+            return dt;
+        }
+#endif
     }
 
-    internal void InitMetadata()
-    {
-      data = new Dictionary<int, object>();
+    public class MySqlSchemaRow {
+        private Dictionary<int, object> _data;
+
+        public MySqlSchemaRow( MySqlSchemaCollection c ) {
+            Collection = c;
+            InitMetadata();
+        }
+
+        internal void InitMetadata() { _data = new Dictionary<int, object>(); }
+
+        internal MySqlSchemaCollection Collection { get; }
+
+        internal object this[ string s ] {
+            get {
+                return GetValueForName( s );
+            }
+            set {
+                SetValueForName( s, value );
+            }
+        }
+
+        internal object this[ int i ] {
+            get {
+                var idx = Collection.LogicalMappings[ i ];
+                if ( !_data.ContainsKey( idx ) ) _data[ idx ] = null;
+                return _data[ idx ];
+            }
+            set {
+                _data[ Collection.LogicalMappings[ i ] ] = value;
+            }
+        }
+
+        private void SetValueForName( string colName, object value ) {
+            var index = Collection.Mapping[ colName ];
+            this[ index ] = value;
+        }
+
+        private object GetValueForName( string colName ) {
+            var index = Collection.Mapping[ colName ];
+            if ( !_data.ContainsKey( index ) ) _data[ index ] = null;
+            return this[ index ];
+        }
+
+        internal void CopyRow( MySqlSchemaRow row ) {
+            if ( Collection.Columns.Count != row.Collection.Columns.Count ) throw new InvalidOperationException( "column count doesn't match" );
+            for ( var i = 0; i < Collection.Columns.Count; i++ ) row[ i ] = this[ i ];
+        }
     }
 
-    internal MySqlSchemaCollection Collection { get; private set; }
-
-    internal object this[string s]
-    {
-      get { return GetValueForName(s); }
-      set { SetValueForName(s, value); }
+    public class SchemaColumn {
+        public string Name { get; set; }
+        public Type Type { get; set; }
     }
-
-    internal object this[int i]
-    {
-      get {
-        int idx = Collection.LogicalMappings[i];
-        if (!data.ContainsKey(idx))
-          data[idx] = null;
-        return data[ idx ];
-      }
-      set { data[ Collection.LogicalMappings[ i ] ] = value; }
-    }
-
-    private void SetValueForName(string colName, object value)
-    {
-      int index = Collection.Mapping[colName];
-      this[index] = value;
-    }
-
-    private object GetValueForName(string colName)
-    {
-      int index = Collection.Mapping[colName];
-      if (!data.ContainsKey(index))
-        data[index] = null;
-      return this[index];
-    }
-
-    internal void CopyRow(MySqlSchemaRow row)
-    {
-      if (Collection.Columns.Count != row.Collection.Columns.Count)
-        throw new InvalidOperationException("column count doesn't match");
-      for (int i = 0; i < Collection.Columns.Count; i++)
-        row[i] = this[i];
-    }
-  }
-
-  public class SchemaColumn
-  {
-    public string Name { get; set; }
-    public Type Type { get; set; }
-  }
 }

@@ -21,73 +21,48 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Security;
 using System.Security.Permissions;
 
-namespace MySql.Data.MySqlClient
-{
-  [Serializable]
-  public sealed class MySqlClientPermission : DBDataPermission
-  {
+namespace MySql.Data.MySqlClient {
+    [Serializable]
+    public sealed class MySqlClientPermission : DBDataPermission {
+        #region Contructors
+        public MySqlClientPermission( PermissionState permissionState ) : base( permissionState ) { }
 
-  #region Contructors
+        private MySqlClientPermission( MySqlClientPermission permission ) : base( permission ) { }
 
-  public MySqlClientPermission(PermissionState permissionState)
-    : base(permissionState)
-  {
-  }
+        internal MySqlClientPermission( MySqlClientPermissionAttribute permissionAttribute ) : base( permissionAttribute ) { }
 
-  private MySqlClientPermission(MySqlClientPermission permission):base(permission)
-  { 
-  }
+        internal MySqlClientPermission( DBDataPermission permission ) : base( permission ) { }
 
-  internal MySqlClientPermission(MySqlClientPermissionAttribute permissionAttribute):base(permissionAttribute)
-  { 
-  }
+        internal MySqlClientPermission( string connectionString ) : base( PermissionState.None ) {
+            if ( ( connectionString == null )
+                 || connectionString.Length == 0 ) base.Add( string.Empty, string.Empty, KeyRestrictionBehavior.AllowOnly );
+            else base.Add( connectionString, string.Empty, KeyRestrictionBehavior.AllowOnly );
+        }
+        #endregion
 
-	internal MySqlClientPermission (DBDataPermission permission)
-		: base (permission)
-	{
-	}
+        #region Methods
+        /// <summary>
+        /// Adds a new connection string with set of restricted keywords to the MySqlClientPermission object 
+        /// </summary>
+        ///<param name="connectionString">Settings to be used for the connection</param>
+        ///<param name="restrictions">Keywords to define the restrictions</param>
+        ///<param name="behavior">KeyRestrictionBehavior to be used</param>
+        public override void Add( string connectionString, string restrictions, KeyRestrictionBehavior behavior ) {
+            base.Add( connectionString, restrictions, behavior );
+        }
 
-  internal MySqlClientPermission(string connectionString)
-    : base(PermissionState.None)
-  {
-    if ((connectionString == null) || connectionString.Length == 0)
-      base.Add(string.Empty, string.Empty, KeyRestrictionBehavior.AllowOnly);
-    else
-      base.Add(connectionString, string.Empty, KeyRestrictionBehavior.AllowOnly);
-  }
-
-
-  #endregion
-   
-  #region Methods
-  
-  /// <summary>
-  /// Adds a new connection string with set of restricted keywords to the MySqlClientPermission object 
-  /// </summary>
-  ///<param name="connectionString">Settings to be used for the connection</param>
-  ///<param name="restrictions">Keywords to define the restrictions</param>
-  ///<param name="behavior">KeyRestrictionBehavior to be used</param>
-  public override void Add(string connectionString, string restrictions, KeyRestrictionBehavior behavior)
-  {
-    base.Add(connectionString, restrictions, behavior);
-  }
-  
-  /// <summary>
-  /// Returns MySqlClientPermission as an IPermission
-  /// </summary>
-  /// <returns></returns>
-  public override IPermission Copy()
-  {
-    return new MySqlClientPermission(this);
-  }
-
-  #endregion
-
-  }
+        /// <summary>
+        /// Returns MySqlClientPermission as an IPermission
+        /// </summary>
+        /// <returns></returns>
+        public override IPermission Copy() {
+            return new MySqlClientPermission( this );
+        }
+        #endregion
+    }
 }

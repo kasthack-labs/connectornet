@@ -20,19 +20,10 @@
 // with this program; if not, write to the Free Software Foundation, Inc., 
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using System;
-using System.Collections.Generic;
 using System.Data.Common;
-using System.Text;
 
-namespace MySql.Data.MySqlClient
-{
-  public sealed partial class MySqlTransaction : DbTransaction
-  {
-    protected override DbConnection DbConnection
-    {
-      get { return conn; }
+namespace MySql.Data.MySqlClient {
+    public sealed partial class MySqlTransaction : DbTransaction {
+        protected override DbConnection DbConnection => Connection;
     }
-  }
-
 }

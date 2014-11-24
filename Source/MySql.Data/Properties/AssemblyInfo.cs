@@ -22,28 +22,32 @@
 
 using System;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Security;
+using MySql.Data;
 
 //
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 //
-[assembly: AssemblyDescription("ADO.Net driver for MySQL")]
-[assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Oracle")]
-[assembly: AssemblyProduct("")]
-[assembly: AssemblyCopyright("Copyright © 2004, 2013, Oracle and/or its affiliates. All rights reserved.")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
-[assembly: ComVisible(false)]
-[assembly: CLSCompliant(false)]
+
+[assembly: AssemblyDescription( "ADO.Net driver for MySQL" )]
+[assembly: AssemblyConfiguration( "" )]
+[assembly: AssemblyCompany( "Oracle" )]
+[assembly: AssemblyProduct( "" )]
+[assembly: AssemblyCopyright( "Copyright © 2004, 2013, Oracle and/or its affiliates. All rights reserved." )]
+[assembly: AssemblyTrademark( "" )]
+[assembly: AssemblyCulture( "" )]
+[assembly: ComVisible( false )]
+[assembly: CLSCompliant( false )]
 #if !CF
-[assembly: AssemblyTitle("MySql.Data.dll")]
+
+[assembly: AssemblyTitle( "MySql.Data.dll" )]
 #if !RT
-[assembly: AllowPartiallyTrustedCallers()]
+
+[assembly: AllowPartiallyTrustedCallers]
 #endif
 #else
 [assembly: AssemblyTitle("MySql.Data.CF.dll")]
@@ -78,15 +82,16 @@ using System.Security;
 //   (*) Delay Signing is an advanced option - see the Microsoft .NET Framework
 //       documentation for more information on this.
 //
-[assembly: AssemblyDelaySign(false)]
-[assembly: AssemblyKeyName("ConnectorNet")]
-[assembly: InternalsVisibleTo("MySql.Data.Tests, PublicKey = " + MySql.Data.AssemblyPublicKey.Value)]
-[assembly: InternalsVisibleTo("MySql.Data.CF.Tests, PublicKey = " + MySql.Data.AssemblyPublicKey.Value)]
-[assembly: InternalsVisibleTo("MySql.Data.Entity, PublicKey = " + MySql.Data.AssemblyPublicKey.Value)]
-[assembly: InternalsVisibleTo("MySql.Data.Entity.EF5, PublicKey = " + MySql.Data.AssemblyPublicKey.Value)]
-[assembly: InternalsVisibleTo("MySql.Data.Entity.EF6, PublicKey = " + MySql.Data.AssemblyPublicKey.Value)]
-[assembly: InternalsVisibleTo("MySql.Data.RT.Tests, PublicKey = " + MySql.Data.AssemblyPublicKey.Value)]
-[assembly: InternalsVisibleTo("MySql.Fabric.Plugin, PublicKey = " + MySql.Data.AssemblyPublicKey.Value)]
+
+[assembly: AssemblyDelaySign( false )]
+[assembly: AssemblyKeyName( "ConnectorNet" )]
+[assembly: InternalsVisibleTo( "MySql.Data.Tests, PublicKey = " + AssemblyPublicKey.Value )]
+[assembly: InternalsVisibleTo( "MySql.Data.CF.Tests, PublicKey = " + AssemblyPublicKey.Value )]
+[assembly: InternalsVisibleTo( "MySql.Data.Entity, PublicKey = " + AssemblyPublicKey.Value )]
+[assembly: InternalsVisibleTo( "MySql.Data.Entity.EF5, PublicKey = " + AssemblyPublicKey.Value )]
+[assembly: InternalsVisibleTo( "MySql.Data.Entity.EF6, PublicKey = " + AssemblyPublicKey.Value )]
+[assembly: InternalsVisibleTo( "MySql.Data.RT.Tests, PublicKey = " + AssemblyPublicKey.Value )]
+[assembly: InternalsVisibleTo( "MySql.Fabric.Plugin, PublicKey = " + AssemblyPublicKey.Value )]
 
 #if CF
 [assembly: AssemblyFlags(AssemblyNameFlags.Retargetable)]

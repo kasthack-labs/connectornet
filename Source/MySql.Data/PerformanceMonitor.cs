@@ -20,29 +20,16 @@
 // with this program; if not, write to the Free Software Foundation, Inc., 
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using System;
-using System.Diagnostics;
-using MySql.Data.MySqlClient.Properties;
+namespace MySql.Data.MySqlClient {
+    internal class PerformanceMonitor {
+        private MySqlConnection _connection;
 
-namespace MySql.Data.MySqlClient
-{
-  internal class PerformanceMonitor
-  {
-    private MySqlConnection connection;
+        public PerformanceMonitor( MySqlConnection connection ) { Connection = connection; }
 
-    public PerformanceMonitor(MySqlConnection connection)
-    {
-      Connection = connection;
+        public MySqlConnection Connection { get; private set; }
+
+        public virtual void AddHardProcedureQuery() { }
+
+        public virtual void AddSoftProcedureQuery() { }
     }
-
-    public MySqlConnection Connection { get; private set; }
-
-    public virtual void AddHardProcedureQuery()
-    {
-    }
-
-    public virtual void AddSoftProcedureQuery()
-    {
-    }
-  }
 }

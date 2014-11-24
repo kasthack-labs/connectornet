@@ -24,64 +24,52 @@ using System;
 using System.Diagnostics;
 using MySql.Data.MySqlClient.Properties;
 
-namespace MySql.Data.MySqlClient
-{
-  internal class SystemPerformanceMonitor : PerformanceMonitor
-  {
-    private static PerformanceCounter procedureHardQueries;
-    private static PerformanceCounter procedureSoftQueries;
+namespace MySql.Data.MySqlClient {
+    internal class SystemPerformanceMonitor : PerformanceMonitor {
+        private static PerformanceCounter _procedureHardQueries;
+        private static PerformanceCounter _procedureSoftQueries;
 
-    public SystemPerformanceMonitor(MySqlConnection connection) : base(connection)
-    {
-      string categoryName = Resources.PerfMonCategoryName;
+        public SystemPerformanceMonitor( MySqlConnection connection ) : base( connection ) {
+            var categoryName = Resources.PerfMonCategoryName;
 
-      if (connection.Settings.UsePerformanceMonitor && procedureHardQueries == null)
-      {
-        try
-        {
-          procedureHardQueries = new PerformanceCounter(categoryName,
-                                                        "HardProcedureQueries", false);
-          procedureSoftQueries = new PerformanceCounter(categoryName,
-                                                        "SoftProcedureQueries", false);
+            if ( connection.Settings.UsePerformanceMonitor
+                 && _procedureHardQueries == null )
+                try {
+                    _procedureHardQueries = new PerformanceCounter( categoryName, "HardProcedureQueries", false );
+                    _procedureSoftQueries = new PerformanceCounter( categoryName, "SoftProcedureQueries", false );
+                }
+                catch ( Exception ex ) {
+                    MySqlTrace.LogError( connection.ServerThread, ex.Message );
+                }
         }
-        catch (Exception ex)
-        {
-          MySqlTrace.LogError(connection.ServerThread, ex.Message);
-        }
-      }
-    }
 
 #if DEBUG
-    private void EnsurePerfCategoryExist()
-    {
-      CounterCreationDataCollection ccdc = new CounterCreationDataCollection();
-      CounterCreationData ccd = new CounterCreationData();
-      ccd.CounterType = PerformanceCounterType.NumberOfItems32;
-      ccd.CounterName = "HardProcedureQueries";
-      ccdc.Add(ccd);
+        private void EnsurePerfCategoryExist() {
+            var ccdc = new CounterCreationDataCollection();
+            var ccd = new CounterCreationData();
+            ccd.CounterType = PerformanceCounterType.NumberOfItems32;
+            ccd.CounterName = "HardProcedureQueries";
+            ccdc.Add( ccd );
 
-      ccd = new CounterCreationData();
-      ccd.CounterType = PerformanceCounterType.NumberOfItems32;
-      ccd.CounterName = "SoftProcedureQueries";
-      ccdc.Add(ccd);
+            ccd = new CounterCreationData();
+            ccd.CounterType = PerformanceCounterType.NumberOfItems32;
+            ccd.CounterName = "SoftProcedureQueries";
+            ccdc.Add( ccd );
 
-      if (!PerformanceCounterCategory.Exists(Resources.PerfMonCategoryName))
-        PerformanceCounterCategory.Create(Resources.PerfMonCategoryName, null, ccdc);
-    }
+            if ( !PerformanceCounterCategory.Exists( Resources.PerfMonCategoryName ) ) PerformanceCounterCategory.Create( Resources.PerfMonCategoryName, null, ccdc );
+        }
 #endif
 
-    public void AddHardProcedureQuery()
-    {
-      if (!Connection.Settings.UsePerformanceMonitor ||
-          procedureHardQueries == null) return;
-      procedureHardQueries.Increment();
-    }
+        public void AddHardProcedureQuery() {
+            if ( !Connection.Settings.UsePerformanceMonitor
+                 || _procedureHardQueries == null ) return;
+            _procedureHardQueries.Increment();
+        }
 
-    public void AddSoftProcedureQuery()
-    {
-      if (!Connection.Settings.UsePerformanceMonitor ||
-          procedureSoftQueries == null) return;
-      procedureSoftQueries.Increment();
+        public void AddSoftProcedureQuery() {
+            if ( !Connection.Settings.UsePerformanceMonitor
+                 || _procedureSoftQueries == null ) return;
+            _procedureSoftQueries.Increment();
+        }
     }
-  }
 }

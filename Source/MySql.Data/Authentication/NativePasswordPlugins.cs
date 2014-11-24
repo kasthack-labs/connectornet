@@ -20,83 +20,71 @@
 // with this program; if not, write to the Free Software Foundation, Inc., 
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using System.IO;
 using System;
-using MySql.Data.MySqlClient.Properties;
-using MySql.Data.Common;
 using System.Security.Cryptography;
 #if RT
 using AliasText = MySql.Data.MySqlClient.RT;
 #else
 using AliasText = System.Text;
+
 #endif
 
-namespace MySql.Data.MySqlClient.Authentication
-{
-  public class MySqlNativePasswordPlugin : MySqlAuthenticationPlugin
-  {
-    public override string PluginName
-    {
-      get { return "mysql_native_password"; }
+namespace MySql.Data.MySqlClient.Authentication {
+    public class MySqlNativePasswordPlugin : MySqlAuthenticationPlugin {
+        public override string PluginName => "mysql_native_password";
+
+        protected override void SetAuthData( byte[] data ) {
+            // if the data given to us is a null terminated string, we need to trim off the trailing zero
+            if ( data[ data.Length - 1 ] == 0 ) {
+                var b = new byte[data.Length - 1];
+                Buffer.BlockCopy( data, 0, b, 0, data.Length - 1 );
+                base.SetAuthData( b );
+            }
+            else base.SetAuthData( data );
+        }
+
+        protected override byte[] MoreData( byte[] data ) {
+            var passBytes = GetPassword() as byte[];
+            var buffer = new byte[passBytes.Length - 1];
+            Array.Copy( passBytes, 1, buffer, 0, passBytes.Length - 1 );
+            return buffer;
+        }
+
+        public override object GetPassword() {
+            var bytes = Get411Password( Settings.Password, AuthenticationData );
+            if ( bytes != null
+                 && bytes.Length == 1
+                 && bytes[ 0 ] == 0 ) return null;
+            return bytes;
+        }
+
+        /// <summary>
+        /// Returns a byte array containing the proper encryption of the 
+        /// given password/seed according to the new 4.1.1 authentication scheme.
+        /// </summary>
+        /// <param name="password"></param>
+        /// <param name="seed"></param>
+        /// <returns></returns>
+        private byte[] Get411Password( string password, byte[] seedBytes ) {
+            // if we have no password, then we just return 1 zero byte
+            if ( password.Length == 0 ) return new byte[1];
+
+            var sha = new SHA1CryptoServiceProvider();
+
+            var firstHash = sha.ComputeHash( AliasText.Encoding.Default.GetBytes( password ) );
+            var secondHash = sha.ComputeHash( firstHash );
+
+            var input = new byte[seedBytes.Length + secondHash.Length];
+            Array.Copy( seedBytes, 0, input, 0, seedBytes.Length );
+            Array.Copy( secondHash, 0, input, seedBytes.Length, secondHash.Length );
+            var thirdHash = sha.ComputeHash( input );
+
+            var finalHash = new byte[thirdHash.Length + 1];
+            finalHash[ 0 ] = 0x14;
+            Array.Copy( thirdHash, 0, finalHash, 1, thirdHash.Length );
+
+            for ( var i = 1; i < finalHash.Length; i++ ) finalHash[ i ] = (byte) ( finalHash[ i ] ^ firstHash[ i - 1 ] );
+            return finalHash;
+        }
     }
-
-    protected override void SetAuthData(byte[] data)
-    {
-      // if the data given to us is a null terminated string, we need to trim off the trailing zero
-      if (data[data.Length - 1] == 0)
-      {
-        byte[] b = new byte[data.Length - 1];
-        Buffer.BlockCopy(data, 0, b, 0, data.Length - 1);
-        base.SetAuthData(b);
-      }
-      else
-        base.SetAuthData(data);
-    }
-
-    protected override byte[] MoreData(byte[] data)
-    {
-      byte[] passBytes = GetPassword() as byte[];
-      byte[] buffer = new byte[passBytes.Length - 1];
-      Array.Copy(passBytes, 1, buffer, 0, passBytes.Length - 1);
-      return buffer;
-    }
-
-    public override object GetPassword()
-    {
-      byte[] bytes = Get411Password(Settings.Password, AuthenticationData);
-      if (bytes != null && bytes.Length == 1 && bytes[0] == 0) return null;
-      return bytes;
-    }
-
-    /// <summary>
-    /// Returns a byte array containing the proper encryption of the 
-    /// given password/seed according to the new 4.1.1 authentication scheme.
-    /// </summary>
-    /// <param name="password"></param>
-    /// <param name="seed"></param>
-    /// <returns></returns>
-    private byte[] Get411Password(string password, byte[] seedBytes)
-    {
-      // if we have no password, then we just return 1 zero byte
-      if (password.Length == 0) return new byte[1];
-
-      SHA1 sha = new SHA1CryptoServiceProvider();
-
-      byte[] firstHash = sha.ComputeHash(AliasText.Encoding.Default.GetBytes(password));
-      byte[] secondHash = sha.ComputeHash(firstHash);
-
-      byte[] input = new byte[seedBytes.Length + secondHash.Length];
-      Array.Copy(seedBytes, 0, input, 0, seedBytes.Length);
-      Array.Copy(secondHash, 0, input, seedBytes.Length, secondHash.Length);
-      byte[] thirdHash = sha.ComputeHash(input);
-
-      byte[] finalHash = new byte[thirdHash.Length + 1];
-      finalHash[0] = 0x14;
-      Array.Copy(thirdHash, 0, finalHash, 1, thirdHash.Length);
-
-      for (int i = 1; i < finalHash.Length; i++)
-        finalHash[i] = (byte)(finalHash[i] ^ firstHash[i - 1]);
-      return finalHash;
-    }
-  }
 }

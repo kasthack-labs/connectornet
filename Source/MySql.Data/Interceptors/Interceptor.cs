@@ -21,42 +21,31 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using MySql.Data.MySqlClient.Properties;
-using System.Reflection;
 
-namespace MySql.Data.MySqlClient
-{
-  /// <summary>
-  /// Interceptor is the base class for the "manager" classes such as ExceptionInterceptor,
-  /// CommandInterceptor, etc
-  /// </summary>
-  internal abstract class Interceptor
-  {
-    protected MySqlConnection connection;
+namespace MySql.Data.MySqlClient {
+    /// <summary>
+    /// Interceptor is the base class for the "manager" classes such as ExceptionInterceptor,
+    /// CommandInterceptor, etc
+    /// </summary>
+    internal abstract class Interceptor {
+        protected MySqlConnection Connection;
 
-    protected void LoadInterceptors(string interceptorList)
-    {
-      if (String.IsNullOrEmpty(interceptorList)) return;
+        protected void LoadInterceptors( string interceptorList ) {
+            if ( String.IsNullOrEmpty( interceptorList ) ) return;
 
-      string[] interceptors = interceptorList.Split('|');
-      foreach (string interceptorType in interceptors)
-      {
-        if (String.IsNullOrEmpty(interceptorType)) continue;
+            var interceptors = interceptorList.Split( '|' );
+            foreach ( var interceptorType in interceptors ) {
+                if ( String.IsNullOrEmpty( interceptorType ) ) continue;
 
-        string type = ResolveType(interceptorType);
-        Type t = Type.GetType(type);
-        object interceptorObject = Activator.CreateInstance(t);
-        AddInterceptor(interceptorObject);
-      }
+                var type = ResolveType( interceptorType );
+                var t = Type.GetType( type );
+                var interceptorObject = Activator.CreateInstance( t );
+                AddInterceptor( interceptorObject );
+            }
+        }
+
+        protected abstract void AddInterceptor( object o );
+
+        protected virtual string ResolveType( string nameOrType ) { return nameOrType; }
     }
-
-    protected abstract void AddInterceptor(object o);
-
-    protected virtual string ResolveType(string nameOrType)
-    {
-      return nameOrType;
-    }
-  }
 }

@@ -20,59 +20,43 @@
 // with this program; if not, write to the Free Software Foundation, Inc., 
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using System;
 using System.Collections.Generic;
 
-namespace MySql.Data.Common
-{
-  internal class Cache<KeyType, ValueType>
-  {
-    private int _capacity;
-    private Queue<KeyType> _keyQ;
-    private Dictionary<KeyType, ValueType> _contents;
+namespace MySql.Data.Common {
+    internal class Cache<TKeyType, TValueType> {
+        private readonly int _capacity;
+        private readonly Queue<TKeyType> _keyQ;
+        private readonly Dictionary<TKeyType, TValueType> _contents;
 
-    public Cache(int initialCapacity, int capacity)
-    {
-      _capacity = capacity;
-      _contents = new Dictionary<KeyType, ValueType>(initialCapacity);
+        public Cache( int initialCapacity, int capacity ) {
+            _capacity = capacity;
+            _contents = new Dictionary<TKeyType, TValueType>( initialCapacity );
 
-      if (capacity > 0)
-        _keyQ = new Queue<KeyType>(initialCapacity);
-    }
-
-    public ValueType this[KeyType key]
-    {
-      get
-      {
-        ValueType val;
-        if (_contents.TryGetValue(key, out val))
-          return val;
-        else
-          return default(ValueType);
-      }
-      set { InternalAdd(key, value); }
-    }
-
-    public void Add(KeyType key, ValueType value)
-    {
-      InternalAdd(key, value);
-    }
-
-    private void InternalAdd(KeyType key, ValueType value)
-    {
-      if (!_contents.ContainsKey(key))
-      {
-
-        if (_capacity > 0)
-        {
-          _keyQ.Enqueue(key);
-
-          if (_keyQ.Count > _capacity)
-            _contents.Remove(_keyQ.Dequeue());
+            if ( capacity > 0 ) _keyQ = new Queue<TKeyType>( initialCapacity );
         }
-      }
 
-      _contents[key] = value;
+        public TValueType this[ TKeyType key ] {
+            get {
+                TValueType val;
+                if ( _contents.TryGetValue( key, out val ) ) return val;
+                return default( TValueType );
+            }
+            set {
+                InternalAdd( key, value );
+            }
+        }
+
+        public void Add( TKeyType key, TValueType value ) { InternalAdd( key, value ); }
+
+        private void InternalAdd( TKeyType key, TValueType value ) {
+            if ( !_contents.ContainsKey( key ) )
+                if ( _capacity > 0 ) {
+                    _keyQ.Enqueue( key );
+
+                    if ( _keyQ.Count > _capacity ) _contents.Remove( _keyQ.Dequeue() );
+                }
+
+            _contents[ key ] = value;
+        }
     }
-  }
 }

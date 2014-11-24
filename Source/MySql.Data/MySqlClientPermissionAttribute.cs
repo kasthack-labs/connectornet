@@ -21,24 +21,19 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 using System;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.Security;
 using System.Security.Permissions;
 
-namespace MySql.Data.MySqlClient
-{
-  [Serializable, AttributeUsage(AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Struct | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
-  public sealed class MySqlClientPermissionAttribute : DBDataPermissionAttribute
-  {
-      // Methods
-      public MySqlClientPermissionAttribute(SecurityAction action) : base(action)
-      {
-      }
+namespace MySql.Data.MySqlClient {
+    [Serializable]
+    [AttributeUsage(
+        AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Struct | AttributeTargets.Class
+        | AttributeTargets.Assembly, AllowMultiple = true, Inherited = false )]
+    public sealed class MySqlClientPermissionAttribute : DBDataPermissionAttribute {
+        // Methods
+        public MySqlClientPermissionAttribute( SecurityAction action ) : base( action ) { }
 
-      public override IPermission CreatePermission()
-      {
-        return new MySqlClientPermission(this);
-      }
+        public override IPermission CreatePermission() { return new MySqlClientPermission( this ); }
     }
 }

@@ -21,116 +21,80 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 using System;
-using System.Data;
 using MySql.Data.MySqlClient;
 
-namespace MySql.Data.Types
-{
-  internal struct MySqlInt64 : IMySqlValue
-  {
-    private long mValue;
-    private bool isNull;
+namespace MySql.Data.Types {
+    internal struct MySqlInt64 : IMySqlValue {
+        private readonly long _mValue;
+        private readonly bool _isNull;
 
-    public MySqlInt64(bool isNull)
-    {
-      this.isNull = isNull;
-      mValue = 0;
+        public MySqlInt64( bool isNull ) {
+            this._isNull = isNull;
+            _mValue = 0;
+        }
+
+        public MySqlInt64( long val ) {
+            _isNull = false;
+            _mValue = val;
+        }
+
+        #region IMySqlValue Members
+        public bool IsNull => _isNull;
+
+        MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.Int64;
+
+        object IMySqlValue.Value => _mValue;
+
+        public long Value => _mValue;
+
+        Type IMySqlValue.SystemType => typeof( long );
+
+        string IMySqlValue.MySqlTypeName => "BIGINT";
+
+        void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
+            var v = ( val is long ) ? (long) val : Convert.ToInt64( val );
+            if ( binary ) packet.WriteInteger( v, 8 );
+            else packet.WriteStringNoNull( v.ToString() );
+        }
+
+        IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {
+            if ( nullVal ) return new MySqlInt64( true );
+
+            if ( length == -1 ) return new MySqlInt64( (long) packet.ReadULong( 8 ) );
+            return new MySqlInt64( long.Parse( packet.ReadString( length ) ) );
+        }
+
+        void IMySqlValue.SkipValue( MySqlPacket packet ) { packet.Position += 8; }
+        #endregion
+
+        internal static void SetDsInfo( MySqlSchemaCollection sc ) {
+            // we use name indexing because this method will only be called
+            // when GetSchema is called for the DataSourceInformation 
+            // collection and then it wil be cached.
+            var row = sc.AddRow();
+            row[ "TypeName" ] = "BIGINT";
+            row[ "ProviderDbType" ] = MySqlDbType.Int64;
+            row[ "ColumnSize" ] = 0;
+            row[ "CreateFormat" ] = "BIGINT";
+            row[ "CreateParameters" ] = null;
+            row[ "DataType" ] = "System.long";
+            row[ "IsAutoincrementable" ] = true;
+            row[ "IsBestMatch" ] = true;
+            row[ "IsCaseSensitive" ] = false;
+            row[ "IsFixedLength" ] = true;
+            row[ "IsFixedPrecisionScale" ] = true;
+            row[ "IsLong" ] = false;
+            row[ "IsNullable" ] = true;
+            row[ "IsSearchable" ] = true;
+            row[ "IsSearchableWithLike" ] = false;
+            row[ "IsUnsigned" ] = false;
+            row[ "MaximumScale" ] = 0;
+            row[ "MinimumScale" ] = 0;
+            row[ "IsConcurrencyType" ] = DBNull.Value;
+            row[ "IsLiteralSupported" ] = false;
+            row[ "LiteralPrefix" ] = null;
+            row[ "LiteralSuffix" ] = null;
+            row[ "NativeDataType" ] = null;
+        }
     }
-
-    public MySqlInt64(long val)
-    {
-      this.isNull = false;
-      mValue = val;
-    }
-
-    #region IMySqlValue Members
-
-    public bool IsNull
-    {
-      get { return isNull; }
-    }
-
-    MySqlDbType IMySqlValue.MySqlDbType
-    {
-      get { return MySqlDbType.Int64; }
-    }
-
-    object IMySqlValue.Value
-    {
-      get { return mValue; }
-    }
-
-    public long Value
-    {
-      get { return mValue; }
-    }
-
-    Type IMySqlValue.SystemType
-    {
-      get { return typeof(long); }
-    }
-
-    string IMySqlValue.MySqlTypeName
-    {
-      get { return "BIGINT"; }
-    }
-
-    void IMySqlValue.WriteValue(MySqlPacket packet, bool binary, object val, int length)
-    {
-      long v = (val is Int64) ? (Int64)val : Convert.ToInt64(val);
-      if (binary)
-        packet.WriteInteger(v, 8);
-      else
-        packet.WriteStringNoNull(v.ToString());
-    }
-
-    IMySqlValue IMySqlValue.ReadValue(MySqlPacket packet, long length, bool nullVal)
-    {
-      if (nullVal)
-        return new MySqlInt64(true);
-
-      if (length == -1)
-        return new MySqlInt64((long)packet.ReadULong(8));
-      else
-        return new MySqlInt64(Int64.Parse(packet.ReadString(length)));
-    }
-
-    void IMySqlValue.SkipValue(MySqlPacket packet)
-    {
-      packet.Position += 8;
-    }
-
-    #endregion
-
-    internal static void SetDSInfo(MySqlSchemaCollection sc)
-    {
-      // we use name indexing because this method will only be called
-      // when GetSchema is called for the DataSourceInformation 
-      // collection and then it wil be cached.
-      MySqlSchemaRow row = sc.AddRow();
-      row["TypeName"] = "BIGINT";
-      row["ProviderDbType"] = MySqlDbType.Int64;
-      row["ColumnSize"] = 0;
-      row["CreateFormat"] = "BIGINT";
-      row["CreateParameters"] = null;
-      row["DataType"] = "System.Int64";
-      row["IsAutoincrementable"] = true;
-      row["IsBestMatch"] = true;
-      row["IsCaseSensitive"] = false;
-      row["IsFixedLength"] = true;
-      row["IsFixedPrecisionScale"] = true;
-      row["IsLong"] = false;
-      row["IsNullable"] = true;
-      row["IsSearchable"] = true;
-      row["IsSearchableWithLike"] = false;
-      row["IsUnsigned"] = false;
-      row["MaximumScale"] = 0;
-      row["MinimumScale"] = 0;
-      row["IsConcurrencyType"] = DBNull.Value;
-      row["IsLiteralSupported"] = false;
-      row["LiteralPrefix"] = null;
-      row["LiteralSuffix"] = null;
-      row["NativeDataType"] = null;
-    }
-  }
 }

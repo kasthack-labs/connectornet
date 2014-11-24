@@ -21,82 +21,66 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 using System;
+using System.Globalization;
 using MySql.Data.MySqlClient;
 using MySql.Data.MySqlClient.Properties;
 
-namespace MySql.Data.Common
-{
-  /// <summary>
-  /// Summary description for Version.
-  /// </summary>
-  internal struct DBVersion
-  {
-    private int major;
-    private int minor;
-    private int build;
-    private string srcString;
+namespace MySql.Data.Common {
+    /// <summary>
+    /// Summary description for Version.
+    /// </summary>
+    internal struct DbVersion {
+        private readonly int _major;
+        private readonly int _minor;
+        private readonly int _build;
+        private readonly string _srcString;
 
-    public DBVersion(string s, int major, int minor, int build)
-    {
-      this.major = major;
-      this.minor = minor;
-      this.build = build;
-      srcString = s;
+        public DbVersion( string s, int major, int minor, int build ) {
+            this._major = major;
+            this._minor = minor;
+            this._build = build;
+            _srcString = s;
+        }
+
+        public int Major => _major;
+
+        public int Minor => _minor;
+
+        public int Build => _build;
+
+        public static DbVersion Parse( string versionString ) {
+            var start = 0;
+            var index = versionString.IndexOf( '.', start );
+            if ( index == -1 ) throw new MySqlException( Resources.BadVersionFormat );
+            var val = versionString.Substring( start, index - start ).Trim();
+            var major = Convert.ToInt32( val, NumberFormatInfo.InvariantInfo );
+
+            start = index + 1;
+            index = versionString.IndexOf( '.', start );
+            if ( index == -1 ) throw new MySqlException( Resources.BadVersionFormat );
+            val = versionString.Substring( start, index - start ).Trim();
+            var minor = Convert.ToInt32( val, NumberFormatInfo.InvariantInfo );
+
+            start = index + 1;
+            var i = start;
+            while ( i < versionString.Length
+                    && Char.IsDigit( versionString, i ) ) i++;
+            val = versionString.Substring( start, i - start ).Trim();
+            var build = Convert.ToInt32( val, NumberFormatInfo.InvariantInfo );
+
+            return new DbVersion( versionString, major, minor, build );
+        }
+
+        public bool IsAtLeast( int majorNum, int minorNum, int buildNum ) {
+            if ( _major > majorNum ) return true;
+            if ( _major == majorNum
+                 && _minor > minorNum ) return true;
+            if ( _major == majorNum
+                 && _minor == minorNum
+                 && _build >= buildNum ) return true;
+            return false;
+        }
+
+        public override string ToString() { return _srcString; }
     }
-
-    public int Major
-    {
-      get { return major; }
-    }
-
-    public int Minor
-    {
-      get { return minor; }
-    }
-
-    public int Build
-    {
-      get { return build; }
-    }
-
-    public static DBVersion Parse(string versionString)
-    {
-      int start = 0;
-      int index = versionString.IndexOf('.', start);
-      if (index == -1)
-        throw new MySqlException(Resources.BadVersionFormat);
-      string val = versionString.Substring(start, index - start).Trim();
-      int major = Convert.ToInt32(val, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-      start = index + 1;
-      index = versionString.IndexOf('.', start);
-      if (index == -1)
-        throw new MySqlException(Resources.BadVersionFormat);
-      val = versionString.Substring(start, index - start).Trim();
-      int minor = Convert.ToInt32(val, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-      start = index + 1;
-      int i = start;
-      while (i < versionString.Length && Char.IsDigit(versionString, i))
-        i++;
-      val = versionString.Substring(start, i - start).Trim();
-      int build = Convert.ToInt32(val, System.Globalization.NumberFormatInfo.InvariantInfo);
-
-      return new DBVersion(versionString, major, minor, build);
-    }
-
-    public bool isAtLeast(int majorNum, int minorNum, int buildNum)
-    {
-      if (major > majorNum) return true;
-      if (major == majorNum && minor > minorNum) return true;
-      if (major == majorNum && minor == minorNum && build >= buildNum) return true;
-      return false;
-    }
-
-    public override string ToString()
-    {
-      return srcString;
-    }
-
-  }
 }

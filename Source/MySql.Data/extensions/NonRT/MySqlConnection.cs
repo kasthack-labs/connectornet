@@ -20,7 +20,6 @@
 // with this program; if not, write to the Free Software Foundation, Inc., 
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.MySqlClient.Properties;
 using System;
 using System.ComponentModel;
 using System.Data;
@@ -29,91 +28,71 @@ using System.Drawing;
 using System.Security;
 using System.Security.Permissions;
 
-namespace MySql.Data.MySqlClient
-{
-  [ToolboxBitmap(typeof(MySqlConnection), "MySqlClient.resources.connection.bmp")]
-  [DesignerCategory("Code")]
-  [ToolboxItem(true)]
-  public sealed partial class MySqlConnection : DbConnection, ICloneable
-  {
-    /// <summary>
-    /// Returns schema information for the data source of this <see cref="DbConnection"/>. 
-    /// </summary>
-    /// <returns>A <see cref="DataTable"/> that contains schema information. </returns>
-    public override DataTable GetSchema()
-    {
-      return GetSchema(null);
-    }
+namespace MySql.Data.MySqlClient {
+    [ToolboxBitmap( typeof( MySqlConnection ), "MySqlClient.resources.connection.bmp" )]
+    [DesignerCategory( "Code" )]
+    [ToolboxItem( true )]
+    public sealed partial class MySqlConnection : DbConnection, ICloneable {
+        /// <summary>
+        /// Returns schema information for the data source of this <see cref="DbConnection"/>. 
+        /// </summary>
+        /// <returns>A <see cref="DataTable"/> that contains schema information. </returns>
+        public override DataTable GetSchema() { return GetSchema( null ); }
 
-    /// <summary>
-    /// Returns schema information for the data source of this 
-    /// <see cref="DbConnection"/> using the specified string for the schema name. 
-    /// </summary>
-    /// <param name="collectionName">Specifies the name of the schema to return. </param>
-    /// <returns>A <see cref="DataTable"/> that contains schema information. </returns>
-    public override DataTable GetSchema(string collectionName)
-    {
-      if (collectionName == null)
-        collectionName = SchemaProvider.MetaCollection;
+        /// <summary>
+        /// Returns schema information for the data source of this 
+        /// <see cref="DbConnection"/> using the specified string for the schema name. 
+        /// </summary>
+        /// <param name="collectionName">Specifies the name of the schema to return. </param>
+        /// <returns>A <see cref="DataTable"/> that contains schema information. </returns>
+        public override DataTable GetSchema( string collectionName ) {
+            if ( collectionName == null ) collectionName = SchemaProvider.MetaCollection;
 
-      return GetSchema(collectionName, null);
-    }
+            return GetSchema( collectionName, null );
+        }
 
-    /// <summary>
-    /// Returns schema information for the data source of this <see cref="DbConnection"/>
-    /// using the specified string for the schema name and the specified string array 
-    /// for the restriction values. 
-    /// </summary>
-    /// <param name="collectionName">Specifies the name of the schema to return.</param>
-    /// <param name="restrictionValues">Specifies a set of restriction values for the requested schema.</param>
-    /// <returns>A <see cref="DataTable"/> that contains schema information.</returns>
-    public override DataTable GetSchema(string collectionName, string[] restrictionValues)
-    {
-      if (collectionName == null)
-        collectionName = SchemaProvider.MetaCollection;
+        /// <summary>
+        /// Returns schema information for the data source of this <see cref="DbConnection"/>
+        /// using the specified string for the schema name and the specified string array 
+        /// for the restriction values. 
+        /// </summary>
+        /// <param name="collectionName">Specifies the name of the schema to return.</param>
+        /// <param name="restrictionValues">Specifies a set of restriction values for the requested schema.</param>
+        /// <returns>A <see cref="DataTable"/> that contains schema information.</returns>
+        public override DataTable GetSchema( string collectionName, string[] restrictionValues ) {
+            if ( collectionName == null ) collectionName = SchemaProvider.MetaCollection;
 
-      string[] restrictions = schemaProvider.CleanRestrictions(restrictionValues);
-      MySqlSchemaCollection c = schemaProvider.GetSchema(collectionName, restrictions);
-      return c.AsDataTable();
-    }
+            var restrictions = _schemaProvider.CleanRestrictions( restrictionValues );
+            var c = _schemaProvider.GetSchema( collectionName, restrictions );
+            return c.AsDataTable();
+        }
 
-    protected override DbTransaction BeginDbTransaction(IsolationLevel isolationLevel)
-    {
-      if (isolationLevel == IsolationLevel.Unspecified)
-        return BeginTransaction();
-      return BeginTransaction(isolationLevel);
-    }
+        protected override DbTransaction BeginDbTransaction( IsolationLevel isolationLevel ) {
+            if ( isolationLevel == IsolationLevel.Unspecified ) return BeginTransaction();
+            return BeginTransaction( isolationLevel );
+        }
 
-    protected override DbCommand CreateDbCommand()
-    {
-      return CreateCommand();
-    }
+        protected override DbCommand CreateDbCommand() { return CreateCommand(); }
 
 #if !CF
-    partial void AssertPermissions()
-    {
-      // Security Asserts can only be done when the assemblies 
-      // are put in the GAC as documented in 
-      // http://msdn.microsoft.com/en-us/library/ff648665.aspx
-      if (this.Settings.IncludeSecurityAsserts)
-      {
-        PermissionSet set = new PermissionSet(PermissionState.None);
-        set.AddPermission(new MySqlClientPermission(ConnectionString));
-        set.Demand();
-        MySqlSecurityPermission.CreatePermissionSet(true).Assert(); 
-      }
-    }
+        partial void AssertPermissions() {
+            // Security Asserts can only be done when the assemblies 
+            // are put in the GAC as documented in 
+            // http://msdn.microsoft.com/en-us/library/ff648665.aspx
+            if ( Settings.IncludeSecurityAsserts ) {
+                var set = new PermissionSet( PermissionState.None );
+                set.AddPermission( new MySqlClientPermission( ConnectionString ) );
+                set.Demand();
+                MySqlSecurityPermission.CreatePermissionSet( true ).Assert();
+            }
+        }
 #endif
 
-    #region IDisposeable
-
-    protected override void Dispose(bool disposing)
-    {
-      if (State == ConnectionState.Open)
-        Close();
-      base.Dispose(disposing);
+        #region IDisposeable
+        protected override void Dispose( bool disposing ) {
+            if ( State == ConnectionState.Open ) Close();
+            base.Dispose( disposing );
+        }
+        #endregion
     }
-
-    #endregion
-  }
 }

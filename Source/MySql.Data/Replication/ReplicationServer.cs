@@ -20,40 +20,36 @@
 // with this program; if not, write to the Free Software Foundation, Inc., 
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using System;
-using System.Collections.Generic;
-using System.Text;
+namespace MySql.Data.MySqlClient.Replication {
+    /// <summary>
+    /// Represents a server in Replication environment
+    /// </summary>
+    public class ReplicationServer {
+        public ReplicationServer( string name, bool isMaster, string connectionString ) {
+            Name = name;
+            IsMaster = isMaster;
+            ConnectionString = connectionString;
+            IsAvailable = true;
+        }
 
-namespace MySql.Data.MySqlClient.Replication
-{
-  /// <summary>
-  /// Represents a server in Replication environment
-  /// </summary>
-  public class ReplicationServer
-  {
-    public ReplicationServer(string name, bool isMaster, string connectionString)
-    {
-      Name = name;
-      IsMaster = isMaster;
-      ConnectionString = connectionString;
-      IsAvailable = true;
+        /// <summary>
+        /// Server name
+        /// </summary>
+        public string Name { get; private set; }
+
+        /// <summary>
+        /// Defines if the server is master (True) or slave
+        /// </summary>
+        public bool IsMaster { get; private set; }
+
+        /// <summary>
+        /// Connection string used to connect to the server
+        /// </summary>
+        public string ConnectionString { get; internal set; }
+
+        /// <summary>
+        /// Defines if the server is available to be considered in load balancing
+        /// </summary>
+        public bool IsAvailable { get; set; }
     }
-
-    /// <summary>
-    /// Server name
-    /// </summary>
-    public string Name { get; private set; }
-    /// <summary>
-    /// Defines if the server is master (True) or slave
-    /// </summary>
-    public bool IsMaster { get; private set; }
-    /// <summary>
-    /// Connection string used to connect to the server
-    /// </summary>
-    public string ConnectionString { get; internal set; }
-    /// <summary>
-    /// Defines if the server is available to be considered in load balancing
-    /// </summary>
-    public bool IsAvailable { get; set; }
-  }
 }

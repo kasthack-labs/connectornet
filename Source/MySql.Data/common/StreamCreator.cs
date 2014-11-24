@@ -20,99 +20,90 @@
 // with this program; if not, write to the Free Software Foundation, Inc., 
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using MySql.Data.MySqlClient;
-using MySql.Data.MySqlClient.Properties;
 using System;
 using System.IO;
+using MySql.Data.MySqlClient;
+using MySql.Data.MySqlClient.Properties;
 
+namespace MySql.Data.Common {
+    /// <summary>
+    /// Summary description for StreamCreator.
+    /// </summary>
+    internal class StreamCreator {
+        private readonly string _hostList;
+        private uint _port;
+        private string _pipeName;
+        private uint _timeOut;
+        private uint _keepalive;
+        private DbVersion _driverVersion;
 
-namespace MySql.Data.Common
-{
-  /// <summary>
-  /// Summary description for StreamCreator.
-  /// </summary>
-  internal class StreamCreator
-  {
-    string hostList;
-    uint port;
-    string pipeName;
-    uint timeOut;
-    uint keepalive;
-    DBVersion driverVersion;
+        public StreamCreator( string hosts, uint port, string pipeName, uint keepalive, DbVersion driverVersion ) {
+            _hostList = hosts;
+            if ( _hostList == null
+                 || _hostList.Length == 0 ) _hostList = "localhost";
+            this._port = port;
+            this._pipeName = pipeName;
+            this._keepalive = keepalive;
+            this._driverVersion = driverVersion;
+        }
 
-    public StreamCreator(string hosts, uint port, string pipeName, uint keepalive, DBVersion driverVersion)
-    {
-      hostList = hosts;
-      if (hostList == null || hostList.Length == 0)
-        hostList = "localhost";
-      this.port = port;
-      this.pipeName = pipeName;
-      this.keepalive = keepalive;
-      this.driverVersion = driverVersion;
-    }
+        public static Stream GetStream( string server, uint port, string pipename, uint keepalive, DbVersion v, uint timeout ) {
+            var settings = new MySqlConnectionStringBuilder();
+            settings.Server = server;
+            settings.Port = port;
+            settings.PipeName = pipename;
+            settings.Keepalive = keepalive;
+            settings.ConnectionTimeout = timeout;
+            return GetStream( settings );
+        }
 
-    public static Stream GetStream(string server, uint port, string pipename, uint keepalive, DBVersion v, uint timeout)
-    {
-      MySqlConnectionStringBuilder settings = new MySqlConnectionStringBuilder();
-      settings.Server = server;
-      settings.Port = port;
-      settings.PipeName = pipename;
-      settings.Keepalive = keepalive;
-      settings.ConnectionTimeout = timeout;
-      return GetStream(settings);
-    }
-
-    public static Stream GetStream(MySqlConnectionStringBuilder settings)
-    {
-      switch (settings.ConnectionProtocol)
-      {
-        case MySqlConnectionProtocol.Tcp: return GetTcpStream(settings);
+        public static Stream GetStream( MySqlConnectionStringBuilder settings ) {
+            switch ( settings.ConnectionProtocol ) {
+                case MySqlConnectionProtocol.Tcp:
+                    return GetTcpStream( settings );
 #if RT
         case MySqlConnectionProtocol.UnixSocket: throw new NotImplementedException();
         case MySqlConnectionProtocol.SharedMemory: throw new NotImplementedException();
 #else
 #if !CF
-        case MySqlConnectionProtocol.UnixSocket: return GetUnixSocketStream(settings);        
-        case MySqlConnectionProtocol.SharedMemory: return GetSharedMemoryStream(settings);
+                case MySqlConnectionProtocol.UnixSocket:
+                    return GetUnixSocketStream( settings );
+                case MySqlConnectionProtocol.SharedMemory:
+                    return GetSharedMemoryStream( settings );
 #endif
-        
+
 #endif
 #if !CF && !RT
-        case MySqlConnectionProtocol.NamedPipe: return GetNamedPipeStream(settings);
+                case MySqlConnectionProtocol.NamedPipe:
+                    return GetNamedPipeStream( settings );
 #endif
-      }
-      throw new InvalidOperationException(Resources.UnknownConnectionProtocol);
-    }
+            }
+            throw new InvalidOperationException( Resources.UnknownConnectionProtocol );
+        }
 
-    private static Stream GetTcpStream(MySqlConnectionStringBuilder settings)
-    {
-      MyNetworkStream s = MyNetworkStream.CreateStream(settings, false);
-      return s;
-    }
+        private static Stream GetTcpStream( MySqlConnectionStringBuilder settings ) {
+            var s = MyNetworkStream.CreateStream( settings, false );
+            return s;
+        }
 
 #if !CF && !RT
-    private static Stream GetUnixSocketStream(MySqlConnectionStringBuilder settings)
-    {
-      if (Platform.IsWindows())
-        throw new InvalidOperationException(Resources.NoUnixSocketsOnWindows);
+        private static Stream GetUnixSocketStream( MySqlConnectionStringBuilder settings ) {
+            if ( Platform.IsWindows() ) throw new InvalidOperationException( Resources.NoUnixSocketsOnWindows );
 
-      MyNetworkStream s = MyNetworkStream.CreateStream(settings, true);
-      return s;
-    }
+            var s = MyNetworkStream.CreateStream( settings, true );
+            return s;
+        }
 
-    private static Stream GetSharedMemoryStream(MySqlConnectionStringBuilder settings)
-    {
-      SharedMemoryStream str = new SharedMemoryStream(settings.SharedMemoryName);
-      str.Open(settings.ConnectionTimeout);
-      return str;
-    }
+        private static Stream GetSharedMemoryStream( MySqlConnectionStringBuilder settings ) {
+            var str = new SharedMemoryStream( settings.SharedMemoryName );
+            str.Open( settings.ConnectionTimeout );
+            return str;
+        }
 
-    private static Stream GetNamedPipeStream(MySqlConnectionStringBuilder settings)
-    {
-      Stream stream = NamedPipeStream.Create(settings.PipeName, settings.Server, settings.ConnectionTimeout);
-      return stream;
-    }
+        private static Stream GetNamedPipeStream( MySqlConnectionStringBuilder settings ) {
+            var stream = NamedPipeStream.Create( settings.PipeName, settings.Server, settings.ConnectionTimeout );
+            return stream;
+        }
 #endif
-
-  }
+    }
 }

@@ -20,42 +20,30 @@
 // with this program; if not, write to the Free Software Foundation, Inc., 
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MySql.Data.MySqlClient.Replication
-{
-  /// <summary>
-  /// Class that implements Round Robing Load Balancing technique
-  /// </summary>
-  public class ReplicationRoundRobinServerGroup : ReplicationServerGroup
-  {
-    private int nextServer;
-
-    public ReplicationRoundRobinServerGroup(string name, int retryTime) : base(name, retryTime)
-    {
-      nextServer = -1;
-    }
-
+namespace MySql.Data.MySqlClient.Replication {
     /// <summary>
-    /// Gets an available server based on Round Robin load balancing
+    /// Class that implements Round Robing Load Balancing technique
     /// </summary>
-    /// <param name="isMaster">True if the server to return must be a master</param>
-    /// <returns>Next available server</returns>
-    internal protected override ReplicationServer GetServer(bool isMaster)
-    {
-      for (int i = 0; i < Servers.Count; i++)
-      {
-        nextServer++;
-        if (nextServer == Servers.Count)
-          nextServer = 0;
-        ReplicationServer s = Servers[nextServer];
-        if (!s.IsAvailable) continue;
-        if (isMaster && !s.IsMaster) continue;
-        return s;
-      }
-      return null;
+    public class ReplicationRoundRobinServerGroup : ReplicationServerGroup {
+        private int _nextServer;
+
+        public ReplicationRoundRobinServerGroup( string name, int retryTime ) : base( name, retryTime ) { _nextServer = -1; }
+
+        /// <summary>
+        /// Gets an available server based on Round Robin load balancing
+        /// </summary>
+        /// <param name="isMaster">True if the server to return must be a master</param>
+        /// <returns>Next available server</returns>
+        protected internal override ReplicationServer GetServer( bool isMaster ) {
+            for ( var i = 0; i < Servers.Count; i++ ) {
+                _nextServer++;
+                if ( _nextServer == Servers.Count ) _nextServer = 0;
+                var s = Servers[ _nextServer ];
+                if ( !s.IsAvailable ) continue;
+                if ( isMaster && !s.IsMaster ) continue;
+                return s;
+            }
+            return null;
+        }
     }
-  }
 }
