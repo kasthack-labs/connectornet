@@ -44,9 +44,7 @@ namespace MySql.Data.MySqlClient {
         IgnoreSpace = 256, // Ignore spaces before '('
         Protocol41 = 512, // Support new 4.1 protocol
         Interactive = 1024, // This is an interactive client
-#if !CF
         Ssl = 2048, // Switch to SSL after handshake
-#endif
         IgnoreSigpipe = 4096, // IGNORE sigpipes
         Transactions = 8192, // Client knows about transactions
         Reserved = 16384, // old 4.1 protocol flag
@@ -462,7 +460,6 @@ namespace MySql.Data.MySqlClient {
         [DisplayName( "_client_name" )]
         public string ClientName => "MySql Connector/NET";
 
-#if !RT
         [DisplayName( "_pid" )]
         public string Pid {
             get {
@@ -478,7 +475,6 @@ namespace MySql.Data.MySqlClient {
             }
         }
 
-#if !CF
 
         [DisplayName( "_client_version" )]
         public string ClientVersion {
@@ -500,9 +496,9 @@ namespace MySql.Data.MySqlClient {
         [DisplayName( "program_name" )]
         public string ProgramName {
             get {
-                var name = Environment.CommandLine;
+                string name;
                 try {
-                    var path = Environment.CommandLine.Substring( 0, Environment.CommandLine.IndexOf( "\" " ) ).Trim( '"' );
+                    var path = Environment.CommandLine.Substring( 0, Environment.CommandLine.InvariantIndexOf( "\" " ) ).Trim( '"' );
                     name = Path.GetFileName( path );
                     if ( Assembly.GetEntryAssembly() != null ) name = Assembly.GetEntryAssembly().ManifestModule.Name;
                 }
@@ -569,14 +565,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         private bool Is64BitOs() {
-#if CLR4
-      return Environment.Is64BitOperatingSystem;
-#else
-            return Environment.GetEnvironmentVariable( "PROCESSOR_ARCHITECTURE" ) == "AMD64";
-#endif
+            return Environment.Is64BitOperatingSystem;
         }
-
-#endif
-#endif
     }
 }

@@ -28,8 +28,6 @@ using System.Threading;
 using MySql.Data.MySqlClient;
 
 namespace MySql.Data.Common {
-#if !PocketPC
-
     /// <summary>
     /// Helper class to encapsulate shared memory functionality
     /// Also cares of proper cleanup of file mapping object and cew
@@ -101,21 +99,18 @@ namespace MySql.Data.Common {
         }
 
         public override void Close() {
-            if ( _connectionClosed != null ) {
-                var isClosed = _connectionClosed.WaitOne( 0 );
-                if ( !isClosed ) {
-                    _connectionClosed.Set();
-                    _connectionClosed.Close();
-                }
-                _connectionClosed = null;
-                EventWaitHandle[] handles = { _serverRead, _serverWrote, _clientRead, _clientWrote };
-
-                for ( var i = 0; i < handles.Length; i++ ) if ( handles[ i ] != null ) handles[ i ].Close();
-                if ( _data != null ) {
-                    _data.Dispose();
-                    _data = null;
-                }
+            if ( _connectionClosed == null ) return;
+            var isClosed = _connectionClosed.WaitOne( 0 );
+            if ( !isClosed ) {
+                _connectionClosed.Set();
+                _connectionClosed.Close();
             }
+            _connectionClosed = null;
+            EventWaitHandle[] handles = { _serverRead, _serverWrote, _clientRead, _clientWrote };
+
+            foreach ( EventWaitHandle t in handles ) t?.Close();
+            _data?.Dispose();
+            _data = null;
         }
 
         private void GetConnectNumber( uint timeOut ) {
@@ -267,5 +262,5 @@ namespace MySql.Data.Common {
             }
         }
     }
-#endif
+
 }

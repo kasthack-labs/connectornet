@@ -70,23 +70,10 @@ namespace MySql.Data.MySqlClient {
             }
         }
         #endregion
-
-#if RT
-    public void Close()
-    {
-      base.Dispose();
-#else
         public override void Close() {
             base.Close();
-#endif
             _baseStream.Close();
-#if !CF
             _cache.Dispose();
-#else
-      System.Reflection.MethodInfo dynMethod = cache.GetType().GetMethod("Dispose", 
-        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-      dynMethod.Invoke(this, new object[0] );
-#endif
         }
 
         public override void SetLength( long value ) { throw new NotSupportedException( Resources.CSNoSetLength ); }
@@ -234,14 +221,7 @@ namespace MySql.Data.MySqlClient {
             _baseStream.Write( buffer, 0, bytesToWrite );
             _baseStream.Flush();
             _cache.SetLength( 0 );
-            if ( compressedBuffer != null )
-#if !CF
-                compressedBuffer.Dispose();
-#else
-        System.Reflection.MethodInfo dynMethod = cache.GetType().GetMethod("Dispose",
-          System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        dynMethod.Invoke(this, new object[0]);
-#endif
+            compressedBuffer?.Dispose();
         }
 
         public override void Flush() {

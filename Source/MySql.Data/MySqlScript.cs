@@ -27,11 +27,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using MySql.Data.MySqlClient.Properties;
-#if NET_40_OR_GREATER
 using System.Threading.Tasks;
 using System.Threading;
-
-#endif
 
 namespace MySql.Data.MySqlClient {
     /// <summary>
@@ -261,8 +258,6 @@ namespace MySql.Data.MySqlClient {
             }
         }
 
-#if NET_40_OR_GREATER
-
         #region Async
         /// <summary>
         /// Async version of Execute
@@ -286,7 +281,6 @@ namespace MySql.Data.MySqlClient {
         }
         #endregion
 
-#endif
     }
 
     /// <summary>

@@ -32,9 +32,7 @@ namespace MySql.Data.MySqlClient.Authentication {
     /// <summary>
     /// 
     /// </summary>
-#if !CF && !RT
     [SuppressUnmanagedCodeSecurity]
-#endif
     internal class MySqlWindowsAuthenticationPlugin : MySqlAuthenticationPlugin {
         private SecurityHandle _outboundCredentials = new SecurityHandle( 0 );
         private SecurityHandle _clientContext = new SecurityHandle( 0 );
@@ -44,14 +42,12 @@ namespace MySql.Data.MySqlClient.Authentication {
 
         protected override void CheckConstraints() {
             var platform = String.Empty;
-#if !RT
             var p = (int) Environment.OSVersion.Platform;
             if ( ( p == 4 )
                  || ( p == 128 ) ) platform = "Unix";
             else if ( Environment.OSVersion.Platform == PlatformID.MacOSX ) platform = "Mac OS/X";
 
             if ( !String.IsNullOrEmpty( platform ) ) throw new MySqlException( String.Format( Resources.WinAuthNotSupportOnPlatform, platform ) );
-#endif
             base.CheckConstraints();
         }
 
@@ -157,11 +153,7 @@ namespace MySql.Data.MySqlClient.Authentication {
                 break;
             }
             if ( index == -1 )
-#if RT
-        targetName = System.Text.Encoding.UTF8.GetString(AuthenticationData, 0, AuthenticationData.Length);
-#else
                 _targetName = Encoding.UTF8.GetString( AuthenticationData );
-#endif
             _targetName = Encoding.UTF8.GetString( AuthenticationData, 0, index );
             return _targetName;
         }

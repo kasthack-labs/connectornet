@@ -26,19 +26,14 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Drawing;
-#if NET_40_OR_GREATER
 using System.Threading.Tasks;
 using System.Threading;
 
-#endif
-
 namespace MySql.Data.MySqlClient {
     /// <include file='docs/MySqlDataAdapter.xml' path='docs/class/*'/>
-#if !CF
     [ToolboxBitmap( typeof( MySqlDataAdapter ), "MySqlClient.resources.dataadapter.bmp" )]
     [DesignerCategory( "Code" )]
     [Designer( "MySql.Data.MySqlClient.Design.MySqlDataAdapterDesigner,MySqlClient.Design" )]
-#endif
     public sealed class MySqlDataAdapter : DbDataAdapter, IDbDataAdapter, IDataAdapter, ICloneable {
         private int _updateBatchSize;
         private List<IDbCommand> _commandBatch;
@@ -76,9 +71,7 @@ namespace MySql.Data.MySqlClient {
 
         #region Properties
         /// <include file='docs/MySqlDataAdapter.xml' path='docs/DeleteCommand/*'/>
-#if !CF
         [Description( "Used during Update for deleted rows in Dataset." )]
-#endif
             public new MySqlCommand DeleteCommand {
             get {
                 return (MySqlCommand) base.DeleteCommand;
@@ -89,9 +82,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         /// <include file='docs/MySqlDataAdapter.xml' path='docs/InsertCommand/*'/>
-#if !CF
         [Description( "Used during Update for new rows in Dataset." )]
-#endif
             public new MySqlCommand InsertCommand {
             get {
                 return (MySqlCommand) base.InsertCommand;
@@ -102,10 +93,8 @@ namespace MySql.Data.MySqlClient {
         }
 
         /// <include file='docs/MySqlDataAdapter.xml' path='docs/SelectCommand/*'/>
-#if !CF
         [Description( "Used during Fill/FillSchema" )]
         [Category( "Fill" )]
-#endif
             public new MySqlCommand SelectCommand {
             get {
                 return (MySqlCommand) base.SelectCommand;
@@ -116,9 +105,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         /// <include file='docs/MySqlDataAdapter.xml' path='docs/UpdateCommand/*'/>
-#if !CF
         [Description( "Used during Update for modified rows in Dataset." )]
-#endif
             public new MySqlCommand UpdateCommand {
             get {
                 return (MySqlCommand) base.UpdateCommand;
@@ -157,25 +144,18 @@ namespace MySql.Data.MySqlClient {
                     return;
             }
 
-            if ( cmd != null
-                 && cmd.Connection != null
-                 && cmd.Connection.ConnectionState == ConnectionState.Closed ) {
-                cmd.Connection.Open();
-                openedConnections.Add( cmd.Connection );
-            }
+            if ( cmd?.Connection?.ConnectionState != ConnectionState.Closed ) return;
+            cmd.Connection.Open();
+            openedConnections.Add( cmd.Connection );
         }
 
         protected override int Update( DataRow[] dataRows, DataTableMapping tableMapping ) {
             var connectionsOpened = new List<MySqlConnection>();
-
             try {
                 // Open connections for insert/update/update commands, if 
                 // connections are closed.
                 foreach ( var row in dataRows ) OpenConnectionIfClosed( row.RowState, connectionsOpened );
-
-                var ret = base.Update( dataRows, tableMapping );
-
-                return ret;
+                return base.Update( dataRows, tableMapping );
             }
             finally {
                 foreach ( var c in connectionsOpened ) c.Close();
@@ -200,10 +180,7 @@ namespace MySql.Data.MySqlClient {
             // to do this one time for each command
             var commandToBatch = (MySqlCommand) command;
             if ( commandToBatch.BatchableCommandText == null ) commandToBatch.GetCommandTextForBatching();
-
-            var cloneCommand = (IDbCommand) ( (ICloneable) command ).Clone();
-            _commandBatch.Add( cloneCommand );
-
+            _commandBatch.Add( (IDbCommand) ( (ICloneable) command ).Clone() );
             return _commandBatch.Count - 1;
         }
 
@@ -224,10 +201,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         protected override void ClearBatch() {
-            if ( _commandBatch.Count > 0 ) {
-                var cmd = (MySqlCommand) _commandBatch[ 0 ];
-                if ( cmd.Batch != null ) cmd.Batch.Clear();
-            }
+            if ( _commandBatch.Count > 0 ) ( (MySqlCommand) _commandBatch[ 0 ] ).Batch?.Clear();
             _commandBatch.Clear();
         }
 
@@ -272,19 +246,13 @@ namespace MySql.Data.MySqlClient {
         /// Overridden. Raises the RowUpdating event.
         /// </summary>
         /// <param name="value">A MySqlRowUpdatingEventArgs that contains the event data.</param>
-        protected override void OnRowUpdating( RowUpdatingEventArgs value ) {
-            if ( RowUpdating != null ) RowUpdating( this, ( value as MySqlRowUpdatingEventArgs ) );
-        }
+        protected override void OnRowUpdating( RowUpdatingEventArgs value ) => RowUpdating?.Invoke( this, ( value as MySqlRowUpdatingEventArgs ) );
 
         /// <summary>
         /// Overridden. Raises the RowUpdated event.
         /// </summary>
         /// <param name="value">A MySqlRowUpdatedEventArgs that contains the event data. </param>
-        protected override void OnRowUpdated( RowUpdatedEventArgs value ) {
-            if ( RowUpdated != null ) RowUpdated( this, ( value as MySqlRowUpdatedEventArgs ) );
-        }
-
-#if NET_40_OR_GREATER
+        protected override void OnRowUpdated( RowUpdatedEventArgs value ) => RowUpdated?.Invoke( this, ( value as MySqlRowUpdatedEventArgs ) );
 
         #region Async
 
@@ -301,8 +269,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var fillResult = base.Fill( dataSet );
-                    result.SetResult( fillResult );
+                    result.SetResult( base.Fill( dataSet ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -346,8 +313,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var fillResult = base.Fill( dataSet, srcTable );
-                    result.SetResult( fillResult );
+                    result.SetResult( base.Fill( dataSet, srcTable ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -369,8 +335,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var fillResult = base.Fill( dataTable, dataReader );
-                    result.SetResult( fillResult );
+                    result.SetResult( base.Fill( dataTable, dataReader ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -417,8 +382,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var fillResult = base.Fill( startRecord, maxRecords, dataTables );
-                    result.SetResult( fillResult );
+                    result.SetResult( base.Fill( startRecord, maxRecords, dataTables ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -442,8 +406,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var fillResult = base.Fill( dataSet, startRecord, maxRecords, srcTable );
-                    result.SetResult( fillResult );
+                    result.SetResult( base.Fill( dataSet, startRecord, maxRecords, srcTable ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -474,8 +437,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var fillResult = base.Fill( dataSet, srcTable, dataReader, startRecord, maxRecords );
-                    result.SetResult( fillResult );
+                    result.SetResult( base.Fill( dataSet, srcTable, dataReader, startRecord, maxRecords ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -506,8 +468,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var fillResult = base.Fill( dataTables, startRecord, maxRecords, command, behavior );
-                    result.SetResult( fillResult );
+                    result.SetResult( base.Fill( dataTables, startRecord, maxRecords, command, behavior ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -546,8 +507,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var fillResult = base.Fill( dataSet, startRecord, maxRecords, srcTable, command, behavior );
-                    result.SetResult( fillResult );
+                    result.SetResult( base.Fill( dataSet, startRecord, maxRecords, srcTable, command, behavior ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -571,8 +531,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var schemaResult = base.FillSchema( dataSet, schemaType );
-                    result.SetResult( schemaResult );
+                    result.SetResult( base.FillSchema( dataSet, schemaType ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -599,8 +558,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var schemaResult = base.FillSchema( dataSet, schemaType, srcTable );
-                    result.SetResult( schemaResult );
+                    result.SetResult( base.FillSchema( dataSet, schemaType, srcTable ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -666,8 +624,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var schemaResult = base.FillSchema( dataSet, schemaType, command, srcTable, behavior );
-                    result.SetResult( schemaResult );
+                    result.SetResult( base.FillSchema( dataSet, schemaType, command, srcTable, behavior ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -689,8 +646,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var schemaResult = base.FillSchema( dataTable, schemaType );
-                    result.SetResult( schemaResult );
+                    result.SetResult( base.FillSchema( dataTable, schemaType ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -717,8 +673,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var schemaResult = base.FillSchema( dataTable, schemaType, dataReader );
-                    result.SetResult( schemaResult );
+                    result.SetResult( base.FillSchema( dataTable, schemaType, dataReader ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -747,8 +702,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var schemaResult = base.FillSchema( dataTable, schemaType, command, behavior );
-                    result.SetResult( schemaResult );
+                    result.SetResult( base.FillSchema( dataTable, schemaType, command, behavior ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -793,8 +747,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var update = base.Update( dataSet );
-                    result.SetResult( update );
+                    result.SetResult( base.Update( dataSet ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -815,8 +768,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var update = base.Update( dataTable );
-                    result.SetResult( update );
+                    result.SetResult( base.Update( dataTable ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -838,8 +790,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var update = base.Update( dataRows, tableMapping );
-                    result.SetResult( update );
+                    result.SetResult( base.Update( dataRows, tableMapping ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -861,8 +812,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var update = base.Update( dataSet, srcTable );
-                    result.SetResult( update );
+                    result.SetResult( base.Update( dataSet, srcTable ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -874,7 +824,6 @@ namespace MySql.Data.MySqlClient {
 
         #endregion
 
-#endif
     }
 
     /// <summary>

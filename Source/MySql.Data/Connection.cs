@@ -25,24 +25,13 @@ using System.ComponentModel;
 using System.Drawing.Design;
 using MySql.Data.Common;
 using MySql.Data.MySqlClient.Properties;
-#if !RT
 using System.Data;
 using System.Data.Common;
-#endif
-#if !CF
-#endif
-#if !CF && !RT
 using System.Transactions;
 using IsolationLevel = System.Data.IsolationLevel;
-#endif
-#if !CF
 using MySql.Data.MySqlClient.Replication;
-#endif
-#if NET_40_OR_GREATER
 using System.Threading.Tasks;
 using System.Threading;
-
-#endif
 
 namespace MySql.Data.MySqlClient {
     /// <include file='docs/MySqlConnection.xml' path='docs/ClassSummary/*'/>
@@ -51,12 +40,8 @@ namespace MySql.Data.MySqlClient {
         internal Driver Driver;
         internal bool HasBeenOpen;
         private SchemaProvider _schemaProvider;
-#if !CF
-#endif
-#if !CF && !RT
         private ExceptionInterceptor _exceptionInterceptor;
         internal CommandInterceptor CommandInterceptor;
-#endif
         private bool _isKillQueryConnection;
         private string _database;
         private int _commandTimeout;
@@ -81,18 +66,12 @@ namespace MySql.Data.MySqlClient {
 
         #region Destructor
         ~MySqlConnection() {
-#if !RT
             Dispose( false );
-#else
-      Dispose();
-#endif
         }
         #endregion
 
         #region Interal Methods & Properties
-#if !CF
         internal PerformanceMonitor PerfMonitor { get; private set; }
-#endif
 
         internal ProcedureCache ProcedureCache { get; private set; }
 
@@ -187,19 +166,16 @@ namespace MySql.Data.MySqlClient {
             }
         }
 
-#if !CF && !__MonoCS__ && !RT
-
+#if !__MonoCS__
         protected override DbProviderFactory DbProviderFactory => MySqlClientFactory.Instance;
-
 #endif
-
         public bool IsPasswordExpired => Driver.IsPasswordExpired;
         #endregion
 
         partial void AssertPermissions();
 
         #region Transactions
-#if !MONO && !CF && !RT
+#if !MONO
         /// <summary>
         /// Enlists in the specified transaction. 
         /// </summary>
@@ -302,10 +278,8 @@ namespace MySql.Data.MySqlClient {
             // This lock  prevents promotable transaction rollback to run
             // in parallel
             lock ( Driver ) {
-#if !CF && !RT
-                if ( Transaction.Current != null
-                     && Transaction.Current.TransactionInformation.Status == TransactionStatus.Aborted ) Throw( new TransactionAbortedException() );
-#endif
+                if ( Transaction.Current != null && Transaction.Current.TransactionInformation.Status == TransactionStatus.Aborted )
+                    Throw( new TransactionAbortedException() );
                 // We use default command timeout for SetDatabase
                 using ( new CommandTimer( this, (int) Settings.DefaultCommandTimeout ) ) Driver.SetDatabase( databaseName );
             }
@@ -336,18 +310,11 @@ namespace MySql.Data.MySqlClient {
         /// <include file='docs/MySqlConnection.xml' path='docs/Open/*'/>
         public override void Open() {
             if ( State == ConnectionState.Open ) Throw( new InvalidOperationException( Resources.ConnectionAlreadyOpen ) );
-
-#if !CF && !RT
             // start up our interceptors
             _exceptionInterceptor = new ExceptionInterceptor( this );
             CommandInterceptor = new CommandInterceptor( this );
-#endif
-
             SetState( ConnectionState.Connecting, true );
-
             AssertPermissions();
-
-#if !CF && !RT
             // if we are auto enlisting in a current transaction, then we will be
             // treating the connection as pooled
             if ( Settings.AutoEnlist
@@ -356,18 +323,12 @@ namespace MySql.Data.MySqlClient {
                 if ( Driver != null
                      && ( Driver.IsInActiveUse || !Driver.Settings.EquivalentTo( Settings ) ) ) Throw( new NotSupportedException( Resources.MultipleConnectionsInTransactionNotSupported ) );
             }
-#endif
-
             try {
                 var currentSettings = Settings;
-#if !CF
-
                 // Load balancing 
                 if ( ReplicationManager.IsReplicationGroup( Settings.Server ) )
                     if ( Driver == null ) ReplicationManager.GetNewConnection( Settings.Server, false, this );
                     else currentSettings = Driver.Settings;
-#endif
-
                 if ( Settings.Pooling ) {
                     var pool = MySqlPoolManager.GetPool( currentSettings );
                     if ( Driver == null
@@ -395,18 +356,12 @@ namespace MySql.Data.MySqlClient {
 
             // setup our schema provider
             _schemaProvider = new IsSchemaProvider( this );
-
-#if !CF
             PerfMonitor = new PerformanceMonitor( this );
-#endif
-
             // if we are opening up inside a current transaction, then autoenlist
             // TODO: control this with a connection string option
-#if !MONO && !CF && !RT
-            if ( Transaction.Current != null
-                 && Settings.AutoEnlist ) EnlistTransaction( Transaction.Current );
+#if !MONO
+            if ( Transaction.Current != null && Settings.AutoEnlist ) EnlistTransaction( Transaction.Current );
 #endif
-
             HasBeenOpen = true;
             SetState( ConnectionState.Open, true );
         }
@@ -469,14 +424,8 @@ namespace MySql.Data.MySqlClient {
             // if the reader was opened with CloseConnection then driver
             // will be null on the second time through
             if ( Driver != null )
-#if !CF && !RT
-                if ( Driver.CurrentTransaction == null )
-#endif
-                    CloseFully();
-#if !CF && !RT
+                if ( Driver.CurrentTransaction == null ) CloseFully();
                 else Driver.IsInActiveUse = false;
-#endif
-
             SetState( ConnectionState.Closed, true );
         }
 
@@ -612,31 +561,13 @@ namespace MySql.Data.MySqlClient {
         #endregion
 
         internal void Throw( Exception ex ) {
-#if !CF && !RT
             if ( _exceptionInterceptor == null ) throw ex;
             _exceptionInterceptor.Throw( ex );
-#else
-      throw ex;
-#endif
         }
-
-#if !RT
         public void Dispose() {
             Dispose( true );
             GC.SuppressFinalize( this );
         }
-#else
-    public void Dispose()
-    {
-      if (State == ConnectionState.Open)
-        Close();
-
-      GC.SuppressFinalize(this);
-    }
-#endif
-
-#if NET_40_OR_GREATER
-
         #region Async
         /// <summary>
         /// Async version of BeginTransaction
@@ -680,8 +611,7 @@ namespace MySql.Data.MySqlClient {
         /// <returns></returns>
         public Task ChangeDataBaseAsync( string databaseName, CancellationToken cancellationToken ) {
             var result = new TaskCompletionSource<bool>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken == CancellationToken.None || !cancellationToken.IsCancellationRequested )
                 try {
                     ChangeDatabase( databaseName );
                     result.SetResult( true );
@@ -691,18 +621,6 @@ namespace MySql.Data.MySqlClient {
                 }
             return result.Task;
         }
-
-        ///// <summary>
-        ///// Async version of Open
-        ///// </summary>
-        ///// <returns></returns>
-        //public Task OpenAsync()
-        //{
-        //  return Task.Run(() =>
-        //  {
-        //    Open();
-        //  });
-        //}
 
         /// <summary>
         /// Async version of Close
@@ -794,8 +712,6 @@ namespace MySql.Data.MySqlClient {
             return result.Task;
         }
         #endregion
-
-#endif
     }
 
     /// <summary>
@@ -829,11 +745,10 @@ namespace MySql.Data.MySqlClient {
 
         #region IDisposable Members
         public void Dispose() {
-            if ( _timeoutSet ) {
-                _timeoutSet = false;
-                _connection.ClearCommandTimeout();
-                _connection = null;
-            }
+            if ( !_timeoutSet ) return;
+            _timeoutSet = false;
+            _connection.ClearCommandTimeout();
+            _connection = null;
         }
         #endregion
     }

@@ -28,18 +28,13 @@ namespace MySql.Data.MySqlClient {
     public class MySqlSchemaCollection {
         private readonly List<SchemaColumn> _columns = new List<SchemaColumn>();
         private readonly List<MySqlSchemaRow> _rows = new List<MySqlSchemaRow>();
-#if !RT
         private readonly DataTable _table;
-#endif
-
         public MySqlSchemaCollection() {
             Mapping = new Dictionary<string, int>( StringComparer.OrdinalIgnoreCase );
             LogicalMappings = new Dictionary<int, int>();
         }
 
         public MySqlSchemaCollection( string name ) : this() { Name = name; }
-
-#if !RT
         public MySqlSchemaCollection( DataTable dt ) : this() {
             // cache the original datatable to avoid the overhead of creating again whenever possible.
             _table = dt;
@@ -56,8 +51,6 @@ namespace MySql.Data.MySqlClient {
                 _rows.Add( row );
             }
         }
-#endif
-
         internal Dictionary<string, int> Mapping;
         internal Dictionary<int, int> LogicalMappings;
         public string Name { get; set; }
@@ -65,9 +58,7 @@ namespace MySql.Data.MySqlClient {
         public IList<MySqlSchemaRow> Rows => _rows;
 
         internal SchemaColumn AddColumn( string name, Type t ) {
-            var c = new SchemaColumn();
-            c.Name = name;
-            c.Type = t;
+            var c = new SchemaColumn { Name = name, Type = t };
             _columns.Add( c );
             Mapping.Add( name, _columns.Count - 1 );
             LogicalMappings[ _columns.Count - 1 ] = _columns.Count - 1;
@@ -100,12 +91,8 @@ namespace MySql.Data.MySqlClient {
             return r;
         }
 
-        internal MySqlSchemaRow NewRow() {
-            var r = new MySqlSchemaRow( this );
-            return r;
-        }
+        internal MySqlSchemaRow NewRow() => new MySqlSchemaRow( this );
 
-#if !RT
         internal DataTable AsDataTable() {
             if ( _table != null ) return _table;
             var dt = new DataTable( Name );
@@ -117,7 +104,6 @@ namespace MySql.Data.MySqlClient {
             }
             return dt;
         }
-#endif
     }
 
     public class MySqlSchemaRow {

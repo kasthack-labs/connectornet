@@ -446,11 +446,7 @@ namespace MySql.Data.MySqlClient {
                         ParseProcedureBody( parametersTable, body, routine, nameToRestrict );
                     }
                 }
-#if RT
-        catch (MySqlNullValueException snex)
-#else
                 catch ( SqlNullValueException snex )
-#endif
                 {
                     throw new InvalidOperationException(
                         String.Format( Resources.UnableToRetrieveParameters, routine[ "ROUTINE_NAME" ] ),
@@ -550,10 +546,7 @@ namespace MySql.Data.MySqlClient {
             }
             else dtd.Append( GetDataTypeDefaults( type, row ) );
 
-            while ( token != ")"
-                    && token != ","
-                    && String.Compare( token, "begin", StringComparison.OrdinalIgnoreCase ) != 0
-                    && String.Compare( token, "return", StringComparison.OrdinalIgnoreCase ) != 0 ) {
+            while ( token != ")" && token != "," && token!="begin" && token!="return") {
                 switch ( token ) {
                     case "CHARACTER":
                     case "BINARY":
@@ -587,9 +580,7 @@ namespace MySql.Data.MySqlClient {
             // now set the octet length
             if ( row[ "CHARACTER_MAXIMUM_LENGTH" ] == null ) return token;
             if ( row[ "CHARACTER_SET_NAME" ] == null ) row[ "CHARACTER_SET_NAME" ] = "";
-            row[ "CHARACTER_OCTET_LENGTH" ] = CharSetMap.GetMaxLength( (string) row[ "CHARACTER_SET_NAME" ], Connection )
-                                              * (int) row[ "CHARACTER_MAXIMUM_LENGTH" ];
-
+            row[ "CHARACTER_OCTET_LENGTH" ] = CharSetMap.GetMaxLength( (string) row[ "CHARACTER_SET_NAME" ], Connection ) * (int) row[ "CHARACTER_MAXIMUM_LENGTH" ];
             return token;
         }
 

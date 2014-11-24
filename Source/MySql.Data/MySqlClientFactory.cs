@@ -20,8 +20,6 @@
 // with this program; if not, write to the Free Software Foundation, Inc., 
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-#if !PocketPC
-
 using System;
 using System.Data.Common;
 using System.Reflection;
@@ -132,5 +130,3 @@ namespace MySql.Data.MySqlClient {
         #endregion
     }
 }
-
-#endif

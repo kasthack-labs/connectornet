@@ -163,18 +163,21 @@ namespace MySql.Data.Types {
         private static void EscapeByteArray( byte[] bytes, int length, MySqlPacket packet ) {
             for ( var x = 0; x < length; x++ ) {
                 var b = bytes[ x ];
-                if ( b == '\0' ) {
-                    packet.WriteByte( (byte) '\\' );
-                    packet.WriteByte( (byte) '0' );
+                switch ( (char)b ) {
+                    case '\0':
+                        packet.WriteByte( (byte) '\\' );
+                        packet.WriteByte( (byte) '0' );
+                        break;
+                    case '\\':
+                    case '\'':
+                    case '\"':
+                        packet.WriteByte( (byte) '\\' );
+                        packet.WriteByte( b );
+                        break;
+                    default:
+                        packet.WriteByte( b );
+                        break;
                 }
-
-                else if ( b == '\\'
-                          || b == '\''
-                          || b == '\"' ) {
-                    packet.WriteByte( (byte) '\\' );
-                    packet.WriteByte( b );
-                }
-                else packet.WriteByte( b );
             }
         }
 
@@ -214,7 +217,8 @@ namespace MySql.Data.Types {
         public static MySqlGeometry Parse( string value ) {
             if ( String.IsNullOrEmpty( value ) ) throw new ArgumentNullException( "value" );
 
-            if ( !( value.Contains( "SRID" ) || value.Contains( "POINT(" ) || value.Contains( "POINT (" ) ) ) throw new FormatException( "String does not contain a valid geometry value" );
+            if ( !( value.Contains( "SRID" ) || value.Contains( "POINT(" ) || value.Contains( "POINT (" ) ) )
+                throw new FormatException( "String does not contain a valid geometry value" );
 
             MySqlGeometry result;
             TryParse( value, out result );
@@ -262,35 +266,11 @@ namespace MySql.Data.Types {
             return false;
         }
 
-        public static void SetDsInfo( MySqlSchemaCollection dsTable ) {
-            // we use name indexing because this method will only be called
-            // when GetSchema is called for the DataSourceInformation 
-            // collection and then it wil be cached.
-            var row = dsTable.AddRow();
-            row[ "TypeName" ] = "GEOMETRY";
-            row[ "ProviderDbType" ] = MySqlDbType.Geometry;
-            row[ "ColumnSize" ] = GeometryLength;
-            row[ "CreateFormat" ] = "GEOMETRY";
-            row[ "CreateParameters" ] = DBNull.Value;
-            row[ "DataType" ] = "System.Byte[]";
-            row[ "IsAutoincrementable" ] = false;
-            row[ "IsBestMatch" ] = true;
-            row[ "IsCaseSensitive" ] = false;
-            row[ "IsFixedLength" ] = false;
-            row[ "IsFixedPrecisionScale" ] = true;
-            row[ "IsLong" ] = false;
-            row[ "IsNullable" ] = true;
-            row[ "IsSearchable" ] = true;
-            row[ "IsSearchableWithLike" ] = false;
-            row[ "IsUnsigned" ] = false;
-            row[ "MaximumScale" ] = 0;
-            row[ "MinimumScale" ] = 0;
-            row[ "IsConcurrencyType" ] = DBNull.Value;
-            row[ "IsLiteralSupported" ] = false;
-            row[ "LiteralPrefix" ] = DBNull.Value;
-            row[ "LiteralSuffix" ] = DBNull.Value;
-            row[ "NativeDataType" ] = DBNull.Value;
-        }
+        // we use name indexing because this method will only be called
+        // when GetSchema is called for the DataSourceInformation 
+        // collection and then it wil be cached.
+        public static void SetDsInfo( MySqlSchemaCollection dsTable ) =>
+            DsInfoHelper.FillDsInfoRow( dsTable.AddRow(), "GEOMETRY", MySqlDbType.Geometry, GeometryLength, "GEOMETRY", typeof(byte[]), false, false );
 
         public string GetWkt() => _isNull ? String.Empty : string.Format( CultureInfo.InvariantCulture.NumberFormat, "POINT({0} {1})", _xValue, _yValue );
     }

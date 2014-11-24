@@ -74,19 +74,16 @@ namespace MySql.Data.MySqlClient {
 
         protected override DbCommand CreateDbCommand() => CreateCommand();
 
-#if !CF
         partial void AssertPermissions() {
             // Security Asserts can only be done when the assemblies 
             // are put in the GAC as documented in 
             // http://msdn.microsoft.com/en-us/library/ff648665.aspx
-            if ( Settings.IncludeSecurityAsserts ) {
-                var set = new PermissionSet( PermissionState.None );
-                set.AddPermission( new MySqlClientPermission( ConnectionString ) );
-                set.Demand();
-                MySqlSecurityPermission.CreatePermissionSet( true ).Assert();
-            }
+            if ( !Settings.IncludeSecurityAsserts ) return;
+            var set = new PermissionSet( PermissionState.None );
+            set.AddPermission( new MySqlClientPermission( ConnectionString ) );
+            set.Demand();
+            MySqlSecurityPermission.CreatePermissionSet( true ).Assert();
         }
-#endif
 
         #region IDisposeable
         protected override void Dispose( bool disposing ) {

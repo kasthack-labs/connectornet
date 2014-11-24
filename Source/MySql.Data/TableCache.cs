@@ -46,9 +46,7 @@ namespace MySql.Data.MySqlClient {
 
         public virtual void AddToCache( string commandText, object resultSet ) {
             CleanCache();
-            var entry = new CacheEntry();
-            entry.CacheTime = DateTime.Now;
-            entry.CacheElement = resultSet;
+            var entry = new CacheEntry { CacheTime = DateTime.Now, CacheElement = resultSet };
             lock ( _cache ) {
                 if ( _cache.ContainsKey( commandText ) ) return;
                 _cache.Add( commandText, entry );
@@ -60,8 +58,7 @@ namespace MySql.Data.MySqlClient {
             lock ( _cache ) {
                 if ( !_cache.ContainsKey( commandText ) ) return null;
                 var entry = _cache[ commandText ];
-                if ( DateTime.Now.Subtract( entry.CacheTime ).TotalSeconds > cacheAge ) return null;
-                return entry.CacheElement;
+                return DateTime.Now.Subtract( entry.CacheTime ).TotalSeconds > cacheAge ? null : entry.CacheElement;
             }
         }
 

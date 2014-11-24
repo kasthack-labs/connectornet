@@ -22,12 +22,10 @@
 
 using System.Data;
 using System.Text;
-#if NET_40_OR_GREATER
 using System.Threading.Tasks;
 using System.Threading;
 using System;
-
-#endif
+using System.Linq;
 
 namespace MySql.Data.MySqlClient {
     /// <summary>
@@ -60,16 +58,10 @@ namespace MySql.Data.MySqlClient {
         /// <returns></returns>
         public static int ExecuteNonQuery( MySqlConnection connection, string commandText, params MySqlParameter[] commandParameters ) {
             //create a command and prepare it for execution
-            var cmd = new MySqlCommand();
-            cmd.Connection = connection;
-            cmd.CommandText = commandText;
-            cmd.CommandType = CommandType.Text;
-
+            var cmd = new MySqlCommand { Connection = connection, CommandText = commandText, CommandType = CommandType.Text };
             if ( commandParameters != null ) foreach ( var p in commandParameters ) cmd.Parameters.Add( p );
-
             var result = cmd.ExecuteNonQuery();
             cmd.Parameters.Clear();
-
             return result;
         }
 
@@ -92,7 +84,6 @@ namespace MySql.Data.MySqlClient {
         }
         #endregion
 
-#if !RT
 
         #region ExecuteDataSet
         /// <summary>
@@ -118,10 +109,8 @@ namespace MySql.Data.MySqlClient {
         /// <param name="connectionString">Settings to be used for the connection</param>
         /// <param name="commandText">Command to execute</param>
         /// <returns><see cref="DataSet"/> containing the resultset</returns>
-        public static DataSet ExecuteDataset( string connectionString, string commandText ) {
             //pass through the call providing null for the set of SqlParameters
-            return ExecuteDataset( connectionString, commandText, null );
-        }
+        public static DataSet ExecuteDataset( string connectionString, string commandText ) => ExecuteDataset( connectionString, commandText, null );
 
         /// <summary>
         /// Executes a single SQL command and returns the resultset in a <see cref="DataSet"/>.  
@@ -135,7 +124,6 @@ namespace MySql.Data.MySqlClient {
             //create & open a SqlConnection, and dispose of it after we are done.
             using ( var cn = new MySqlConnection( connectionString ) ) {
                 cn.Open();
-
                 //call the overload that takes a connection in place of the connection string
                 return ExecuteDataset( cn, commandText, commandParameters );
             }
@@ -149,10 +137,8 @@ namespace MySql.Data.MySqlClient {
         /// <param name="connection"><see cref="MySqlConnection"/> object to use</param>
         /// <param name="commandText">Command to execute</param>
         /// <returns><see cref="DataSet"/> containing the resultset</returns>
-        public static DataSet ExecuteDataset( MySqlConnection connection, string commandText ) {
             //pass through the call providing null for the set of SqlParameters
-            return ExecuteDataset( connection, commandText, null );
-        }
+        public static DataSet ExecuteDataset( MySqlConnection connection, string commandText ) => ExecuteDataset( connection, commandText, null );
 
         /// <summary>
         /// Executes a single SQL command and returns the resultset in a <see cref="DataSet"/>.  
@@ -165,23 +151,13 @@ namespace MySql.Data.MySqlClient {
         /// <returns><see cref="DataSet"/> containing the resultset</returns>
         public static DataSet ExecuteDataset( MySqlConnection connection, string commandText, params MySqlParameter[] commandParameters ) {
             //create a command and prepare it for execution
-            var cmd = new MySqlCommand();
-            cmd.Connection = connection;
-            cmd.CommandText = commandText;
-            cmd.CommandType = CommandType.Text;
-
+            var cmd = new MySqlCommand { Connection = connection, CommandText = commandText, CommandType = CommandType.Text };
             if ( commandParameters != null ) foreach ( var p in commandParameters ) cmd.Parameters.Add( p );
-
-            //create the DataAdapter & DataSet
-            var da = new MySqlDataAdapter( cmd );
             var ds = new DataSet();
-
             //fill the DataSet using default values for DataTable names, etc.
-            da.Fill( ds );
-
+            new MySqlDataAdapter( cmd ).Fill( ds );
             // detach the MySqlParameters from the command object, so they can be used again.			
             cmd.Parameters.Clear();
-
             //return the dataset
             return ds;
         }
@@ -194,17 +170,16 @@ namespace MySql.Data.MySqlClient {
         /// <param name="ds"><see cref="DataSet"/> containing the new data to use in the update</param>
         /// <param name="tablename">Tablename in the dataset to update</param>
         public static void UpdateDataSet( string connectionString, string commandText, DataSet ds, string tablename ) {
-            var cn = new MySqlConnection( connectionString );
-            cn.Open();
-            var da = new MySqlDataAdapter( commandText, cn );
-            var cb = new MySqlCommandBuilder( da );
-            cb.ToString();
-            da.Update( ds, tablename );
-            cn.Close();
+            using ( var cn = new MySqlConnection( connectionString ) ) {
+                cn.Open();
+                var da = new MySqlDataAdapter( commandText, cn );
+                var cb = new MySqlCommandBuilder( da );
+                cb.ToString();//wut?
+                da.Update( ds, tablename );
+            }
         }
         #endregion
 
-#endif
 
         #region ExecuteDataReader
         /// <summary>
@@ -223,24 +198,18 @@ namespace MySql.Data.MySqlClient {
             MySqlParameter[] commandParameters,
             bool externalConn ) {
             //create a command and prepare it for execution
-            var cmd = new MySqlCommand();
-            cmd.Connection = connection;
-            cmd.Transaction = transaction;
-            cmd.CommandText = commandText;
-            cmd.CommandType = CommandType.Text;
+            var cmd = new MySqlCommand {
+                Connection = connection,
+                Transaction = transaction,
+                CommandText = commandText,
+                CommandType = CommandType.Text
+            };
 
             if ( commandParameters != null ) foreach ( var p in commandParameters ) cmd.Parameters.Add( p );
-
-            //create a reader
-            MySqlDataReader dr;
-
             // call ExecuteReader with the appropriate CommandBehavior
-            if ( externalConn ) dr = cmd.ExecuteReader();
-            else dr = cmd.ExecuteReader( CommandBehavior.CloseConnection );
-
+            var dr = externalConn ? cmd.ExecuteReader() : cmd.ExecuteReader( CommandBehavior.CloseConnection );
             // detach the SqlParameters from the command object, so they can be used again.
             cmd.Parameters.Clear();
-
             return dr;
         }
 
@@ -250,10 +219,8 @@ namespace MySql.Data.MySqlClient {
         /// <param name="connectionString">Settings to use for this command</param>
         /// <param name="commandText">Command text to use</param>
         /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-        public static MySqlDataReader ExecuteReader( string connectionString, string commandText ) {
             //pass through the call providing null for the set of SqlParameters
-            return ExecuteReader( connectionString, commandText, null );
-        }
+        public static MySqlDataReader ExecuteReader( string connectionString, string commandText ) => ExecuteReader( connectionString, commandText, null );
 
         /// <summary>
         /// Executes a single command against a MySQL database.
@@ -261,10 +228,8 @@ namespace MySql.Data.MySqlClient {
         /// <param name="connection"><see cref="MySqlConnection"/> object to use for the command</param>
         /// <param name="commandText">Command text to use</param>
         /// <returns><see cref="MySqlDataReader"/> object ready to read the results of the command</returns>
-        public static MySqlDataReader ExecuteReader( MySqlConnection connection, string commandText ) {
             //pass through the call providing null for the set of SqlParameters
-            return ExecuteReader( connection, null, commandText, null, true );
-        }
+        public static MySqlDataReader ExecuteReader( MySqlConnection connection, string commandText ) => ExecuteReader( connection, null, commandText, null, true );
 
         /// <summary>
         /// Executes a single command against a MySQL database.
@@ -278,11 +243,13 @@ namespace MySql.Data.MySqlClient {
             string commandText,
             params MySqlParameter[] commandParameters ) {
             //create & open a SqlConnection
-            var cn = new MySqlConnection( connectionString );
-            cn.Open();
+            using (var cn = new MySqlConnection( connectionString )) {
+                cn.Open();
 
-            //call the private overload that takes an internally owned connection in place of the connection string
-            return ExecuteReader( cn, null, commandText, commandParameters, false );
+                //call the private overload that takes an internally owned connection in place of the connection string
+                return ExecuteReader( cn, null, commandText, commandParameters, false );
+            }
+            //todo: check if connection must not be closed
         }
 
         /// <summary>
@@ -295,10 +262,7 @@ namespace MySql.Data.MySqlClient {
         public static MySqlDataReader ExecuteReader(
             MySqlConnection connection,
             string commandText,
-            params MySqlParameter[] commandParameters ) {
-            //call the private overload that takes an internally owned connection in place of the connection string
-            return ExecuteReader( connection, null, commandText, commandParameters, true );
-        }
+            params MySqlParameter[] commandParameters ) => ExecuteReader( connection, null, commandText, commandParameters, true );
         #endregion
 
         #region ExecuteScalar
@@ -308,10 +272,8 @@ namespace MySql.Data.MySqlClient {
         /// <param name="connectionString">Settings to use for the update</param>
         /// <param name="commandText">Command text to use for the update</param>
         /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
-        public static object ExecuteScalar( string connectionString, string commandText ) {
             //pass through the call providing null for the set of MySqlParameters
-            return ExecuteScalar( connectionString, commandText, null );
-        }
+        public static object ExecuteScalar( string connectionString, string commandText ) => ExecuteScalar( connectionString, commandText, null );
 
         /// <summary>
         /// Execute a single command against a MySQL database.
@@ -324,7 +286,6 @@ namespace MySql.Data.MySqlClient {
             //create & open a SqlConnection, and dispose of it after we are done.
             using ( var cn = new MySqlConnection( connectionString ) ) {
                 cn.Open();
-
                 //call the overload that takes a connection in place of the connection string
                 return ExecuteScalar( cn, commandText, commandParameters );
             }
@@ -336,10 +297,7 @@ namespace MySql.Data.MySqlClient {
         /// <param name="connection"><see cref="MySqlConnection"/> object to use</param>
         /// <param name="commandText">Command text to use for the command</param>
         /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
-        public static object ExecuteScalar( MySqlConnection connection, string commandText ) {
-            //pass through the call providing null for the set of MySqlParameters
-            return ExecuteScalar( connection, commandText, null );
-        }
+        public static object ExecuteScalar( MySqlConnection connection, string commandText ) => ExecuteScalar( connection, commandText, null );
 
         /// <summary>
         /// Execute a single command against a MySQL database.
@@ -350,18 +308,14 @@ namespace MySql.Data.MySqlClient {
         /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
         public static object ExecuteScalar( MySqlConnection connection, string commandText, params MySqlParameter[] commandParameters ) {
             //create a command and prepare it for execution
-            var cmd = new MySqlCommand();
-            cmd.Connection = connection;
-            cmd.CommandText = commandText;
-            cmd.CommandType = CommandType.Text;
-
-            if ( commandParameters != null ) foreach ( var p in commandParameters ) cmd.Parameters.Add( p );
-
-            //execute the command & return the results
-            var retval = cmd.ExecuteScalar();
-
-            // detach the SqlParameters from the command object, so they can be used again.
-            cmd.Parameters.Clear();
+            object retval;
+            using ( var cmd = new MySqlCommand { Connection = connection, CommandText = commandText, CommandType = CommandType.Text } ) {
+                if ( commandParameters != null ) foreach ( var p in commandParameters ) cmd.Parameters.Add( p );
+                //execute the command & return the results
+                retval = cmd.ExecuteScalar();
+                // detach the SqlParameters from the command object, so they can be used again.
+                cmd.Parameters.Clear();
+            }
             return retval;
         }
         #endregion
@@ -374,10 +328,7 @@ namespace MySql.Data.MySqlClient {
             return a;
         }
 
-        private static bool NeedsQuoting( string s ) {
-            foreach ( var c in s ) if ( CharClassArray[ c ] != CharClass.None ) return true;
-            return false;
-        }
+        private static bool NeedsQuoting( string s ) => s.Any( c => CharClassArray[ c ] != CharClass.None );
 
         /// <summary>
         /// Escapes the string.
@@ -410,8 +361,6 @@ namespace MySql.Data.MySqlClient {
             return sb.ToString();
         }
         #endregion
-
-#if NET_40_OR_GREATER
 
         #region Async
 
@@ -655,8 +604,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var reader = ExecuteReader( connection, transaction, commandText, commandParameters, externalConn );
-                    result.SetResult( reader );
+                    result.SetResult( ExecuteReader( connection, transaction, commandText, commandParameters, externalConn ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -713,8 +661,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var reader = ExecuteReader( connectionString, commandText, commandParameters );
-                    result.SetResult( reader );
+                    result.SetResult( ExecuteReader( connectionString, commandText, commandParameters ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -774,8 +721,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var scalarResult = ExecuteScalar( connectionString, commandText, commandParameters );
-                    result.SetResult( scalarResult );
+                    result.SetResult( ExecuteScalar( connectionString, commandText, commandParameters ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -815,8 +761,7 @@ namespace MySql.Data.MySqlClient {
             if ( cancellationToken == CancellationToken.None
                  || !cancellationToken.IsCancellationRequested )
                 try {
-                    var scalarResult = ExecuteScalar( connection, commandText, commandParameters );
-                    result.SetResult( scalarResult );
+                    result.SetResult( ExecuteScalar( connection, commandText, commandParameters ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -828,6 +773,5 @@ namespace MySql.Data.MySqlClient {
 
         #endregion
 
-#endif
     }
 }

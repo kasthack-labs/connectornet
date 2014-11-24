@@ -56,23 +56,13 @@ namespace MySql.Data.MySqlClient {
             Stream stream;
             if ( compress ) stream = new CompressedStream( _timedStream );
             else stream = _timedStream;
-
-#if RT
-      inStream = baseStream;
-#else
             _inStream = new BufferedStream( stream );
-#endif
             _outStream = stream;
         }
 
         public void Close() {
-#if RT
-      outStream.Dispose();
-      inStream.Dispose();
-#else
             _outStream.Close();
             _inStream.Close();
-#endif
             _timedStream.Close();
         }
 
@@ -157,16 +147,8 @@ namespace MySql.Data.MySqlClient {
 
                     // make roo for the next block
                     _packet.Length += length;
-
-#if RT
-          byte[] tempBuffer = new byte[length];
-          ReadFully(inStream, tempBuffer, offset, length);
-          packet.Write(tempBuffer);
-#else
                     ReadFully( _inStream, _packet.Buffer, offset, length );
-#endif
                     offset += length;
-
                     // if this block was < maxBlock then it's last one in a multipacket series
                     if ( length < MaxBlockSize ) break;
                 }

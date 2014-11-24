@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Timers;
 using MySql.Data.MySqlClient.Properties;
 
@@ -84,10 +85,7 @@ namespace MySql.Data.MySqlClient.Replication {
         /// </summary>
         /// <param name="name">Server name</param>
         /// <returns>Replication server</returns>
-        protected internal ReplicationServer GetServer( string name ) {
-            foreach ( var server in servers ) if ( String.Compare( name, server.Name, StringComparison.OrdinalIgnoreCase ) == 0 ) return server;
-            return null;
-        }
+        protected internal ReplicationServer GetServer( string name ) => servers.FirstOrDefault( server => server.Name == name);
 
         /// <summary>
         /// Must be implemented. Defines the next server for a custom load balancing implementation.
@@ -107,13 +105,11 @@ namespace MySql.Data.MySqlClient.Replication {
         /// <param name="server">The failed server</param>
         protected internal virtual void HandleFailover( ReplicationServer server ) {
             var worker = new BackgroundWorker();
-            worker.DoWork += delegate( object sender, DoWorkEventArgs e ) {
+            worker.DoWork += ( sender, e ) => {
                 var isRunning = false;
                 var server1 = e.Argument as ReplicationServer;
-#if !RT
                 var timer = new Timer( RetryTime * 1000.0 );
-
-                ElapsedEventHandler elapsedEvent = delegate {
+                ElapsedEventHandler elapsedEvent = ( o, args ) => {
                     if ( isRunning ) return;
                     try {
                         isRunning = true;
@@ -133,36 +129,6 @@ namespace MySql.Data.MySqlClient.Replication {
                 timer.Elapsed += elapsedEvent;
                 timer.Start();
                 elapsedEvent( sender, null );
-#else
-              Windows.UI.Xaml.DispatcherTimer timer = new Windows.UI.Xaml.DispatcherTimer();
-              TimeSpan ts = new TimeSpan(RetryTime * 1000);
-              System.EventHandler<object> elapsedEvent = (TickSender, TickEventArgs) =>
-              {
-                  if (isRunning) return;
-                  try
-                  {
-                      isRunning = true;
-                      using (MySqlConnection connectionFailed = new MySqlConnection(server.ConnectionString))
-                      {
-                          connectionFailed.Open();
-                          server1.IsAvailable = true;
-                          timer.Stop();
-                      }
-                  }
-                  catch
-                  {
-                      MySqlTrace.LogWarning(0,
-                        string.Format(Properties.Resources.Replication_ConnectionAttemptFailed, server1.Name));
-                  }
-                  finally
-                  {
-                      isRunning = false;
-                  }
-              };
-              timer.Tick += elapsedEvent;
-              elapsedEvent(sender, null);
-              timer.Start();
-#endif
             };
 
             worker.RunWorkerAsync( server );

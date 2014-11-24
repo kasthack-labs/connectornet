@@ -30,11 +30,8 @@ using System.Text.RegularExpressions;
 using MySql.Data.Constants;
 using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
-#if !RT
 using System.Data;
 using System.Data.Common;
-
-#endif
 
 namespace MySql.Data.MySqlClient {
     internal class SchemaProvider {
@@ -43,13 +40,9 @@ namespace MySql.Data.MySqlClient {
 
         public SchemaProvider( MySqlConnection connectionToUse ) { Connection = connectionToUse; }
 
-        public virtual MySqlSchemaCollection GetSchema( string collection, String[] restrictions ) {
+        public virtual MySqlSchemaCollection GetSchema( string collection, string[] restrictions ) {
             if ( Connection.State != ConnectionState.Open ) throw new MySqlException( "GetSchema can only be called on an open connection." );
-
-            collection = StringUtility.InvariantToUpper( collection );
-
-            var c = GetSchemaInternal( collection, restrictions );
-
+            var c = GetSchemaInternal( collection.InvariantToUpper(), restrictions );
             if ( c == null ) throw new ArgumentException( "Invalid collection name" );
             return c;
         }
@@ -64,14 +57,11 @@ namespace MySql.Data.MySqlClient {
             // so we can use LIKE to do the matching.
             if ( caseSetting == 0 )
                 if ( restrictions != null
-                     && restrictions.Length >= 1 ) sql = sql + " LIKE '" + restrictions[ 0 ] + "'";
+                     && restrictions.Length >= 1 ) sql += string.Format( " LIKE '{0}'", restrictions[ 0 ] );
 
             var c = QueryCollection( "Databases", sql );
 
-            if ( caseSetting != 0
-                 && restrictions != null
-                 && restrictions.Length >= 1
-                 && restrictions[ 0 ] != null ) regex = new Regex( restrictions[ 0 ], RegexOptions.IgnoreCase );
+            if ( caseSetting != 0 && restrictions?[ 0 ] != null ) regex = new Regex( restrictions[ 0 ], RegexOptions.IgnoreCase );
 
             var c2 = new MySqlSchemaCollection( "Databases" );
             c2.AddColumn( "CATALOG_NAME", Constants.Types.String );
@@ -129,7 +119,6 @@ namespace MySql.Data.MySqlClient {
         protected void QuoteDefaultValues( MySqlSchemaCollection schemaCollection ) {
             if ( schemaCollection == null ) return;
             if ( !schemaCollection.ContainsColumn( "COLUMN_DEFAULT" ) ) return;
-
             foreach ( var row in schemaCollection.Rows ) {
                 var defaultValue = row[ "COLUMN_DEFAULT" ];
                 if ( MetaData.IsTextType( row[ "DATA_TYPE" ].ToString() ) ) row[ "COLUMN_DEFAULT" ] = String.Format( "{0}", defaultValue );
@@ -221,13 +210,17 @@ namespace MySql.Data.MySqlClient {
             var stop = dataType.IndexOf( ')', index );
             var dataLen = dataType.Substring( index + 1, stop - ( index + 1 ) );
             var lowerType = row[ "DATA_TYPE" ].ToString().ToLower();
-            if ( lowerType == "char"
-                 || lowerType == "varchar" ) row[ "CHARACTER_MAXIMUM_LENGTH" ] = dataLen;
-            else if ( lowerType == "real"
-                      || lowerType == "decimal" ) {
-                var lenparts = dataLen.Split( ',' );
-                row[ "NUMERIC_PRECISION" ] = lenparts[ 0 ];
-                if ( lenparts.Length == 2 ) row[ "NUMERIC_SCALE" ] = lenparts[ 1 ];
+            switch ( lowerType ) {
+                case "char":
+                case "varchar":
+                    row[ "CHARACTER_MAXIMUM_LENGTH" ] = dataLen;
+                    break;
+                case "real":
+                case "decimal":
+                    var lenparts = dataLen.Split( ',' );
+                    row[ "NUMERIC_PRECISION" ] = lenparts[ 0 ];
+                    if ( lenparts.Length == 2 ) row[ "NUMERIC_SCALE" ] = lenparts[ 1 ];
+                    break;
             }
         }
 
@@ -391,10 +384,7 @@ namespace MySql.Data.MySqlClient {
             return dt;
         }
 
-        private string GetSqlMode() {
-            var cmd = new MySqlCommand( "SELECT @@SQL_MODE", Connection );
-            return cmd.ExecuteScalar().ToString();
-        }
+        private string GetSqlMode() => new MySqlCommand( "SELECT @@SQL_MODE", Connection ).ExecuteScalar().ToString();
 
         #region Foreign Key routines
         /// <summary>
@@ -571,7 +561,7 @@ namespace MySql.Data.MySqlClient {
                     row[ "ROUTINE_NAME" ] = reader.GetString( "name" );
                     var routineType = reader.GetString( "type" );
                     row[ "ROUTINE_TYPE" ] = routineType;
-                    row[ "DTD_IDENTIFIER" ] = StringUtility.InvariantToLower( routineType ) == "function"
+                    row[ "DTD_IDENTIFIER" ] = routineType.InvariantToLower() == "function"
                                                   ? (object) reader.GetString( "returns" )
                                                   : DBNull.Value;
                     row[ "ROUTINE_BODY" ] = "SQL";
@@ -613,9 +603,6 @@ namespace MySql.Data.MySqlClient {
         }
 
         private MySqlSchemaCollection GetDataSourceInformation() {
-#if CF || RT
-      throw new NotSupportedException();
-#else
             var dt = new MySqlSchemaCollection( "DataSourceInformation" );
             dt.AddColumn( "CompositeIdentifierSeparatorPattern", Constants.Types.String );
             dt.AddColumn( "DataSourceProductName", Constants.Types.String );
@@ -660,7 +647,6 @@ namespace MySql.Data.MySqlClient {
             dt.Rows.Add( row );
 
             return dt;
-#endif
         }
 
         private static MySqlSchemaCollection GetDataTypes() {
@@ -741,13 +727,8 @@ namespace MySql.Data.MySqlClient {
 
         private static MySqlSchemaCollection GetReservedWords() {
             var dt = new MySqlSchemaCollection( "ReservedWords" );
-#if !RT
             dt.AddColumn( DbMetaDataColumnNames.ReservedWord, Constants.Types.String );
             var str = Assembly.GetExecutingAssembly().GetManifestResourceStream( "MySql.Data.MySqlClient.Properties.ReservedWords.txt" );
-#else
-      dt.AddColumn("ReservedWord", TypeConstants.String);
-      Stream str = typeof(SchemaProvider).GetTypeInfo().Assembly.GetManifestResourceStream("MySql.Data.MySqlClient.Properties.ReservedWords.txt");
-#endif
             var sr = new StreamReader( str );
             var line = sr.ReadLine();
             while ( line != null ) {
@@ -759,11 +740,7 @@ namespace MySql.Data.MySqlClient {
                 }
                 line = sr.ReadLine();
             }
-#if !CF
             sr.Dispose();
-#else
-      sr.Close();
-#endif
             str?.Close();
 
             return dt;

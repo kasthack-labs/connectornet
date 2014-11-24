@@ -35,7 +35,6 @@ namespace MySql.Data.MySqlClient {
         /// </summary>
         public override int Depth => 0;
 
-#if !CF
         public MySqlGeometry GetMySqlGeometry( int i ) {
             try {
                 var v = GetFieldValue( i, false );
@@ -49,7 +48,6 @@ namespace MySql.Data.MySqlClient {
         }
 
         public MySqlGeometry GetMySqlGeometry( string column ) => GetMySqlGeometry( GetOrdinal( column ) );
-#endif
 
         /// <summary>
         /// Returns a DataTable that describes the column metadata of the MySqlDataReader.

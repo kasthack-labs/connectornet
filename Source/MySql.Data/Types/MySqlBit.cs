@@ -22,7 +22,6 @@
 
 using System;
 using MySql.Data.MySqlClient;
-using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     /// <summary>
@@ -31,22 +30,14 @@ namespace MySql.Data.Types {
     internal struct MySqlBit : IMySqlValue {
         private ulong _mValue;
         private bool _isNull;
-        private bool _readAsString;
 
-        public MySqlBit( bool isnull ) {
+        public MySqlBit( bool isnull ) : this() {
             _mValue = 0;
             _isNull = isnull;
-            _readAsString = false;
+            ReadAsString = false;
         }
 
-        public bool ReadAsString {
-            get {
-                return _readAsString;
-            }
-            set {
-                _readAsString = value;
-            }
-        }
+        public bool ReadAsString { get; set; }
 
         public bool IsNull => _isNull;
 
@@ -79,34 +70,6 @@ namespace MySql.Data.Types {
             packet.Position += len;
         }
 
-        internal static void SetDsInfo( MySqlSchemaCollection sc ) {
-            // we use name indexing because this method will only be called
-            // when GetSchema is called for the DataSourceInformation 
-            // collection and then it wil be cached.
-            var row = sc.AddRow();
-            row[ "TypeName" ] = "BIT";
-            row[ "ProviderDbType" ] = MySqlDbType.Bit;
-            row[ "ColumnSize" ] = 64;
-            row[ "CreateFormat" ] = "BIT";
-            row[ "CreateParameters" ] = DBNull.Value;
-            row[ "DataType" ] = Constants.Types.UInt64.ToString();
-            row[ "IsAutoincrementable" ] = false;
-            row[ "IsBestMatch" ] = true;
-            row[ "IsCaseSensitive" ] = false;
-            row[ "IsFixedLength" ] = false;
-            row[ "IsFixedPrecisionScale" ] = true;
-            row[ "IsLong" ] = false;
-            row[ "IsNullable" ] = true;
-            row[ "IsSearchable" ] = true;
-            row[ "IsSearchableWithLike" ] = false;
-            row[ "IsUnsigned" ] = false;
-            row[ "MaximumScale" ] = 0;
-            row[ "MinimumScale" ] = 0;
-            row[ "IsConcurrencyType" ] = DBNull.Value;
-            row[ "IsLiteralSupported" ] = false;
-            row[ "LiteralPrefix" ] = DBNull.Value;
-            row[ "LiteralSuffix" ] = DBNull.Value;
-            row[ "NativeDataType" ] = DBNull.Value;
-        }
+        internal static void SetDsInfo( MySqlSchemaCollection sc ) => DsInfoHelper.FillDsInfoRow( sc.AddRow(), "BIT", MySqlDbType.Bit, 64, "BIT", Constants.Types.UInt64, false, false );
     }
 }

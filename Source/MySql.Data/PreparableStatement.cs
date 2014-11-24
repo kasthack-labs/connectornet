@@ -32,11 +32,7 @@ namespace MySql.Data.MySqlClient {
     /// Summary description for PreparedStatement.
     /// </summary>
     internal class PreparableStatement : Statement {
-#if RT
-    RtBitArray nullMap;
-#else
         private BitArray _nullMap;
-#endif
         private readonly List<MySqlParameter> _parametersToSend = new List<MySqlParameter>();
         private MySqlPacket _packet;
         private int _dataPosition;
@@ -76,11 +72,7 @@ namespace MySql.Data.MySqlClient {
             var numNullBytes = 0;
             if ( paramList != null
                  && paramList.Length > 0 ) {
-#if RT
-          nullMap = new RtBitArray(paramList.Length);
-#else
                 _nullMap = new BitArray( paramList.Length );
-#endif
                 numNullBytes = ( _nullMap.Count + 7 ) / 8;
             }
 

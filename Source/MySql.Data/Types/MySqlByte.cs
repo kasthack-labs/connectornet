@@ -27,20 +27,18 @@ using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlByte : IMySqlValue {
-        private sbyte _mValue;
         private readonly bool _isNull;
-        private bool _treatAsBool;
 
-        public MySqlByte( bool isNull ) {
+        public MySqlByte( bool isNull ) : this() {
             _isNull = isNull;
-            _mValue = 0;
-            _treatAsBool = false;
+            Value = 0;
+            TreatAsBoolean = false;
         }
 
-        public MySqlByte( sbyte val ) {
+        public MySqlByte( sbyte val ) : this() {
             _isNull = false;
-            _mValue = val;
-            _treatAsBool = false;
+            Value = val;
+            TreatAsBoolean = false;
         }
 
         #region IMySqlValue Members
@@ -50,19 +48,12 @@ namespace MySql.Data.Types {
 
         object IMySqlValue.Value {
             get {
-                if ( TreatAsBoolean ) return Convert.ToBoolean( _mValue );
-                return _mValue;
+                if ( TreatAsBoolean ) return Convert.ToBoolean( Value );
+                return Value;
             }
         }
 
-        public sbyte Value {
-            get {
-                return _mValue;
-            }
-            set {
-                _mValue = value;
-            }
-        }
+        public sbyte Value { get; set; }
 
         Type IMySqlValue.SystemType => TreatAsBoolean ? Constants.Types.Boolean : typeof( sbyte );
 
@@ -84,25 +75,22 @@ namespace MySql.Data.Types {
         void IMySqlValue.SkipValue( MySqlPacket packet ) { packet.ReadByte(); }
         #endregion
 
-        internal bool TreatAsBoolean {
-            get {
-                return _treatAsBool;
-            }
-            set {
-                _treatAsBool = value;
-            }
-        }
+        internal bool TreatAsBoolean { get; set; }
 
         internal static void SetDsInfo( MySqlSchemaCollection sc ) {
             // we use name indexing because this method will only be called
             // when GetSchema is called for the DataSourceInformation 
             // collection and then it wil be cached.
+
+
             var row = sc.AddRow();
+
+
             row[ "TypeName" ] = "TINYINT";
             row[ "ProviderDbType" ] = MySqlDbType.Byte;
             row[ "ColumnSize" ] = 0;
             row[ "CreateFormat" ] = "TINYINT";
-            row[ "CreateParameters" ] = null;
+            row[ "CreateParameters" ] = DBNull.Value;
             row[ "DataType" ] = "System.SByte";
             row[ "IsAutoincrementable" ] = true;
             row[ "IsBestMatch" ] = true;
@@ -118,9 +106,9 @@ namespace MySql.Data.Types {
             row[ "MinimumScale" ] = 0;
             row[ "IsConcurrencyType" ] = DBNull.Value;
             row[ "IsLiteralSupported" ] = false;
-            row[ "LiteralPrefix" ] = null;
-            row[ "LiteralSuffix" ] = null;
-            row[ "NativeDataType" ] = null;
+            row[ "LiteralPrefix" ] = DBNull.Value;
+            row[ "LiteralSuffix" ] = DBNull.Value;
+            row[ "NativeDataType" ] = DBNull.Value;
         }
     }
 }

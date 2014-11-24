@@ -34,22 +34,13 @@ namespace MySql.Data.MySqlClient {
     /// Summary description for BaseDriver.
     /// </summary>
     internal class Driver : IDisposable {
-        protected Encoding encoding;
-        protected MySqlConnectionStringBuilder ConnectionString;
         protected bool isOpen;
         protected DateTime CreationTime;
         protected string ServerCharSet;
-        protected int ServerCharSetIndex;
         protected Dictionary<string, string> ServerProps;
         protected Dictionary<int, string> CharSets;
         protected long maxPacketSize;
         internal int TimeZoneOffset;
-
-#if !CF && !RT
-        protected MySqlPromotableTransaction currentTransaction;
-        protected bool InActiveUse;
-#endif
-        protected MySqlPool pool;
         private bool _firstResult;
         protected IDriver Handler;
         internal MySqlDataReader Reader;
@@ -63,11 +54,11 @@ namespace MySql.Data.MySqlClient {
         public DateTime IdleSince { get; set; }
 
         public Driver( MySqlConnectionStringBuilder settings ) {
-            encoding = Encoding.GetEncoding( "Windows-1252" );
-            if ( encoding == null ) throw new MySqlException( Resources.DefaultEncodingNotFound );
-            ConnectionString = settings;
+            Encoding = Encoding.GetEncoding( "Windows-1252" );
+            if ( Encoding == null ) throw new MySqlException( Resources.DefaultEncodingNotFound );
+            Settings = settings;
             ServerCharSet = "latin1";
-            ServerCharSetIndex = -1;
+            ConnectionCharSetIndex = -1;
             maxPacketSize = 1024;
             Handler = new NativeDriver( this );
         }
@@ -79,64 +70,21 @@ namespace MySql.Data.MySqlClient {
 
         public DbVersion Version => Handler.Version;
 
-        public MySqlConnectionStringBuilder Settings {
-            get {
-                return ConnectionString;
-            }
-            set {
-                ConnectionString = value;
-            }
-        }
+        public MySqlConnectionStringBuilder Settings { get; set; }
 
-        public Encoding Encoding {
-            get {
-                return encoding;
-            }
-            set {
-                encoding = value;
-            }
-        }
+        public Encoding Encoding { get; set; }
 
-#if !CF && !RT
-        public MySqlPromotableTransaction CurrentTransaction {
-            get {
-                return currentTransaction;
-            }
-            set {
-                currentTransaction = value;
-            }
-        }
+        public MySqlPromotableTransaction CurrentTransaction { get; set; }
 
-        public bool IsInActiveUse {
-            get {
-                return InActiveUse;
-            }
-            set {
-                InActiveUse = value;
-            }
-        }
-#endif
+        public bool IsInActiveUse { get; set; }
+
         public bool IsOpen => isOpen;
 
-        public MySqlPool Pool {
-            get {
-                return pool;
-            }
-            set {
-                pool = value;
-            }
-        }
+        public MySqlPool Pool { get; set; }
 
         public long MaxPacketSize => maxPacketSize;
 
-        internal int ConnectionCharSetIndex {
-            get {
-                return ServerCharSetIndex;
-            }
-            set {
-                ServerCharSetIndex = value;
-            }
-        }
+        protected internal int ConnectionCharSetIndex { get; set; }
 
         internal Dictionary<int, string> CharacterSets => CharSets;
 
@@ -153,16 +101,10 @@ namespace MySql.Data.MySqlClient {
 
         public string Property( string key ) => ServerProps[ key ];
 
-        public bool ConnectionLifetimeExpired() {
-            var ts = DateTime.Now.Subtract( CreationTime );
-            if ( Settings.ConnectionLifeTime != 0
-                 && ts.TotalSeconds > Settings.ConnectionLifeTime ) return true;
-            return false;
-        }
+        public bool ConnectionLifetimeExpired() => Settings.ConnectionLifeTime != 0 && DateTime.Now.Subtract( CreationTime ).TotalSeconds > Settings.ConnectionLifeTime;
 
         public static Driver Create( MySqlConnectionStringBuilder settings ) {
             Driver d = null;
-#if !CF && !RT
             try {
                 if ( MySqlTrace.QueryAnalysisEnabled
                      || settings.Logging
@@ -173,12 +115,6 @@ namespace MySql.Data.MySqlClient {
                 //Only rethrow if InnerException is not a SecurityException. If it is a SecurityException then 
                 //we couldn't initialize MySqlTrace because we don't have unmanaged code permissions. 
             }
-#else
-      if (settings.Logging || settings.UseUsageAdvisor)
-      {
-        throw new NotImplementedException( "Logging not supported in this WinRT release." );
-      }
-#endif
             if ( d == null ) d = new Driver( settings );
 
             //this try was added as suggested fix submitted on MySql Bug 72025, socket connections are left in CLOSE_WAIT status when connector fails to open a new connection.
@@ -245,10 +181,10 @@ namespace MySql.Data.MySqlClient {
             if ( !Settings.ConnectionReset
                  && !firstConfigure ) return;
 
-            var charSet = ConnectionString.CharacterSet;
+            var charSet = Settings.CharacterSet;
             if ( string.IsNullOrEmpty( charSet ) )
-                if ( ServerCharSetIndex >= 0
-                     && CharSets.ContainsKey( ServerCharSetIndex ) ) charSet = CharSets[ ServerCharSetIndex ];
+                if ( ConnectionCharSetIndex >= 0
+                     && CharSets.ContainsKey( ConnectionCharSetIndex ) ) charSet = CharSets[ ConnectionCharSetIndex ];
                 else charSet = ServerCharSet;
 
             if ( ServerProps.ContainsKey( "max_allowed_packet" ) ) maxPacketSize = Convert.ToInt64( ServerProps[ "max_allowed_packet" ] );
@@ -412,7 +348,7 @@ namespace MySql.Data.MySqlClient {
                 ResetTimeout( 1000 );
                 if ( disposing ) Handler.Close( isOpen );
                 // if we are pooling, then release ourselves
-                if ( ConnectionString.Pooling ) MySqlPoolManager.RemoveConnection( this );
+                if ( Settings.Pooling ) MySqlPoolManager.RemoveConnection( this );
             }
             catch ( Exception ) {
                 if ( disposing ) throw;

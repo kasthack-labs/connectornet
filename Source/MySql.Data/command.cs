@@ -23,21 +23,16 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
+using System.Drawing.Design;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Transactions;
-using MySql.Data.Constants;
 using MySql.Data.MySqlClient.Properties;
-using System.Drawing.Design;
-#if !RT
-using System.Data;
-#endif
-#if !CF
 using MySql.Data.MySqlClient.Replication;
-
-#endif
 
 namespace MySql.Data.MySqlClient {
     /// <include file='docs/mysqlcommand.xml' path='docs/ClassSummary/*'/> 
@@ -54,7 +49,6 @@ namespace MySql.Data.MySqlClient {
         private string _batchableCommandText;
         private CommandTimer _commandTimer;
         private bool _useDefaultTimeout;
-        private bool _internallyCreated;
 
         /// <include file='docs/mysqlcommand.xml' path='docs/ctor1/*'/>
         public MySqlCommand() {
@@ -83,14 +77,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         #region Destructor
-#if !RT
         ~MySqlCommand() { Dispose( false ); }
-#else
-    ~MySqlCommand()
-    {
-      this.Dispose();
-    }
-#endif
         #endregion
 
         #region Properties
@@ -176,15 +163,14 @@ namespace MySql.Data.MySqlClient {
 
                 // if the user has not already set the command timeout, then
                 // take the default from the connection
-                if ( _connection != null ) {
-                    if ( _useDefaultTimeout ) {
-                        _commandTimeout = (int) _connection.Settings.DefaultCommandTimeout;
-                        _useDefaultTimeout = false;
-                    }
-
-                    EnableCaching = _connection.Settings.TableCaching;
-                    CacheAge = _connection.Settings.DefaultTableCacheAge;
+                if ( _connection == null ) return;
+                if ( _useDefaultTimeout ) {
+                    _commandTimeout = (int) _connection.Settings.DefaultCommandTimeout;
+                    _useDefaultTimeout = false;
                 }
+
+                EnableCaching = _connection.Settings.TableCaching;
+                CacheAge = _connection.Settings.DefaultTableCacheAge;
             }
         }
 
@@ -208,14 +194,7 @@ namespace MySql.Data.MySqlClient {
 
         internal string BatchableCommandText => _batchableCommandText;
 
-        internal bool InternallyCreated {
-            get {
-                return _internallyCreated;
-            }
-            set {
-                _internallyCreated = value;
-            }
-        }
+        internal bool InternallyCreated { get; set; }
         #endregion
 
         #region Methods
@@ -249,28 +228,17 @@ namespace MySql.Data.MySqlClient {
         private void CheckState() {
             // There must be a valid and open connection.
             if ( _connection == null ) Throw( new InvalidOperationException( "Connection must be valid and open." ) );
-
-            if ( _connection.State != ConnectionState.Open
-                 && !_connection.SoftClosed ) Throw( new InvalidOperationException( "Connection must be valid and open." ) );
-
+            if ( _connection.State != ConnectionState.Open && !_connection.SoftClosed ) Throw( new InvalidOperationException( "Connection must be valid and open." ) );
             // Data readers have to be closed first
-            if ( _connection.IsInUse
-                 && !_internallyCreated )
-                Throw(
-                    new MySqlException( "There is already an open DataReader associated with this Connection which must be closed first." ) );
+            if ( _connection.IsInUse && !InternallyCreated )
+                Throw( new MySqlException( "There is already an open DataReader associated with this Connection which must be closed first." ) );
         }
 
         /// <include file='docs/mysqlcommand.xml' path='docs/ExecuteNonQuery/*'/>
         public override int ExecuteNonQuery() {
             var records = -1;
-
-#if !CF && !RT
             // give our interceptors a shot at it first
-            if ( _connection != null
-                 && _connection.CommandInterceptor != null
-                 && _connection.CommandInterceptor.ExecuteNonQuery( CommandText, ref records ) ) return records;
-#endif
-
+            if ( _connection?.CommandInterceptor?.ExecuteNonQuery( CommandText, ref records ) ?? false ) return records;
             // ok, none of our interceptors handled this so we default
             using ( var reader = ExecuteReader() ) {
                 reader.Close();
@@ -306,7 +274,7 @@ namespace MySql.Data.MySqlClient {
             // if we are supposed to reset the sql select limit, do that here
             if ( !_resetSqlSelect ) return;
             _resetSqlSelect = false;
-            new MySqlCommand( "SET SQL_SELECT_LIMIT=DEFAULT", _connection ) { _internallyCreated = true }.ExecuteNonQuery();
+            new MySqlCommand( "SET SQL_SELECT_LIMIT=DEFAULT", _connection ) { InternallyCreated = true }.ExecuteNonQuery();
         }
 
         /// <include file='docs/mysqlcommand.xml' path='docs/ExecuteReader/*'/>
@@ -314,14 +282,11 @@ namespace MySql.Data.MySqlClient {
 
         /// <include file='docs/mysqlcommand.xml' path='docs/ExecuteReader1/*'/>
         public new MySqlDataReader ExecuteReader( CommandBehavior behavior ) {
-#if !CF && !RT
             // give our interceptors a shot at it first
             MySqlDataReader interceptedReader = null;
 
             var executeReader = _connection?.CommandInterceptor?.ExecuteReader( CommandText, behavior, ref interceptedReader );
             if ( executeReader!=null && executeReader.Value ) return interceptedReader;
-#endif
-
             // interceptors didn't handle this so we fall through
             var success = false;
             CheckState();
@@ -332,19 +297,14 @@ namespace MySql.Data.MySqlClient {
 
             var sql = _cmdText.Trim( ';' );
 
-#if !CF
             // Load balancing getting a new connection
-            if ( _connection.HasBeenOpen
-                 && !driver.HasStatus( ServerStatusFlags.InTransaction ) ) ReplicationManager.GetNewConnection( _connection.Settings.Server, !IsReadOnlyCommand( sql ), _connection );
-#endif
+            if ( _connection.HasBeenOpen && !driver.HasStatus( ServerStatusFlags.InTransaction ) )
+                ReplicationManager.GetNewConnection( _connection.Settings.Server, !IsReadOnlyCommand( sql ), _connection );
 
             lock ( driver ) {
                 // We have to recheck that there is no reader, after we got the lock
                 if ( _connection.Reader != null ) Throw( new MySqlException( Resources.DataReaderOpen ) );
-
-#if !CF && !RT
                 var curTrans = System.Transactions.Transaction.Current;
-
                 if ( curTrans != null ) {
                     var inRollback = false;
                     if ( driver.CurrentTransaction != null ) inRollback = driver.CurrentTransaction.InRollback;
@@ -360,7 +320,6 @@ namespace MySql.Data.MySqlClient {
                         if ( status == TransactionStatus.Aborted ) Throw( new TransactionAbortedException() );
                     }
                 }
-#endif
                 _commandTimer = new CommandTimer( _connection, CommandTimeout );
 
                 lastInsertedId = -1;
@@ -375,11 +334,9 @@ namespace MySql.Data.MySqlClient {
                 }
 
                 // if we are on a replicated connection, we are only allow readonly statements
-                if ( _connection.Settings.Replication
-                     && !InternallyCreated ) EnsureCommandIsReadOnly( sql );
+                if ( _connection.Settings.Replication && !InternallyCreated ) EnsureCommandIsReadOnly( sql );
 
-                if ( _statement == null
-                     || !_statement.IsPrepared )
+                if ( _statement == null || !_statement.IsPrepared )
                     _statement = CommandType == CommandType.StoredProcedure ? new StoredProcedure( this, sql ) : new PreparableStatement( this, sql );
 
                 // stored procs are the only statement type that need do anything during resolve
@@ -449,7 +406,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         private void EnsureCommandIsReadOnly( string sql ) {
-            sql = StringUtility.InvariantToLower( sql );
+            sql = sql.InvariantToLower();
             if ( !sql.StartsWith( "select" )
                  && !sql.StartsWith( "show" ) ) Throw( new MySqlException( Resources.ReplicatedConnectionsAllowOnlyReadonlyStatements ) );
             if ( sql.EndsWith( "for update" )
@@ -458,6 +415,7 @@ namespace MySql.Data.MySqlClient {
 
         private bool IsReadOnlyCommand( string sql ) {
             sql = sql.ToLower();
+            //todo: startswith ignorecase + tolower -> devnull
             return ( sql.StartsWith( "select" ) || sql.StartsWith( "show" ) )
                    && !( sql.EndsWith( "for update" ) || sql.EndsWith( "lock in share mode" ) );
         }
@@ -466,13 +424,9 @@ namespace MySql.Data.MySqlClient {
         public override object ExecuteScalar() {
             lastInsertedId = -1;
             object val = null;
-
-#if !CF && !RT
             // give our interceptors a shot at it first
             if ( _connection != null
                  && _connection.CommandInterceptor.ExecuteScalar( CommandText, ref val ) ) return val;
-#endif
-
             using ( var reader = ExecuteReader() ) if ( reader.Read() ) val = reader.GetValue( 0 );
 
             return val;
@@ -490,16 +444,13 @@ namespace MySql.Data.MySqlClient {
         }
 
         /// <include file='docs/mysqlcommand.xml' path='docs/Prepare2/*'/>
+        //todo:parameter ignored. Bug?
         private void Prepare( int cursorPageSize ) {
             using ( new CommandTimer( Connection, CommandTimeout ) ) {
-                // if the length of the command text is zero, then just return
-                var psSql = CommandText;
-                if ( psSql == null
-                     || psSql.Trim().Length == 0 ) return;
-
-                if ( CommandType == CommandType.StoredProcedure ) _statement = new StoredProcedure( this, CommandText );
-                else _statement = new PreparableStatement( this, CommandText );
-
+                if ( String.IsNullOrWhiteSpace( CommandText ) ) return;
+                _statement = CommandType == CommandType.StoredProcedure
+                    ? new StoredProcedure( this, CommandText )
+                    : new PreparableStatement( this, CommandText );
                 _statement.Resolve( true );
                 _statement.Prepare();
             }
@@ -510,7 +461,6 @@ namespace MySql.Data.MySqlClient {
             if ( _connection == null ) Throw( new InvalidOperationException( "The connection property has not been set." ) );
             if ( _connection.State != ConnectionState.Open ) Throw( new InvalidOperationException( "The connection is not open." ) );
             if ( _connection.Settings.IgnorePrepare ) return;
-
             Prepare( 0 );
         }
         #endregion
@@ -520,6 +470,7 @@ namespace MySql.Data.MySqlClient {
 
         internal AsyncDelegate Caller;
         internal Exception ThrownException;
+        private static readonly Regex AddCallStatementPattern = new Regex( @"^|COMMIT|ROLLBACK|BEGIN|END|DO\S+|SELECT\S+[FROM|\S+]|USE?\S+|SET\S+", RegexOptions.IgnoreCase | RegexOptions.Compiled );
 
         internal object AsyncExecuteWrapper( int type, CommandBehavior behavior ) {
             ThrownException = null;
@@ -631,74 +582,18 @@ namespace MySql.Data.MySqlClient {
         #endregion
 
         #region Private Methods
-        /*		private ArrayList PrepareSqlBuffers(string sql)
-                {
-                    ArrayList buffers = new ArrayList();
-                    MySqlStreamWriter writer = new MySqlStreamWriter(new MemoryStream(), connection.Encoding);
-                    writer.Version = connection.driver.Version;
 
-                    // if we are executing as a stored procedure, then we need to add the call
-                    // keyword.
-                    if (CommandType == CommandType.StoredProcedure)
-                    {
-                        if (storedProcedure == null)
-                            storedProcedure = new StoredProcedure(this);
-                        sql = storedProcedure.Prepare( CommandText );
-                    }
-
-                    // tokenize the SQL
-                    sql = sql.TrimStart(';').TrimEnd(';');
-                    ArrayList tokens = TokenizeSql( sql );
-
-                    foreach (string token in tokens)
-                    {
-                        if (token.Trim().Length == 0) continue;
-                        if (token == ";" && ! connection.driver.SupportsBatch)
-                        {
-                            MemoryStream ms = (MemoryStream)writer.Stream;
-                            if (ms.Length > 0)
-                                buffers.Add( ms );
-
-                            writer = new MySqlStreamWriter(new MemoryStream(), connection.Encoding);
-                            writer.Version = connection.driver.Version;
-                            continue;
-                        }
-                        else if (token[0] == parameters.ParameterMarker) 
-                        {
-                            if (SerializeParameter(writer, token)) continue;
-                        }
-
-                        // our fall through case is to write the token to the byte stream
-                        writer.WriteStringNoNull(token);
-                    }
-
-                    // capture any buffer that is left over
-                    MemoryStream mStream = (MemoryStream)writer.Stream;
-                    if (mStream.Length > 0)
-                        buffers.Add( mStream );
-
-                    return buffers;
-                }*/
-
-        internal long EstimatedSize() {
-            long size = CommandText.Length;
-            foreach ( MySqlParameter parameter in Parameters ) size += parameter.EstimatedSize();
-            return size;
-        }
+        internal long EstimatedSize() => CommandText.Length + Parameters.OfType<MySqlParameter>().Sum( a => a.EstimatedSize() );
 
         /// <summary>
         /// Verifies if a query is valid even if it has not spaces or is a stored procedure call
         /// </summary>
         /// <param name="query">Query to validate</param>
         /// <returns>If it is necessary to add call statement</returns>
-        private bool AddCallStatement( string query ) {
             /*PATTERN MATCHES
        * SELECT`user`FROM`mysql`.`user`;, select(left('test',1));, do(1);, commit, rollback, use, begin, end, use`sakila`;, select`test`;, select'1'=1;, SET@test='test';
        */
-            var pattern = @"^|COMMIT|ROLLBACK|BEGIN|END|DO\S+|SELECT\S+[FROM|\S+]|USE?\S+|SET\S+";
-            var regex = new Regex( pattern, RegexOptions.IgnoreCase );
-            return !( regex.Matches( query ).Count > 0 );
-        }
+        private bool AddCallStatement( string query ) => AddCallStatementPattern.Matches( query ).Count == 0;
         #endregion
 
         #region ICloneable
@@ -735,7 +630,7 @@ namespace MySql.Data.MySqlClient {
 
         internal string GetCommandTextForBatching() {
             if ( _batchableCommandText != null ) return _batchableCommandText;
-            if ( String.Compare( CommandText.Substring( 0, 6 ), "INSERT", StringComparison.OrdinalIgnoreCase ) == 0 ) {
+            if ( CommandText.StartsWith( "INSERT", StringComparison.OrdinalIgnoreCase ) ) {
                 var cmd = new MySqlCommand( "SELECT @@sql_mode", Connection );
                 var sqlMode = cmd.ExecuteScalar().ToString().InvariantToUpper();
                 var tokenizer = new MySqlTokenizer( CommandText ) {
@@ -744,8 +639,7 @@ namespace MySql.Data.MySqlClient {
                 };
                 var token = tokenizer.NextToken().InvariantToLower() ;
                 while ( token != null ) {
-                    if ( token.InvariantToUpper() == "VALUES"
-                         && !tokenizer.Quoted ) {
+                    if ( token.InvariantToUpper() == "VALUES" && !tokenizer.Quoted ) {
                         token = tokenizer.NextToken();
                         Debug.Assert( token == "(" );
 
@@ -771,7 +665,7 @@ namespace MySql.Data.MySqlClient {
                         if ( token != null ) _batchableCommandText += token;
                         token = tokenizer.NextToken();
                         if ( token != null
-                             && ( token == "," || StringUtility.InvariantToUpper( token ) == "ON" ) ) {
+                             && ( token == "," || token.InvariantToUpper() == "ON" ) ) {
                             _batchableCommandText = null;
                             break;
                         }
@@ -781,7 +675,6 @@ namespace MySql.Data.MySqlClient {
             }
             // Otherwise use the command verbatim
             else _batchableCommandText = CommandText;
-
             return _batchableCommandText;
         }
         #endregion
@@ -792,23 +685,14 @@ namespace MySql.Data.MySqlClient {
             throw ex;
         }
 
-#if !RT
         public void Dispose() {
             Dispose( true );
             GC.SuppressFinalize( this );
         }
 
         protected override void Dispose( bool disposing ) {
-            if ( _statement != null
-                 && _statement.IsPrepared ) _statement.CloseStatement();
-
+            if ( _statement?.IsPrepared ?? false ) _statement.CloseStatement();
             base.Dispose( disposing );
         }
-#else
-    public void Dispose()
-    {
-      GC.SuppressFinalize(this);
-    }
-#endif
     }
 }

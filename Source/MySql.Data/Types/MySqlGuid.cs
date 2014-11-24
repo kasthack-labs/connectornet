@@ -29,10 +29,9 @@ namespace MySql.Data.Types {
         private Guid _mValue;
         private bool _isNull;
         private readonly byte[] _bytes;
-        private bool _oldGuids;
 
-        public MySqlGuid( byte[] buff ) {
-            _oldGuids = false;
+        public MySqlGuid( byte[] buff ) : this() {
+            OldGuids = false;
             _mValue = new Guid( buff );
             _isNull = false;
             _bytes = buff;
@@ -40,14 +39,7 @@ namespace MySql.Data.Types {
 
         public byte[] Bytes => _bytes;
 
-        public bool OldGuids {
-            get {
-                return _oldGuids;
-            }
-            set {
-                _oldGuids = value;
-            }
-        }
+        public bool OldGuids { get; set; }
 
         #region IMySqlValue Members
         public bool IsNull => _isNull;

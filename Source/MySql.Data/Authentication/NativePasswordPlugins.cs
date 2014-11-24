@@ -22,12 +22,7 @@
 
 using System;
 using System.Security.Cryptography;
-#if RT
-using AliasText = MySql.Data.MySqlClient.RT;
-#else
 using AliasText = System.Text;
-
-#endif
 
 namespace MySql.Data.MySqlClient.Authentication {
     public class MySqlNativePasswordPlugin : MySqlAuthenticationPlugin {

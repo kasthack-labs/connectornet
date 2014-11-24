@@ -27,11 +27,8 @@ using System.Data;
 using System.Text;
 using MySql.Data.Common;
 using MySql.Data.MySqlClient.Properties;
-#if NET_40_OR_GREATER
 using System.Threading.Tasks;
 using System.Threading;
-
-#endif
 
 namespace MySql.Data.MySqlClient {
     /// <summary>
@@ -180,17 +177,13 @@ namespace MySql.Data.MySqlClient {
 
             try {
                 var sql = BuildSqlCommand();
-                var cmd = new MySqlCommand( sql, Connection );
-                cmd.CommandTimeout = Timeout;
+                var cmd = new MySqlCommand( sql, Connection ) { CommandTimeout = Timeout };
                 return cmd.ExecuteNonQuery();
             }
             finally {
                 if ( openedConnection ) Connection.Close();
             }
         }
-
-#if NET_40_OR_GREATER
-
         #region Async
         /// <summary>
         /// Async version of Load
@@ -212,8 +205,6 @@ namespace MySql.Data.MySqlClient {
             return result.Task;
         }
         #endregion
-
-#endif
 
         private string BuildSqlCommand() {
             var sql = new StringBuilder( "LOAD DATA " );

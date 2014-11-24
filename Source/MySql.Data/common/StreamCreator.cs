@@ -39,21 +39,21 @@ namespace MySql.Data.Common {
 
         public StreamCreator( string hosts, uint port, string pipeName, uint keepalive, DbVersion driverVersion ) {
             _hostList = hosts;
-            if ( _hostList == null
-                 || _hostList.Length == 0 ) _hostList = "localhost";
-            this._port = port;
-            this._pipeName = pipeName;
-            this._keepalive = keepalive;
-            this._driverVersion = driverVersion;
+            if ( string.IsNullOrEmpty( _hostList ) ) _hostList = "localhost";
+            _port = port;
+            _pipeName = pipeName;
+            _keepalive = keepalive;
+            _driverVersion = driverVersion;
         }
 
         public static Stream GetStream( string server, uint port, string pipename, uint keepalive, DbVersion v, uint timeout ) {
-            var settings = new MySqlConnectionStringBuilder();
-            settings.Server = server;
-            settings.Port = port;
-            settings.PipeName = pipename;
-            settings.Keepalive = keepalive;
-            settings.ConnectionTimeout = timeout;
+            var settings = new MySqlConnectionStringBuilder {
+                Server = server,
+                Port = port,
+                PipeName = pipename,
+                Keepalive = keepalive,
+                ConnectionTimeout = timeout
+            };
             return GetStream( settings );
         }
 
@@ -61,37 +61,23 @@ namespace MySql.Data.Common {
             switch ( settings.ConnectionProtocol ) {
                 case MySqlConnectionProtocol.Tcp:
                     return GetTcpStream( settings );
-#if RT
-        case MySqlConnectionProtocol.UnixSocket: throw new NotImplementedException();
-        case MySqlConnectionProtocol.SharedMemory: throw new NotImplementedException();
-#else
-#if !CF
                 case MySqlConnectionProtocol.UnixSocket:
                     return GetUnixSocketStream( settings );
                 case MySqlConnectionProtocol.SharedMemory:
                     return GetSharedMemoryStream( settings );
-#endif
-
-#endif
-#if !CF && !RT
                 case MySqlConnectionProtocol.NamedPipe:
                     return GetNamedPipeStream( settings );
-#endif
             }
             throw new InvalidOperationException( Resources.UnknownConnectionProtocol );
         }
 
         private static Stream GetTcpStream( MySqlConnectionStringBuilder settings ) {
-            var s = MyNetworkStream.CreateStream( settings, false );
-            return s;
+            return MyNetworkStream.CreateStream( settings, false );
         }
 
-#if !CF && !RT
         private static Stream GetUnixSocketStream( MySqlConnectionStringBuilder settings ) {
             if ( Platform.IsWindows() ) throw new InvalidOperationException( Resources.NoUnixSocketsOnWindows );
-
-            var s = MyNetworkStream.CreateStream( settings, true );
-            return s;
+            return MyNetworkStream.CreateStream( settings, true );
         }
 
         private static Stream GetSharedMemoryStream( MySqlConnectionStringBuilder settings ) {
@@ -101,9 +87,7 @@ namespace MySql.Data.Common {
         }
 
         private static Stream GetNamedPipeStream( MySqlConnectionStringBuilder settings ) {
-            var stream = NamedPipeStream.Create( settings.PipeName, settings.Server, settings.ConnectionTimeout );
-            return stream;
+            return NamedPipeStream.Create( settings.PipeName, settings.Server, settings.ConnectionTimeout );
         }
-#endif
     }
 }

@@ -131,7 +131,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblyPublicKey.cs" />
+    <Compile Include="Constants\AssemblyPublicKey.cs" />
     <Compile Include="Authentication\AuthenticationManager.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -219,6 +219,7 @@
     <Compile Include="TimedStream.cs" />
     <Compile Include="TracingDriver.cs" />
     <Compile Include="transaction.cs" />
+    <Compile Include="Types\DsInfoHelper.cs" />
     <Compile Include="Types\MetaData.cs" />
     <Compile Include="Types\MySqlBinary.cs" />
     <Compile Include="Types\MySqlBit.cs" />

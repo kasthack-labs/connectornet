@@ -26,20 +26,18 @@ using MySql.Data.MySqlClient;
 
 namespace MySql.Data.Types {
     public struct MySqlDecimal : IMySqlValue {
-        private byte _precision;
-        private byte _scale;
         private readonly string _mValue;
         private readonly bool _isNull;
 
-        internal MySqlDecimal( bool isNull ) {
+        internal MySqlDecimal( bool isNull ) : this() {
             _isNull = isNull;
             _mValue = null;
-            _precision = _scale = 0;
+            Precision = Scale = 0;
         }
 
-        internal MySqlDecimal( string val ) {
+        internal MySqlDecimal( string val ) : this() {
             _isNull = false;
-            _precision = _scale = 0;
+            Precision = Scale = 0;
             _mValue = val;
         }
 
@@ -48,23 +46,9 @@ namespace MySql.Data.Types {
 
         MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.Decimal;
 
-        public byte Precision {
-            get {
-                return _precision;
-            }
-            set {
-                _precision = value;
-            }
-        }
+        public byte Precision { get; set; }
 
-        public byte Scale {
-            get {
-                return _scale;
-            }
-            set {
-                _scale = value;
-            }
-        }
+        public byte Scale { get; set; }
 
         object IMySqlValue.Value => Value;
 

@@ -32,10 +32,8 @@ using MySql.Data.Types;
 
 namespace MySql.Data.MySqlClient {
     /// <include file='docs/MySqlCommandBuilder.xml' path='docs/class/*'/>
-#if !CF && !RT
     [ToolboxItem( false )]
     [DesignerCategory( "Code" )]
-#endif
     public sealed class MySqlCommandBuilder : DbCommandBuilder {
         /// <include file='docs/MySqlCommandBuilder.xml' path='docs/Ctor/*'/>
         public MySqlCommandBuilder() {
@@ -134,13 +132,16 @@ namespace MySql.Data.MySqlClient {
         }
 
         private static ParameterDirection GetDirection( MySqlSchemaRow row ) {
-            var mode = row[ "PARAMETER_MODE" ].ToString();
-            var ordinal = Convert.ToInt32( row[ "ORDINAL_POSITION" ] );
-
-            if ( 0 == ordinal ) return ParameterDirection.ReturnValue;
-            if ( mode == "IN" ) return ParameterDirection.Input;
-            if ( mode == "OUT" ) return ParameterDirection.Output;
-            return ParameterDirection.InputOutput;
+            if ( Convert.ToInt32( row[ "ORDINAL_POSITION" ] ) == 0 )
+                return ParameterDirection.ReturnValue;
+            switch ( row[ "PARAMETER_MODE" ].ToString() ) {
+                case "IN":
+                    return ParameterDirection.Input;
+                case "OUT":
+                    return ParameterDirection.Output;
+                default:
+                    return ParameterDirection.InputOutput;
+            }
         }
 
         /// <summary>

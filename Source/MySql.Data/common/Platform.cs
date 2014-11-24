@@ -34,9 +34,6 @@ namespace MySql.Data.Common {
         private Platform() { }
 
         public static bool IsWindows() {
-#if NETFX_CORE
-      return true;
-#else
             var os = Environment.OSVersion;
             switch ( os.Platform ) {
                 case PlatformID.Win32NT:
@@ -45,7 +42,6 @@ namespace MySql.Data.Common {
                     return true;
             }
             return false;
-#endif
         }
 
         public static char DirectorySeparatorChar => Path.DirectorySeparatorChar;

@@ -52,12 +52,8 @@ namespace MySql.Data.MySqlClient {
         /// </summary>
         /// <param name="baseStream"> Undelying stream</param>
         public TimedStream( Stream baseStream ) {
-            this._baseStream = baseStream;
-#if !CF && !RT
+            _baseStream = baseStream;
             _timeout = baseStream.ReadTimeout;
-#else
-            timeout = System.Threading.Timeout.Infinite;
-#endif
             IsClosed = false;
             _stopwatch = new LowResolutionStopwatch();
         }
@@ -88,21 +84,12 @@ namespace MySql.Data.MySqlClient {
 
             if ( op == IoKind.Read ) {
                 if ( ShouldResetStreamTimeout( _lastReadTimeout, streamTimeout ) ) {
-#if !CF && !RT
                     _baseStream.ReadTimeout = streamTimeout;
-#endif
                     _lastReadTimeout = streamTimeout;
                 }
             }
-            else if ( ShouldResetStreamTimeout( _lastWriteTimeout, streamTimeout ) ) {
-#if !CF && !RT
-                _baseStream.WriteTimeout = streamTimeout;
-#endif
-                _lastWriteTimeout = streamTimeout;
-            }
-
+            else if ( ShouldResetStreamTimeout( _lastWriteTimeout, streamTimeout ) ) _lastWriteTimeout = _baseStream.WriteTimeout = streamTimeout;
             if ( _timeout == Timeout.Infinite ) return;
-
             _stopwatch.Start();
         }
 
@@ -213,20 +200,12 @@ namespace MySql.Data.MySqlClient {
             }
         }
 
-#if RT
-    public void Close()
-#else
         public override void Close()
-#endif
         {
             if ( IsClosed ) return;
             IsClosed = true;
-#if !RT
             _baseStream.Close();
-#endif
-#if !CF
             _baseStream.Dispose();
-#endif
         }
 
         public void ResetTimeout( int newTimeout ) {

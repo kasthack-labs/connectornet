@@ -27,7 +27,6 @@ using MySql.Data.MySqlClient.Properties;
 
 namespace MySql.Data.MySqlClient {
     public sealed class MySqlTrace {
-#if !CF
         protected static string QaHost;
 
         static MySqlTrace() {
@@ -78,30 +77,22 @@ namespace MySql.Data.MySqlClient {
         }
 
         internal static TraceSource Source { get; } = new TraceSource( "mysql" );
-#endif
 
         internal static void LogInformation( int id, string msg ) {
-#if !CF
             Source.TraceEvent( TraceEventType.Information, id, msg, MySqlTraceEventType.NonQuery, -1 );
             Trace.TraceInformation( msg );
-#endif
         }
 
         internal static void LogWarning( int id, string msg ) {
-#if !CF
             Source.TraceEvent( TraceEventType.Warning, id, msg, MySqlTraceEventType.NonQuery, -1 );
             Trace.TraceWarning( msg );
-#endif
         }
 
         internal static void LogError( int id, string msg ) {
-#if !CF
             Source.TraceEvent( TraceEventType.Error, id, msg, MySqlTraceEventType.NonQuery, -1 );
             Trace.TraceError( msg );
-#endif
         }
 
-#if !CF
         internal static void TraceEvent(
             TraceEventType eventType,
             MySqlTraceEventType mysqlEventType,
@@ -109,7 +100,6 @@ namespace MySql.Data.MySqlClient {
             params object[] args ) {
             Source.TraceEvent( eventType, (int) mysqlEventType, msgFormat, args );
         }
-#endif
     }
 
     public enum UsageAdvisorWarningFlags {

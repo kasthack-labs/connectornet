@@ -35,8 +35,6 @@ namespace MySql.Data.MySqlClient.Replication {
 
         static ReplicationManager() {
             Groups = _groups;
-
-#if !CF && !RT
             // load up our selectors
             if ( MySqlConfiguration.Settings == null ) return;
 
@@ -44,7 +42,6 @@ namespace MySql.Data.MySqlClient.Replication {
                 var g = AddGroup( group.Name, group.GroupType, group.RetryTime );
                 foreach ( var server in group.Servers ) g.AddServer( server.Name, server.IsMaster, server.ConnectionString );
             }
-#endif
         }
 
         /// <summary>

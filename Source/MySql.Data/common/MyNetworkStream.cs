@@ -52,27 +52,16 @@ namespace MySql.Data.Common {
 
         public MyNetworkStream( Socket socket, bool ownsSocket ) : base( socket, ownsSocket ) { this._socket = socket; }
 
-        private bool IsTimeoutException( SocketException e ) {
-#if CF
-       return (e.NativeErrorCode == 10060);
-#else
-            return ( e.SocketErrorCode == SocketError.TimedOut );
-#endif
-        }
+        private bool IsTimeoutException( SocketException e ) => ( e.SocketErrorCode == SocketError.TimedOut );
 
-        private bool IsWouldBlockException( SocketException e ) {
-#if CF
-      return (e.NativeErrorCode == 10035);
-#else
-            return ( e.SocketErrorCode == SocketError.WouldBlock );
-#endif
-        }
+        private bool IsWouldBlockException( SocketException e ) => ( e.SocketErrorCode == SocketError.WouldBlock );
 
         private void HandleOrRethrowException( Exception e ) {
             var currentException = e;
             while ( currentException != null ) {
-                if ( currentException is SocketException ) {
-                    var socketException = (SocketException) currentException;
+                var exception = currentException as SocketException;
+                if ( exception != null ) {
+                    var socketException = exception;
                     if ( IsWouldBlockException( socketException ) ) {
                         // Workaround  for WSAEWOULDBLOCK
                         _socket.Blocking = true;
@@ -165,22 +154,18 @@ namespace MySql.Data.Common {
                     // if the exception is a ConnectionRefused then we eat it as we may have other address
                     // to attempt
                     if ( socketException == null ) throw;
-#if !CF
                     if ( socketException.SocketErrorCode != SocketError.ConnectionRefused ) throw;
-#endif
                 }
             return stream;
         }
 
         private static IPHostEntry ParseIpAddress( string hostname ) {
             IPHostEntry ipHe = null;
-#if !CF
             IPAddress addr;
             if ( IPAddress.TryParse( hostname, out addr ) ) {
                 ipHe = new IPHostEntry { AddressList = new IPAddress[1] };
                 ipHe.AddressList[ 0 ] = addr;
             }
-#endif
             return ipHe;
         }
 
@@ -189,9 +174,6 @@ namespace MySql.Data.Common {
             if ( ipHe != null ) return ipHe;
             return Dns.GetHostEntry( hostname );
         }
-
-#if !CF
-
         private static EndPoint CreateUnixEndPoint( string host ) {
             // first we need to load the Mono.posix assembly			
             var a = Assembly.Load( @"Mono.Posix, Version=2.0.0.0, 				
@@ -203,15 +185,11 @@ namespace MySql.Data.Common {
                 a.CreateInstance( "Mono.Posix.UnixEndPoint", false, BindingFlags.CreateInstance, null, new object[] { host }, null, null );
             return ep;
         }
-#endif
 
         private static MyNetworkStream CreateSocketStream( MySqlConnectionStringBuilder settings, IPAddress ip, bool unix ) {
             EndPoint endPoint;
-#if !CF
             if ( !Platform.IsWindows() && unix ) endPoint = CreateUnixEndPoint( settings.Server );
-            else
-#endif
-                endPoint = new IPEndPoint( ip, (int) settings.Port );
+            else endPoint = new IPEndPoint( ip, (int) settings.Port );
 
             var socket = unix
                              ? new Socket( AddressFamily.Unix, SocketType.Stream, ProtocolType.IP )
@@ -242,9 +220,8 @@ namespace MySql.Data.Common {
         /// <param name="s">socket</param>
         /// <param name="time">keepalive timeout, in seconds</param>
         private static void SetKeepAlive( Socket s, uint time ) {
-#if !CF
-            var on = 1;
-            var interval = 1000; // default interval = 1 sec
+            const int @on = 1;
+            const int interval = 1000; // default interval = 1 sec
 
             uint timeMilliseconds;
             if ( time > UInt32.MaxValue / 1000 ) timeMilliseconds = UInt32.MaxValue;
@@ -273,7 +250,6 @@ namespace MySql.Data.Common {
             catch ( NotImplementedException ) {
                 // Mono throws not implemented currently
             }
-#endif
             // Fallback if Socket.IOControl is not available ( Compact Framework )
             // or not implemented ( Mono ). Keepalive option will still be set, but
             // with timeout is kept default.

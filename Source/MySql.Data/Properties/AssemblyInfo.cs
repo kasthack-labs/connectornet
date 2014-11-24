@@ -42,20 +42,10 @@ using MySql.Data;
 [assembly: AssemblyCulture( "" )]
 [assembly: ComVisible( false )]
 [assembly: CLSCompliant( false )]
-#if !CF
-
 [assembly: AssemblyTitle( "MySql.Data.dll" )]
-#if !RT
-
 [assembly: AllowPartiallyTrustedCallers]
-#endif
-#else
-[assembly: AssemblyTitle("MySql.Data.CF.dll")]
-#endif
 
-#if NET_40_OR_GREATER
 [assembly: SecurityRules(SecurityRuleSet.Level1)]
-#endif
 
 //
 // In order to sign your assembly you must specify a key to use. Refer to the 
@@ -92,7 +82,3 @@ using MySql.Data;
 [assembly: InternalsVisibleTo( "MySql.Data.Entity.EF6, PublicKey = " + AssemblyPublicKey.Value )]
 [assembly: InternalsVisibleTo( "MySql.Data.RT.Tests, PublicKey = " + AssemblyPublicKey.Value )]
 [assembly: InternalsVisibleTo( "MySql.Fabric.Plugin, PublicKey = " + AssemblyPublicKey.Value )]
-
-#if CF
-[assembly: AssemblyFlags(AssemblyNameFlags.Retargetable)]
-#endif

@@ -41,10 +41,8 @@ namespace MySql.Data.MySqlClient {
         internal static int MaxConnectionIdleTime = 180;
 
         static MySqlPoolManager() {
-#if !CF && !RT
             AppDomain.CurrentDomain.ProcessExit += EnsureClearingPools;
             AppDomain.CurrentDomain.DomainUnload += EnsureClearingPools;
-#endif
         }
 
         private static void EnsureClearingPools( object sender, EventArgs e ) { ClearAllPools(); }
@@ -62,7 +60,6 @@ namespace MySql.Data.MySqlClient {
             lock ( settings ) {
                 key = settings.ConnectionString;
             }
-#if !CF && !RT
             if ( settings.IntegratedSecurity
                  && !settings.ConnectionReset )
                 try {
@@ -79,7 +76,6 @@ namespace MySql.Data.MySqlClient {
                     // connection can only be pooled if reset is done.
                     throw new MySqlException( Resources.NoWindowsIdentity, ex );
                 }
-#endif
             return key;
         }
 

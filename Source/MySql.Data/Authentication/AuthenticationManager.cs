@@ -32,12 +32,10 @@ namespace MySql.Data.MySqlClient.Authentication {
         static AuthenticationPluginManager() {
             Plugins[ "mysql_native_password" ] = new PluginInfo( "MySql.Data.MySqlClient.Authentication.MySqlNativePasswordPlugin" );
             Plugins[ "sha256_password" ] = new PluginInfo( "MySql.Data.MySqlClient.Authentication.Sha256AuthenticationPlugin" );
-#if !CF && !RT
             Plugins[ "authentication_windows_client" ] =
                 new PluginInfo( "MySql.Data.MySqlClient.Authentication.MySqlWindowsAuthenticationPlugin" );
             if ( MySqlConfiguration.Settings?.AuthenticationPlugins == null ) return;
             foreach ( var e in MySqlConfiguration.Settings.AuthenticationPlugins ) Plugins[ e.Name ] = new PluginInfo( e.Type );
-#endif
         }
 
         public static MySqlAuthenticationPlugin GetPlugin( string method ) {

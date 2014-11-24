@@ -26,12 +26,8 @@ using System.ComponentModel;
 using System.Text;
 using MySql.Data.Types;
 using MySql.Data.Constants;
-#if !RT
 using System.Data;
 using System.Data.Common;
-
-#endif
-
 namespace MySql.Data.MySqlClient {
     /// <summary>
     /// Represents a parameter to a <see cref="MySqlCommand"/>, and optionally, its mapping to <see cref="DataSet"/> columns. This class cannot be inherited.
@@ -148,10 +144,8 @@ namespace MySql.Data.MySqlClient {
         /// <summary>
         /// Gets or sets the value of the parameter.
         /// </summary>
-#if !CF && !RT
         [TypeConverter( typeof( StringConverter ) )]
         [Category( "Data" )]
-#endif
             public override object Value {
             get {
                 return _paramValue;
@@ -215,14 +209,12 @@ namespace MySql.Data.MySqlClient {
                     g.OldGuids = settings.OldGuids;
                     ValueObject = g;
                 }
-#if !CF
                 if ( ValueObject.MySqlDbType == MySqlDbType.Geometry ) {
                     var v = (MySqlGeometry) ValueObject;
                     if ( v.IsNull
                          && Value != null ) MySqlGeometry.TryParse( Value.ToString(), out v );
                     ValueObject = v;
                 }
-#endif
                 ValueObject.WriteValue( packet, binary, _paramValue, Size );
             }
         }
@@ -260,28 +252,18 @@ namespace MySql.Data.MySqlClient {
                     case TypeCode.DateTime: MySqlDbType = MySqlDbType.DateTime; break;
                     case TypeCode.String: MySqlDbType = MySqlDbType.VarChar; break;
                     case TypeCode.Object: default:
-#if RT
-                        if (t.GetTypeInfo().BaseType == TypeConstants.Enum)
-#else
-                        if ( t.BaseType == Constants.Types.Enum )
-#endif
-                            MySqlDbType = MySqlDbType.Int32;
-                        else MySqlDbType = MySqlDbType.Blob;
+                        MySqlDbType = t.BaseType == Constants.Types.Enum ? MySqlDbType.Int32 : MySqlDbType.Blob;
                         break;
                 }
             }
         }
 
         #region ICloneable
+        // if we have not had our type set yet then our clone should not either
         public MySqlParameter Clone() {
-#if RT
-      MySqlParameter clone = new MySqlParameter(paramName, mySqlDbType);
-#else
-            var clone = new MySqlParameter( _paramName, _mySqlDbType, Direction, SourceColumn, SourceVersion, _paramValue );
-#endif
-            // if we have not had our type set yet then our clone should not either
-            clone._inferType = _inferType;
-            return clone;
+            return new MySqlParameter( _paramName, _mySqlDbType, Direction, SourceColumn, SourceVersion, _paramValue ) {
+                _inferType = _inferType
+            };
         }
 
         object ICloneable.Clone() => Clone();

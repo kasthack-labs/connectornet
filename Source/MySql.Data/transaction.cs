@@ -21,10 +21,7 @@
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
 using System;
-#if !RT
 using System.Data;
-
-#endif
 
 namespace MySql.Data.MySqlClient {
     /// <include file='docs/MySqlTransaction.xml' path='docs/Class/*'/>

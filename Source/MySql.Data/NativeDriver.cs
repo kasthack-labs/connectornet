@@ -20,9 +20,6 @@
 // with this program; if not, write to the Free Software Foundation, Inc., 
 // 51 Franklin St, Fifth Floor, Boston, MA 02110-1301  USA
 
-#if RT
-using System.Linq;
-#endif
 using System;
 using System.Collections;
 using System.ComponentModel;
@@ -33,12 +30,9 @@ using MySql.Data.Common;
 using MySql.Data.MySqlClient.Authentication;
 using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
-#if !CF && !RT
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
 using System.Security.Authentication;
-
-#endif
 
 namespace MySql.Data.MySqlClient {
     /// <summary>
@@ -101,11 +95,10 @@ namespace MySql.Data.MySqlClient {
 
                 Packet.ReadFieldLength(); /* affected rows */
                 Packet.ReadFieldLength(); /* last insert id */
-                if ( Packet.HasMoreData ) {
-                    serverStatus = (ServerStatusFlags) Packet.ReadInteger( 2 );
-                    Packet.ReadInteger( 2 ); /* warning count */
-                    if ( Packet.HasMoreData ) Packet.ReadLenString(); /* message */
-                }
+                if ( !Packet.HasMoreData ) return;
+                serverStatus = (ServerStatusFlags) Packet.ReadInteger( 2 );
+                Packet.ReadInteger( 2 ); /* warning count */
+                if ( Packet.HasMoreData ) Packet.ReadLenString(); /* message */
             }
             catch ( MySqlException ex ) {
                 HandleException( ex );
@@ -137,9 +130,7 @@ namespace MySql.Data.MySqlClient {
             // connect to one of our specified hosts
             try {
                 BaseStream = StreamCreator.GetStream( Settings );
-#if !CF && !RT
                 if ( Settings.IncludeSecurityAsserts ) MySqlSecurityPermission.CreatePermissionSet( false ).Assert();
-#endif
             }
             catch ( SecurityException ) {
                 throw;
@@ -149,7 +140,6 @@ namespace MySql.Data.MySqlClient {
             }
             if ( BaseStream == null ) throw new MySqlException( Resources.UnableToConnectToHost, (int) MySqlErrorCode.UnableToConnectToHost );
 
-            var maxSinglePacket = 255 * 255 * 255;
             Stream = new MySqlStream( BaseStream, Encoding, false );
 
             Stream.ResetTimeout( (int) Settings.ConnectionTimeout * 1000 );
@@ -161,12 +151,12 @@ namespace MySql.Data.MySqlClient {
             var versionString = Packet.ReadString();
             _owner.IsFabric = versionString.EndsWith( "fabric", StringComparison.OrdinalIgnoreCase );
             _version = DbVersion.Parse( versionString );
-            if ( !_owner.IsFabric
-                 && !_version.IsAtLeast( 5, 0, 0 ) ) throw new NotSupportedException( Resources.ServerTooOld );
+            if ( !_owner.IsFabric && !_version.IsAtLeast( 5, 0, 0 ) )
+                throw new NotSupportedException( Resources.ServerTooOld );
             ThreadId = Packet.ReadInteger( 4 );
             EncryptionSeed = Packet.ReadString();
 
-            maxSinglePacket = ( 256 * 256 * 256 ) - 1;
+            const int maxSinglePacket = ( 256 * 256 * 256 ) - 1;
 
             // read in Server capabilities if they are provided
             ClientFlags serverCaps = 0;
@@ -194,7 +184,6 @@ namespace MySql.Data.MySqlClient {
             Packet.Clear();
             Packet.WriteInteger( (int) Flags, 4 );
 
-#if !CF && !RT
             if ( ( serverCaps & ClientFlags.Ssl ) == 0 ) {
                 if ( ( Settings.SslMode != MySqlSslMode.None )
                      && ( Settings.SslMode != MySqlSslMode.Preferred ) ) {
@@ -209,15 +198,6 @@ namespace MySql.Data.MySqlClient {
                 Packet.Clear();
                 Packet.WriteInteger( (int) Flags, 4 );
             }
-#endif
-
-#if RT
-      if (Settings.SslMode != MySqlSslMode.None)
-      {
-        throw new NotImplementedException("SSL not supported in this WinRT release.");
-      }
-#endif
-
             Packet.WriteInteger( maxSinglePacket, 4 );
             Packet.WriteByte( 8 );
             Packet.Write( new byte[23] );
@@ -234,9 +214,6 @@ namespace MySql.Data.MySqlClient {
             Packet.Version = _version;
             Stream.MaxBlockSize = maxSinglePacket;
         }
-
-#if !CF && !RT
-
         #region SSL
         /// <summary>
         /// Retrieve client SSL certificates. Dependent on connection string 
@@ -273,7 +250,7 @@ namespace MySql.Data.MySqlClient {
             // Find certificate with given thumbprint
             certs.AddRange( store.Certificates.Find( X509FindType.FindByThumbprint, Settings.CertificateThumbprint, true ) );
 
-            if ( certs.Count == 0 ) throw new MySqlException( "Certificate with Thumbprint " + Settings.CertificateThumbprint + " not found" );
+            if ( certs.Count == 0 ) throw new MySqlException( string.Format( "Certificate with Thumbprint {0} not found", Settings.CertificateThumbprint ) );
             return certs;
         }
 
@@ -289,21 +266,19 @@ namespace MySql.Data.MySqlClient {
         private bool ServerCheckValidation( object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors ) {
             if ( sslPolicyErrors == SslPolicyErrors.None ) return true;
 
-            if ( Settings.SslMode == MySqlSslMode.Preferred
-                 || Settings.SslMode == MySqlSslMode.Required )
-                //Tolerate all certificate errors.
-                return true;
-
-            if ( Settings.SslMode == MySqlSslMode.VerifyCa
-                 && sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch )
-                // Tolerate name mismatch in certificate, if full validation is not requested.
-                return true;
-
+            switch ( Settings.SslMode ) {
+                case MySqlSslMode.Preferred:
+                case MySqlSslMode.Required:
+                    return true;
+                case MySqlSslMode.VerifyCa:
+                    // Tolerate name mismatch in certificate, if full validation is not requested.
+                    if ( sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch )
+                        return true;
+                    break;
+            }
             return false;
         }
         #endregion
-
-#endif
 
         #region Authentication
         /// <summary>
@@ -345,13 +320,9 @@ namespace MySql.Data.MySqlClient {
 
             // if the server is requesting a secure connection, then we oblige
             if ( ( serverCaps & ClientFlags.SecureConnection ) != 0 ) flags |= ClientFlags.SecureConnection;
-
-#if !CF
             // if the server is capable of SSL and the user is requesting SSL
             if ( ( serverCaps & ClientFlags.Ssl ) != 0
                  && Settings.SslMode != MySqlSslMode.None ) flags |= ClientFlags.Ssl;
-#endif
-
             // if the server supports output parameters, then we do too
             if ( ( serverCaps & ClientFlags.PsMultiResults ) != 0 ) flags |= ClientFlags.PsMultiResults;
 
@@ -460,21 +431,18 @@ namespace MySql.Data.MySqlClient {
             if ( -1 == fieldCount ) {
                 var filename = Packet.ReadString();
                 SendFileToServer( filename );
-
                 return GetResult( ref affectedRow, ref insertedId );
             }
-            if ( fieldCount == 0 ) {
-                // the code to read last packet will set these server status vars 
-                // again if necessary.
-                serverStatus &= ~( ServerStatusFlags.AnotherQuery | ServerStatusFlags.MoreResults );
-                affectedRow = (int) Packet.ReadFieldLength();
-                insertedId = Packet.ReadFieldLength();
-
-                serverStatus = (ServerStatusFlags) Packet.ReadInteger( 2 );
-                WarningCount += Packet.ReadInteger( 2 );
-                if ( Packet.HasMoreData ) Packet.ReadLenString(); //TODO: server message
-            }
-            return fieldCount;
+            if ( fieldCount != 0 ) return fieldCount;
+            // the code to read last packet will set these server status vars 
+            // again if necessary.
+            serverStatus &= ~( ServerStatusFlags.AnotherQuery | ServerStatusFlags.MoreResults );
+            affectedRow = (int) Packet.ReadFieldLength();
+            insertedId = Packet.ReadFieldLength();
+            serverStatus = (ServerStatusFlags) Packet.ReadInteger( 2 );
+            WarningCount += Packet.ReadInteger( 2 );
+            if ( Packet.HasMoreData ) Packet.ReadLenString(); //TODO: server message
+            return 0;
         }
 
         /// <summary>
@@ -594,19 +562,18 @@ namespace MySql.Data.MySqlClient {
 
             Packet.ReadByte(); // read off the 254
 
-            if ( Packet.HasMoreData ) {
-                WarningCount += Packet.ReadInteger( 2 );
-                serverStatus = (ServerStatusFlags) Packet.ReadInteger( 2 );
+            if ( !Packet.HasMoreData ) return;
+            WarningCount += Packet.ReadInteger( 2 );
+            serverStatus = (ServerStatusFlags) Packet.ReadInteger( 2 );
 
-                // if we are at the end of this cursor based resultset, then we remove
-                // the last row sent status flag so our next fetch doesn't abort early
-                // and we remove this command result from our list of active CommandResult objects.
-                //                if ((serverStatus & ServerStatusFlags.LastRowSent) != 0)
-                //              {
-                //                serverStatus &= ~ServerStatusFlags.LastRowSent;
-                //              commandResults.Remove(lastCommandResult);
-                //        }
-            }
+            // if we are at the end of this cursor based resultset, then we remove
+            // the last row sent status flag so our next fetch doesn't abort early
+            // and we remove this command result from our list of active CommandResult objects.
+            //                if ((serverStatus & ServerStatusFlags.LastRowSent) != 0)
+            //              {
+            //                serverStatus &= ~ServerStatusFlags.LastRowSent;
+            //              commandResults.Remove(lastCommandResult);
+            //        }
         }
 
         private void ReadEof() {
@@ -724,16 +691,11 @@ namespace MySql.Data.MySqlClient {
             var attrs = new MySqlConnectAttrs();
             foreach ( var property in attrs.GetType().GetProperties() ) {
                 var name = property.Name;
-#if RT
-          object[] customAttrs = property.GetCustomAttributes(typeof(DisplayNameAttribute), false).ToArray<object>();
-#else
                 var customAttrs = property.GetCustomAttributes( typeof( DisplayNameAttribute ), false );
-#endif
                 if ( customAttrs.Length > 0 ) {
                     var displayNameAttribute = customAttrs[ 0 ] as DisplayNameAttribute;
                     if ( displayNameAttribute != null ) name = displayNameAttribute.DisplayName;
                 }
-
                 var value = (string) property.GetValue( attrs, null );
                 connectAttrs += string.Format( "{0}{1}", (char) name.Length, name );
                 connectAttrs += string.Format( "{0}{1}", (char) value.Length, value );

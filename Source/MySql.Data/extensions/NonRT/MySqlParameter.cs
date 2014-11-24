@@ -26,15 +26,10 @@ using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using MySql.Data.Constants;
-#if !CF
 using System.ComponentModel.Design.Serialization;
 
-#endif
-
 namespace MySql.Data.MySqlClient {
-#if !CF
     [TypeConverter( typeof( MySqlParameterConverter ) )]
-#endif
     public sealed partial class MySqlParameter : DbParameter, IDataParameter, IDbDataParameter {
         private DbType _dbType;
 
@@ -297,7 +292,6 @@ namespace MySql.Data.MySqlClient {
         }
     }
 
-#if !CF
     internal class MySqlParameterConverter : TypeConverter {
         // Always call the base to see if it can perform the conversion.
         public override bool CanConvertTo( ITypeDescriptorContext context, Type destinationType ) => destinationType == Constants.Types.InstanceDescriptor || base.CanConvertTo( context, destinationType );
@@ -321,5 +315,4 @@ namespace MySql.Data.MySqlClient {
             // Always call base, even if you can't convert.
         }
     }
-#endif
 }
