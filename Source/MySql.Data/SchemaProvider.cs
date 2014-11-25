@@ -38,6 +38,7 @@ using MySql.Data.Constants.ColumnNames.Shared;
 using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
 using MySql.Data.Constants.Types;
+using MySql.Data.Constants.ColumnNames.DsInfo;
 
 namespace MySql.Data.MySqlClient {
     internal class SchemaProvider {
@@ -120,7 +121,7 @@ namespace MySql.Data.MySqlClient {
             if ( !schemaCollection.ContainsColumn( ColumnDefault ) ) return;
             foreach ( var row in schemaCollection.Rows ) {
                 var defaultValue = row[ ColumnDefault ];
-                if ( MetaData.IsTextType( row[ DataType ].ToString() ) ) row[ ColumnDefault ] = String.Format( "{0}", defaultValue );
+                if ( MetaData.IsTextType( row[ Columns.DataType ].ToString() ) ) row[ ColumnDefault ] = String.Format( "{0}", defaultValue );
             }
         }
 
@@ -132,8 +133,8 @@ namespace MySql.Data.MySqlClient {
             c.AddColumn( ColumnName, TString );
             c.AddColumn( OrdinalPosition, TUInt64 );
             c.AddColumn( ColumnDefault, TString );
-            c.AddColumn( IsNullable, TString );
-            c.AddColumn( DataType, TString );
+            c.AddColumn( Columns.IsNullable, TString );
+            c.AddColumn( Columns.DataType, TString );
             c.AddColumn( CharacterMaximumLength, TUInt64 );
             c.AddColumn( CharacterOctetLength, TUInt64 );
             c.AddColumn( NumericPrecision, TUInt64 );
@@ -178,8 +179,8 @@ namespace MySql.Data.MySqlClient {
                     row[ ColumnName ] = colName;
                     row[ OrdinalPosition ] = pos++;
                     row[ ColumnDefault ] = reader.GetValue( 5 );
-                    row[ IsNullable ] = reader.GetString( 3 );
-                    row[ DataType ] = reader.GetString( 1 );
+                    row[ Columns.IsNullable ] = reader.GetString( 3 );
+                    row[ Columns.DataType ] = reader.GetString( 1 );
                     row[ CharacterMaximumLength ] = DBNull.Value;
                     row[ CharacterOctetLength ] = DBNull.Value;
                     row[ NumericPrecision ] = DBNull.Value;
@@ -202,13 +203,13 @@ namespace MySql.Data.MySqlClient {
             if ( index != -1 ) row[ CharacterSetName ] = charset.Substring( 0, index );
 
             // now parse the data type
-            var dataType = row[ DataType ].ToString();
+            var dataType = row[ Columns.DataType ].ToString();
             index = dataType.IndexOf( '(' );
             if ( index == -1 ) return;
-            row[ DataType ] = dataType.Substring( 0, index );
+            row[ Columns.DataType ] = dataType.Substring( 0, index );
             var stop = dataType.IndexOf( ')', index );
             var dataLen = dataType.Substring( index + 1, stop - ( index + 1 ) );
-            var lowerType = row[ DataType ].ToString().ToLower();
+            var lowerType = row[ Columns.DataType ].ToString().ToLower();
             switch ( lowerType ) {
                 case "char":
                 case "varchar":
@@ -650,29 +651,29 @@ namespace MySql.Data.MySqlClient {
 
         private static MySqlSchemaCollection GetDataTypes() {
             var dt = new MySqlSchemaCollection( "DataTypes" );
-            dt.AddColumn( "TypeName", TString );
-            dt.AddColumn( "ProviderDbType", TInt32 );
-            dt.AddColumn( "ColumnSize", TInt64 );
-            dt.AddColumn( "CreateFormat", TString );
-            dt.AddColumn( "CreateParameters", TString );
-            dt.AddColumn( "DataType", TString );
-            dt.AddColumn( "IsAutoincrementable", TBoolean );
-            dt.AddColumn( "IsBestMatch", TBoolean );
-            dt.AddColumn( "IsCaseSensitive", TBoolean );
-            dt.AddColumn( "IsFixedLength", TBoolean );
-            dt.AddColumn( "IsFixedPrecisionScale", TBoolean );
-            dt.AddColumn( "IsLong", TBoolean );
-            dt.AddColumn( "IsNullable", TBoolean );
-            dt.AddColumn( "IsSearchable", TBoolean );
-            dt.AddColumn( "IsSearchableWithLike", TBoolean );
-            dt.AddColumn( "IsUnsigned", TBoolean );
-            dt.AddColumn( "MaximumScale", TInt16 );
-            dt.AddColumn( "MinimumScale", TInt16 );
-            dt.AddColumn( "IsConcurrencyType", TBoolean );
-            dt.AddColumn( "IsLiteralSupported", TBoolean );
-            dt.AddColumn( "LiteralPrefix", TString );
-            dt.AddColumn( "LiteralSuffix", TString );
-            dt.AddColumn( "NativeDataType", TString );
+            dt.AddColumn( TypeName, TString );
+            dt.AddColumn( ProviderDbType, TInt32 );
+            dt.AddColumn( ColumnSize, TInt64 );
+            dt.AddColumn( CreateFormat, TString );
+            dt.AddColumn( CreateParameters, TString );
+            dt.AddColumn( DsInfo.DataType, TString );
+            dt.AddColumn( IsAutoincrementable, TBoolean );
+            dt.AddColumn( IsBestMatch, TBoolean );
+            dt.AddColumn( IsCaseSensitive, TBoolean );
+            dt.AddColumn( IsFixedLength, TBoolean );
+            dt.AddColumn( IsFixedPrecisionScale, TBoolean );
+            dt.AddColumn( IsLong, TBoolean );
+            dt.AddColumn( DsInfo.IsNullable, TBoolean );
+            dt.AddColumn( IsSearchable, TBoolean );
+            dt.AddColumn( IsSearchableWithLike, TBoolean );
+            dt.AddColumn( IsUnsigned, TBoolean );
+            dt.AddColumn( MaximumScale, TInt16 );
+            dt.AddColumn( MinimumScale, TInt16 );
+            dt.AddColumn( IsConcurrencyType, TBoolean );
+            dt.AddColumn( IsLiteralSupported, TBoolean );
+            dt.AddColumn( LiteralPrefix, TString );
+            dt.AddColumn( LiteralSuffix, TString );
+            dt.AddColumn( NativeDataType, TString );
 
             // have each one of the types contribute to the datatypes collection
             MySqlBit.SetDsInfo( dt );

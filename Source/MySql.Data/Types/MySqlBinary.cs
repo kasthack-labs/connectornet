@@ -23,6 +23,8 @@
 using System;
 using MySql.Data.MySqlClient;
 using MySql.Data.Constants.Types;
+using MySql.Data.Constants.ColumnNames.DsInfo;
+
 namespace MySql.Data.Types {
     internal struct MySqlBinary : IMySqlValue {
         private readonly MySqlDbType _type;
@@ -149,29 +151,29 @@ namespace MySql.Data.Types {
             // collection and then it wil be cached.
             for ( var x = 0; x < types.Length; x++ ) {
                 var row = sc.AddRow();
-                row[ "TypeName" ] = types[ x ];
-                row[ "ProviderDbType" ] = dbtype[ x ];
-                row[ "ColumnSize" ] = sizes[ x ];
-                row[ "CreateFormat" ] = format[ x ];
-                row[ "CreateParameters" ] = parms[ x ];
-                row[ "DataType" ] = "System.Byte[]";
-                row[ "IsAutoincrementable" ] = false;
-                row[ "IsBestMatch" ] = true;
-                row[ "IsCaseSensitive" ] = false;
-                row[ "IsFixedLength" ] = x >= 4;
-                row[ "IsFixedPrecisionScale" ] = false;
-                row[ "IsLong" ] = sizes[ x ] > 255;
-                row[ "IsNullable" ] = true;
-                row[ "IsSearchable" ] = false;
-                row[ "IsSearchableWithLike" ] = false;
-                row[ "IsUnsigned" ] = DBNull.Value;
-                row[ "MaximumScale" ] = DBNull.Value;
-                row[ "MinimumScale" ] = DBNull.Value;
-                row[ "IsConcurrencyType" ] = DBNull.Value;
-                row[ "IsLiteralSupported" ] = false;
-                row[ "LiteralPrefix" ] = "0x";
-                row[ "LiteralSuffix" ] = DBNull.Value;
-                row[ "NativeDataType" ] = DBNull.Value;
+                row[ TypeName ] = types[ x ];
+                row[ ProviderDbType ] = dbtype[ x ];
+                row[ ColumnSize ] = sizes[ x ];
+                row[ CreateFormat ] = format[ x ];
+                row[ CreateParameters ] = parms[ x ];
+                row[ DataType ] = "System.Byte[]";
+                row[ IsAutoincrementable ] = false;
+                row[ IsBestMatch ] = true;
+                row[ IsCaseSensitive ] = false;
+                row[ IsFixedLength ] = x >= 4;
+                row[ IsFixedPrecisionScale ] = false;
+                row[ IsLong ] = sizes[ x ] > 255;
+                row[ IsNullable ] = true;
+                row[ IsSearchable ] = false;
+                row[ IsSearchableWithLike ] = false;
+                row[ IsUnsigned ] = DBNull.Value;
+                row[ MaximumScale ] = DBNull.Value;
+                row[ MinimumScale ] = DBNull.Value;
+                row[ IsConcurrencyType ] = DBNull.Value;
+                row[ IsLiteralSupported ] = false;
+                row[ LiteralPrefix ] = "0x";
+                row[ LiteralSuffix ] = DBNull.Value;
+                row[ NativeDataType ] = DBNull.Value;
             }
         }
     }

@@ -24,7 +24,7 @@ using System;
 using System.Globalization;
 using MySql.Data.MySqlClient;
 using MySql.Data.Constants.Types;
-
+using MySql.Data.Constants.ColumnNames.DsInfo;
 namespace MySql.Data.Types {
     internal struct MySqlInt32 : IMySqlValue {
         private readonly int _mValue;
@@ -82,29 +82,29 @@ namespace MySql.Data.Types {
             // collection and then it wil be cached.
             for ( var x = 0; x < types.Length; x++ ) {
                 var row = sc.AddRow();
-                row[ "TypeName" ] = types[ x ];
-                row[ "ProviderDbType" ] = dbtype[ x ];
-                row[ "ColumnSize" ] = 0;
-                row[ "CreateFormat" ] = types[ x ];
-                row[ "CreateParameters" ] = null;
-                row[ "DataType" ] = "System.Int32";
-                row[ "IsAutoincrementable" ] = dbtype[ x ] != MySqlDbType.Year;
-                row[ "IsBestMatch" ] = true;
-                row[ "IsCaseSensitive" ] = false;
-                row[ "IsFixedLength" ] = true;
-                row[ "IsFixedPrecisionScale" ] = true;
-                row[ "IsLong" ] = false;
-                row[ "IsNullable" ] = true;
-                row[ "IsSearchable" ] = true;
-                row[ "IsSearchableWithLike" ] = false;
-                row[ "IsUnsigned" ] = false;
-                row[ "MaximumScale" ] = 0;
-                row[ "MinimumScale" ] = 0;
-                row[ "IsConcurrencyType" ] = DBNull.Value;
-                row[ "IsLiteralSupported" ] = false;
-                row[ "LiteralPrefix" ] = null;
-                row[ "LiteralSuffix" ] = null;
-                row[ "NativeDataType" ] = null;
+                row[ TypeName ] = types[ x ];
+                row[ ProviderDbType ] = dbtype[ x ];
+                row[ ColumnSize ] = 0;
+                row[ CreateFormat ] = types[ x ];
+                row[ CreateParameters ] = null;
+                row[ DataType ] = "System.Int32";
+                row[ IsAutoincrementable ] = dbtype[ x ] != MySqlDbType.Year;
+                row[ IsBestMatch ] = true;
+                row[ IsCaseSensitive ] = false;
+                row[ IsFixedLength ] = true;
+                row[ IsFixedPrecisionScale ] = true;
+                row[ IsLong ] = false;
+                row[ IsNullable ] = true;
+                row[ IsSearchable ] = true;
+                row[ IsSearchableWithLike ] = false;
+                row[ IsUnsigned ] = false;
+                row[ MaximumScale ] = 0;
+                row[ MinimumScale ] = 0;
+                row[ IsConcurrencyType ] = DBNull.Value;
+                row[ IsLiteralSupported ] = false;
+                row[ LiteralPrefix ] = null;
+                row[ LiteralSuffix ] = null;
+                row[ NativeDataType ] = null;
             }
         }
     }

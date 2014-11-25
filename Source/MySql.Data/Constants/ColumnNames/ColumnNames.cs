@@ -92,4 +92,30 @@ namespace MySql.Data.Constants.ColumnNames {
         public const string Checksum = "CHECKSUM";
         public const string SchemaName = "SCHEMA_NAME";
     }
+
+    public static class DsInfo {
+        public const string TypeName = "TypeName";
+        public const string ProviderDbType = "ProviderDbType";
+        public const string ColumnSize = "ColumnSize";
+        public const string CreateFormat = "CreateFormat";
+        public const string CreateParameters = "CreateParameters";
+        public const string DataType = "DataType";
+        public const string IsAutoincrementable = "IsAutoincrementable";
+        public const string IsBestMatch = "IsBestMatch";
+        public const string IsCaseSensitive = "IsCaseSensitive";
+        public const string IsFixedLength = "IsFixedLength";
+        public const string IsFixedPrecisionScale = "IsFixedPrecisionScale";
+        public const string IsLong = "IsLong";
+        public const string IsNullable = "IsNullable";
+        public const string IsSearchable = "IsSearchable";
+        public const string IsSearchableWithLike = "IsSearchableWithLike";
+        public const string IsUnsigned = "IsUnsigned";
+        public const string MaximumScale = "MaximumScale";
+        public const string MinimumScale = "MinimumScale";
+        public const string IsConcurrencyType = "IsConcurrencyType";
+        public const string IsLiteralSupported = "IsLiteralSupported";
+        public const string LiteralPrefix = "LiteralPrefix";
+        public const string LiteralSuffix = "LiteralSuffix";
+        public const string NativeDataType = "NativeDataType";
+    }
 }
