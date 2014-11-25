@@ -31,13 +31,13 @@ namespace MySql.Data.Types {
         private readonly MySqlDbType _type;
 
         public MySqlString( MySqlDbType type, bool isNull ) {
-            this._type = type;
-            this._isNull = isNull;
+            _type = type;
+            _isNull = isNull;
             _mValue = String.Empty;
         }
 
         public MySqlString( MySqlDbType type, string val ) {
-            this._type = type;
+            _type = type;
             _isNull = false;
             _mValue = val;
         }

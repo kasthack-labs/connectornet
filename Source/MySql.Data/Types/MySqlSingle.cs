@@ -26,6 +26,7 @@ using MySql.Data.MySqlClient;
 
 namespace MySql.Data.Types {
     internal struct MySqlSingle : IMySqlValue {
+        private const string MySqlTypeString = "FLOAT";
         private readonly float _mValue;
         private readonly bool _isNull;
 
@@ -48,9 +49,9 @@ namespace MySql.Data.Types {
 
         public float Value => _mValue;
 
-        Type IMySqlValue.SystemType => typeof( float );
+        Type IMySqlValue.SystemType => Constants.Types.Single;
 
-        string IMySqlValue.MySqlTypeName => "FLOAT";
+        string IMySqlValue.MySqlTypeName => MySqlTypeString;
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var v = val as float? ?? Convert.ToSingle( val );
@@ -67,37 +68,10 @@ namespace MySql.Data.Types {
             return new MySqlSingle( BitConverter.ToSingle( b, 0 ) );
         }
 
-        void IMySqlValue.SkipValue( MySqlPacket packet ) { packet.Position += 4; }
+        void IMySqlValue.SkipValue( MySqlPacket packet ) => packet.Position += 4;
         #endregion
 
-        internal static void SetDsInfo( MySqlSchemaCollection sc ) {
-            // we use name indexing because this method will only be called
-            // when GetSchema is called for the DataSourceInformation 
-            // collection and then it wil be cached.
-            var row = sc.AddRow();
-            row[ "TypeName" ] = "FLOAT";
-            row[ "ProviderDbType" ] = MySqlDbType.Float;
-            row[ "ColumnSize" ] = 0;
-            row[ "CreateFormat" ] = "FLOAT";
-            row[ "CreateParameters" ] = null;
-            row[ "DataType" ] = "System.Single";
-            row[ "IsAutoincrementable" ] = false;
-            row[ "IsBestMatch" ] = true;
-            row[ "IsCaseSensitive" ] = false;
-            row[ "IsFixedLength" ] = true;
-            row[ "IsFixedPrecisionScale" ] = true;
-            row[ "IsLong" ] = false;
-            row[ "IsNullable" ] = true;
-            row[ "IsSearchable" ] = true;
-            row[ "IsSearchableWithLike" ] = false;
-            row[ "IsUnsigned" ] = false;
-            row[ "MaximumScale" ] = 0;
-            row[ "MinimumScale" ] = 0;
-            row[ "IsConcurrencyType" ] = DBNull.Value;
-            row[ "IsLiteralSupported" ] = false;
-            row[ "LiteralPrefix" ] = null;
-            row[ "LiteralSuffix" ] = null;
-            row[ "NativeDataType" ] = null;
-        }
+        internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Float, Constants.Types.Single );
     }
 }

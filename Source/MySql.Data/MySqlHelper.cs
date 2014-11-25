@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System;
 using System.Linq;
+using MySql.Data.MySqlClient.common;
 
 namespace MySql.Data.MySqlClient {
     /// <summary>
@@ -243,12 +244,10 @@ namespace MySql.Data.MySqlClient {
             string commandText,
             params MySqlParameter[] commandParameters ) {
             //create & open a SqlConnection
-            using (var cn = new MySqlConnection( connectionString )) {
-                cn.Open();
-
-                //call the private overload that takes an internally owned connection in place of the connection string
-                return ExecuteReader( cn, null, commandText, commandParameters, false );
-            }
+            var cn = new MySqlConnection( connectionString );
+            cn.Open();
+            //call the private overload that takes an internally owned connection in place of the connection string
+            return ExecuteReader( cn, null, commandText, commandParameters, false );
             //todo: check if connection must not be closed
         }
 
@@ -284,11 +283,10 @@ namespace MySql.Data.MySqlClient {
         /// <returns>The first column of the first row in the result set, or a null reference if the result set is empty.</returns>
         public static object ExecuteScalar( string connectionString, string commandText, params MySqlParameter[] commandParameters ) {
             //create & open a SqlConnection, and dispose of it after we are done.
-            using ( var cn = new MySqlConnection( connectionString ) ) {
-                cn.Open();
-                //call the overload that takes a connection in place of the connection string
-                return ExecuteScalar( cn, commandText, commandParameters );
-            }
+            var cn = new MySqlConnection( connectionString );
+            cn.Open();
+            //call the overload that takes a connection in place of the connection string
+            return ExecuteScalar( cn, commandText, commandParameters );
         }
 
         /// <summary>
@@ -337,9 +335,7 @@ namespace MySql.Data.MySqlClient {
         /// <returns>The string with all quotes escaped.</returns>
         public static string EscapeString( string value ) {
             if ( !NeedsQuoting( value ) ) return value;
-
             var sb = new StringBuilder();
-
             foreach ( var c in value ) {
                 var charClass = CharClassArray[ c ];
                 if ( charClass != CharClass.None ) sb.Append( "\\" );
@@ -350,12 +346,17 @@ namespace MySql.Data.MySqlClient {
 
         public static string DoubleQuoteString( string value ) {
             if ( !NeedsQuoting( value ) ) return value;
-
             var sb = new StringBuilder();
             foreach ( var c in value ) {
                 var charClass = CharClassArray[ c ];
-                if ( charClass == CharClass.Quote ) sb.Append( c );
-                else if ( charClass == CharClass.Backslash ) sb.Append( "\\" );
+                switch ( charClass ) {
+                    case CharClass.Quote:
+                        sb.Append( c );
+                        break;
+                    case CharClass.Backslash:
+                        sb.Append( "\\" );
+                        break;
+                }
                 sb.Append( c );
             }
             return sb.ToString();
@@ -381,11 +382,9 @@ namespace MySql.Data.MySqlClient {
             CancellationToken cancellationToken,
             params MySqlParameter[] parms ) {
             var result = new TaskCompletionSource<DataRow>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
-                    var row = ExecuteDataRow( connectionString, commandText, parms );
-                    result.SetResult( row );
+                    result.SetResult( ExecuteDataRow( connectionString, commandText, parms ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -414,11 +413,9 @@ namespace MySql.Data.MySqlClient {
             CancellationToken cancellationToken,
             params MySqlParameter[] commandParameters ) {
             var result = new TaskCompletionSource<int>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
-                    var queryResult = ExecuteNonQuery( connection, commandText, commandParameters );
-                    result.SetResult( queryResult );
+                    result.SetResult( ExecuteNonQuery( connection, commandText, commandParameters ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -445,11 +442,9 @@ namespace MySql.Data.MySqlClient {
             CancellationToken cancellationToken,
             params MySqlParameter[] commandParameters ) {
             var result = new TaskCompletionSource<int>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
-                    var queryResult = ExecuteNonQuery( connectionString, commandText, commandParameters );
-                    result.SetResult( queryResult );
+                    result.SetResult( ExecuteNonQuery( connectionString, commandText, commandParameters ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -466,7 +461,7 @@ namespace MySql.Data.MySqlClient {
         /// <param name="connectionString">Settings to be used for the connection</param>
         /// <param name="commandText">Command to execute</param>
         /// <returns><see cref="DataSet"/> containing the resultset</returns>
-        public static Task<DataSet> ExecuteDatasetAsync( string connectionString, string commandText ) => ExecuteDatasetAsync( connectionString, commandText, CancellationToken.None, (MySqlParameter[]) null );
+        public static Task<DataSet> ExecuteDatasetAsync( string connectionString, string commandText ) => ExecuteDatasetAsync( connectionString, commandText, CancellationToken.None, null );
 
         public static Task<DataSet> ExecuteDatasetAsync( string connectionString, string commandText, CancellationToken cancellationToken ) => ExecuteDatasetAsync( connectionString, commandText, cancellationToken, 
                                                                                                                                                                     null );
@@ -489,11 +484,9 @@ namespace MySql.Data.MySqlClient {
             CancellationToken cancellationToken,
             params MySqlParameter[] commandParameters ) {
             var result = new TaskCompletionSource<DataSet>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
-                    var dataset = ExecuteDataset( connectionString, commandText, commandParameters );
-                    result.SetResult( dataset );
+                    result.SetResult( ExecuteDataset( connectionString, commandText, commandParameters ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -513,7 +506,7 @@ namespace MySql.Data.MySqlClient {
         public static Task<DataSet> ExecuteDatasetAsync(
             MySqlConnection connection,
             string commandText,
-            CancellationToken cancellationToken ) => ExecuteDatasetAsync( connection, commandText, cancellationToken, (MySqlParameter[]) null );
+            CancellationToken cancellationToken ) => ExecuteDatasetAsync( connection, commandText, cancellationToken, null );
 
         /// <summary>
         /// Async version of ExecuteDataset
@@ -533,11 +526,9 @@ namespace MySql.Data.MySqlClient {
             CancellationToken cancellationToken,
             params MySqlParameter[] commandParameters ) {
             var result = new TaskCompletionSource<DataSet>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
-                    var dataset = ExecuteDataset( connection, commandText, commandParameters );
-                    result.SetResult( dataset );
+                    result.SetResult( ExecuteDataset( connection, commandText, commandParameters ) );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );
@@ -562,8 +553,7 @@ namespace MySql.Data.MySqlClient {
             string tablename,
             CancellationToken cancellationToken ) {
             var result = new TaskCompletionSource<bool>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
                     UpdateDataSet( connectionString, commandText, ds, tablename );
                     result.SetResult( true );
@@ -601,8 +591,7 @@ namespace MySql.Data.MySqlClient {
             bool externalConn,
             CancellationToken cancellationToken ) {
             var result = new TaskCompletionSource<MySqlDataReader>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
                     result.SetResult( ExecuteReader( connection, transaction, commandText, commandParameters, externalConn ) );
                 }
@@ -658,8 +647,7 @@ namespace MySql.Data.MySqlClient {
             CancellationToken cancellationToken,
             params MySqlParameter[] commandParameters ) {
             var result = new TaskCompletionSource<MySqlDataReader>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
                     result.SetResult( ExecuteReader( connectionString, commandText, commandParameters ) );
                 }
@@ -718,8 +706,7 @@ namespace MySql.Data.MySqlClient {
             CancellationToken cancellationToken,
             params MySqlParameter[] commandParameters ) {
             var result = new TaskCompletionSource<object>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
                     result.SetResult( ExecuteScalar( connectionString, commandText, commandParameters ) );
                 }
@@ -758,8 +745,7 @@ namespace MySql.Data.MySqlClient {
             CancellationToken cancellationToken,
             params MySqlParameter[] commandParameters ) {
             var result = new TaskCompletionSource<object>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
                     result.SetResult( ExecuteScalar( connection, commandText, commandParameters ) );
                 }

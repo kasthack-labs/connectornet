@@ -50,7 +50,7 @@ namespace MySql.Data.Types {
 
         public byte[] Value => _mValue;
 
-        Type IMySqlValue.SystemType => typeof( byte[] );
+        Type IMySqlValue.SystemType => Constants.Types.ByteArray;
 
         string IMySqlValue.MySqlTypeName {
             get {
@@ -71,7 +71,7 @@ namespace MySql.Data.Types {
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var buffToWrite = ( val as byte[] );
             if ( buffToWrite == null ) {
-                var valAsChar = ( val as Char[] );
+                var valAsChar = ( val as char[] );
                 if ( valAsChar != null ) buffToWrite = packet.Encoding.GetBytes( valAsChar );
                 else {
                     var s = val.ToString();
@@ -124,7 +124,6 @@ namespace MySql.Data.Types {
             if ( nullVal ) b = new MySqlBinary( _type, true );
             else {
                 if ( length == -1 ) length = packet.ReadFieldLength();
-
                 var newBuff = new byte[length];
                 packet.Read( newBuff, 0, (int) length );
                 b = new MySqlBinary( _type, newBuff );
@@ -132,10 +131,7 @@ namespace MySql.Data.Types {
             return b;
         }
 
-        void IMySqlValue.SkipValue( MySqlPacket packet ) {
-            var len = (int) packet.ReadFieldLength();
-            packet.Position += len;
-        }
+        void IMySqlValue.SkipValue( MySqlPacket packet ) => packet.Position += (int) packet.ReadFieldLength();
         #endregion
 
         public static void SetDsInfo( MySqlSchemaCollection sc ) {

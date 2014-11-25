@@ -29,6 +29,7 @@ using MySql.Data.Common;
 using MySql.Data.MySqlClient.Properties;
 using System.Threading.Tasks;
 using System.Threading;
+using MySql.Data.MySqlClient.common;
 
 namespace MySql.Data.MySqlClient {
     /// <summary>
@@ -193,8 +194,7 @@ namespace MySql.Data.MySqlClient {
 
         public Task<int> LoadAsync( CancellationToken cancellationToken ) {
             var result = new TaskCompletionSource<int>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
                     result.SetResult( Load() );
                 }

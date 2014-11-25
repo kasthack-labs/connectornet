@@ -22,79 +22,39 @@
 
 using System;
 using MySql.Data.MySqlClient;
-using MySql.Data.Constants;
-
 namespace MySql.Data.Types {
     internal struct MySqlUByte : IMySqlValue {
+        private const string MySqlTypeString = "TINYINT";
         private readonly byte _mValue;
         private readonly bool _isNull;
-
         public MySqlUByte( bool isNull ) {
             _isNull = isNull;
             _mValue = 0;
         }
-
         public MySqlUByte( byte val ) {
             _isNull = false;
             _mValue = val;
         }
-
         #region IMySqlValue Members
         public bool IsNull => _isNull;
-
         MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.UByte;
-
         object IMySqlValue.Value => _mValue;
-
         public byte Value => _mValue;
-
         Type IMySqlValue.SystemType => Constants.Types.Byte;
-
-        string IMySqlValue.MySqlTypeName => "TINYINT";
-
+        string IMySqlValue.MySqlTypeName => MySqlTypeString;
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var v = val as byte? ?? Convert.ToByte( val );
             if ( binary ) packet.WriteByte( v );
             else packet.WriteStringNoNull( v.InvariantToString() );
         }
-
         IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {
             if ( nullVal ) return new MySqlUByte( true );
             if ( length == -1 ) return new MySqlUByte( packet.ReadByte() );
             return new MySqlUByte( Byte.Parse( packet.ReadString( length ) ) );
         }
-
         void IMySqlValue.SkipValue( MySqlPacket packet ) { packet.ReadByte(); }
         #endregion
-
-        internal static void SetDsInfo( MySqlSchemaCollection sc ) {
-            // we use name indexing because this method will only be called
-            // when GetSchema is called for the DataSourceInformation 
-            // collection and then it wil be cached.
-            var row = sc.AddRow();
-            row[ "TypeName" ] = "TINY INT";
-            row[ "ProviderDbType" ] = MySqlDbType.UByte;
-            row[ "ColumnSize" ] = 0;
-            row[ "CreateFormat" ] = "TINYINT UNSIGNED";
-            row[ "CreateParameters" ] = null;
-            row[ "DataType" ] = "System.Byte";
-            row[ "IsAutoincrementable" ] = true;
-            row[ "IsBestMatch" ] = true;
-            row[ "IsCaseSensitive" ] = false;
-            row[ "IsFixedLength" ] = true;
-            row[ "IsFixedPrecisionScale" ] = true;
-            row[ "IsLong" ] = false;
-            row[ "IsNullable" ] = true;
-            row[ "IsSearchable" ] = true;
-            row[ "IsSearchableWithLike" ] = false;
-            row[ "IsUnsigned" ] = true;
-            row[ "MaximumScale" ] = 0;
-            row[ "MinimumScale" ] = 0;
-            row[ "IsConcurrencyType" ] = DBNull.Value;
-            row[ "IsLiteralSupported" ] = false;
-            row[ "LiteralPrefix" ] = null;
-            row[ "LiteralSuffix" ] = null;
-            row[ "NativeDataType" ] = null;
-        }
+        internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.UByte, Constants.Types.Byte, isAutoIncrementable: true,  isUnsigned: true  );
     }
 }

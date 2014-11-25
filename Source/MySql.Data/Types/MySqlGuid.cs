@@ -26,34 +26,26 @@ using MySql.Data.MySqlClient.Properties;
 
 namespace MySql.Data.Types {
     internal struct MySqlGuid : IMySqlValue {
+        private const string MySqlTypeString = "GUID";
+        private const string MySqlFormatString = "BINARY(16)";
         private Guid _mValue;
         private bool _isNull;
         private readonly byte[] _bytes;
-
         public MySqlGuid( byte[] buff ) : this() {
             OldGuids = false;
             _mValue = new Guid( buff );
             _isNull = false;
             _bytes = buff;
         }
-
         public byte[] Bytes => _bytes;
-
         public bool OldGuids { get; set; }
-
         #region IMySqlValue Members
         public bool IsNull => _isNull;
-
         MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.Guid;
-
         object IMySqlValue.Value => _mValue;
-
         public Guid Value => _mValue;
-
         Type IMySqlValue.SystemType => typeof( Guid );
-
-        string IMySqlValue.MySqlTypeName => OldGuids ? "BINARY(16)" : "CHAR(36)";
-
+        string IMySqlValue.MySqlTypeName => OldGuids ? MySqlFormatString : "CHAR(36)";
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var guid = Guid.Empty;
             var valAsString = val as string;
@@ -77,10 +69,8 @@ namespace MySql.Data.Types {
                 else packet.WriteStringNoNull( "'" + MySqlHelper.EscapeString( guid.ToString( "D" ) ) + "'" );
             }
         }
-
         private void WriteOldGuid( MySqlPacket packet, Guid guid, bool binary ) {
             var bytes = guid.ToByteArray();
-
             if ( binary ) {
                 packet.WriteLength( bytes.Length );
                 packet.Write( bytes );
@@ -92,7 +82,6 @@ namespace MySql.Data.Types {
                 packet.WriteByte( (byte) '\'' );
             }
         }
-
         private static void EscapeByteArray( byte[] bytes, int length, MySqlPacket packet ) {
             for ( var x = 0; x < length; x++ ) {
                 var b = bytes[ x ];
@@ -113,7 +102,6 @@ namespace MySql.Data.Types {
                 }
             }
         }
-
         private MySqlGuid ReadOldGuid( MySqlPacket packet, long length ) {
             if ( length == -1 ) length = packet.ReadFieldLength();
 
@@ -121,7 +109,6 @@ namespace MySql.Data.Types {
             packet.Read( buff, 0, (int) length );
             return new MySqlGuid( buff ) { OldGuids = OldGuids };
         }
-
         IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {
             var g = new MySqlGuid { _isNull = true, OldGuids = OldGuids };
             if ( nullVal ) return g;
@@ -131,41 +118,13 @@ namespace MySql.Data.Types {
             g._isNull = false;
             return g;
         }
-
-        void IMySqlValue.SkipValue( MySqlPacket packet ) {
-            var len = (int) packet.ReadFieldLength();
-            packet.Position += len;
-        }
+        void IMySqlValue.SkipValue( MySqlPacket packet ) => packet.Position += (int) packet.ReadFieldLength();
         #endregion
 
         public static void SetDsInfo( MySqlSchemaCollection sc ) {
-            // we use name indexing because this method will only be called
-            // when GetSchema is called for the DataSourceInformation 
-            // collection and then it wil be cached.
             var row = sc.AddRow();
-            row[ "TypeName" ] = "GUID";
-            row[ "ProviderDbType" ] = MySqlDbType.Guid;
-            row[ "ColumnSize" ] = 0;
-            row[ "CreateFormat" ] = "BINARY(16)";
-            row[ "CreateParameters" ] = null;
-            row[ "DataType" ] = "System.Guid";
-            row[ "IsAutoincrementable" ] = false;
-            row[ "IsBestMatch" ] = true;
-            row[ "IsCaseSensitive" ] = false;
-            row[ "IsFixedLength" ] = true;
-            row[ "IsFixedPrecisionScale" ] = true;
-            row[ "IsLong" ] = false;
-            row[ "IsNullable" ] = true;
+            DsInfoHelper.FillRow( row, MySqlTypeString, MySqlDbType.Guid, Constants.Types.Guid, createFormat: MySqlFormatString );
             row[ "IsSearchable" ] = false;
-            row[ "IsSearchableWithLike" ] = false;
-            row[ "IsUnsigned" ] = false;
-            row[ "MaximumScale" ] = 0;
-            row[ "MinimumScale" ] = 0;
-            row[ "IsConcurrencyType" ] = DBNull.Value;
-            row[ "IsLiteralSupported" ] = false;
-            row[ "LiteralPrefix" ] = null;
-            row[ "LiteralSuffix" ] = null;
-            row[ "NativeDataType" ] = null;
         }
     }
 }

@@ -106,12 +106,10 @@ namespace MySql.Data.MySqlClient {
         private MySqlParameterCollection CheckParameters( string spName ) {
             var newParms = new MySqlParameterCollection( Command );
             var returnParameter = GetReturnParameter();
-
             var entry = GetParameters( spName );
-            if ( entry.Procedure == null
-                 || entry.Procedure.Rows.Count == 0 ) throw new InvalidOperationException( String.Format( Resources.RoutineNotFound, spName ) );
-
-            var realAsFloat = entry.Procedure.Rows[ 0 ][ "SQL_MODE" ].ToString().InvariantIndexOf( "REAL_AS_FLOAT" ) != -1;
+            if ( entry.Procedure == null || entry.Procedure.Rows.Count == 0 )
+                throw new InvalidOperationException( String.Format( Resources.RoutineNotFound, spName ) );
+            var realAsFloat = entry.Procedure.Rows[ 0 ][ "SQL_MODE" ].ToString().IgnoreCaseContains( "REAL_AS_FLOAT" );
             foreach ( var param in entry.Parameters.Rows ) newParms.Add( GetAndFixParameter( spName, param, realAsFloat, returnParameter ) );
             return newParms;
         }
@@ -125,14 +123,11 @@ namespace MySql.Data.MySqlClient {
             // first retrieve the procedure definition from our
             // procedure cache
             var spName = CommandText;
-            if ( spName.IndexOf( "." ) == -1
-                 && !String.IsNullOrEmpty( Connection.Database ) ) spName = Connection.Database + "." + spName;
+            if ( !spName.InvariantContains( "." ) && !String.IsNullOrEmpty( Connection.Database ) )
+                spName = Connection.Database + "." + spName;
             spName = FixProcedureName( spName );
-
             var returnParameter = GetReturnParameter();
-
             var parms = Command.Connection.Settings.CheckParameters ? CheckParameters( spName ) : Parameters;
-
             var setSql = SetUserVariables( parms, preparing );
             var callSql = CreateCallStatement( spName, returnParameter, parms );
             var outSql = CreateOutputSelect( parms, preparing );
@@ -145,20 +140,18 @@ namespace MySql.Data.MySqlClient {
             var delimiter = String.Empty;
             foreach ( MySqlParameter p in parms ) {
                 if ( p.Direction != ParameterDirection.InputOutput ) continue;
-
                 var pName = "@" + p.BaseName;
                 var uName = "@" + ParameterPrefix + p.BaseName;
                 var sql = String.Format( "SET {0}={1}", uName, pName );
-
-                if ( Command.Connection.Settings.AllowBatch
-                     && !preparing ) {
+                if ( Command.Connection.Settings.AllowBatch && !preparing ) {
                     setSql.InvariantAppendFormat( "{0}{1}", delimiter, sql );
                     delimiter = "; ";
                 }
                 else {
-                    var cmd = new MySqlCommand( sql, Command.Connection );
-                    cmd.Parameters.Add( p );
-                    cmd.ExecuteNonQuery();
+                    using ( var cmd = new MySqlCommand( sql, Command.Connection ) ) {
+                        cmd.Parameters.Add( p );
+                        cmd.ExecuteNonQuery();
+                    }
                 }
             }
             if ( setSql.Length > 0 ) setSql.Append( "; " );
@@ -167,26 +160,21 @@ namespace MySql.Data.MySqlClient {
 
         private string CreateCallStatement( string spName, MySqlParameter returnParameter, MySqlParameterCollection parms ) {
             var callSql = new StringBuilder();
-
             var delimiter = String.Empty;
             foreach ( MySqlParameter p in parms ) {
                 if ( p.Direction == ParameterDirection.ReturnValue ) continue;
-
                 var pName = "@" + p.BaseName;
                 var uName = "@" + ParameterPrefix + p.BaseName;
-
                 var useRealVar = p.Direction == ParameterDirection.Input || ServerProvidingOutputParameters;
                 callSql.InvariantAppendFormat( "{0}{1}", delimiter, useRealVar ? pName : uName );
                 delimiter = ", ";
             }
-
             if ( returnParameter == null ) return String.Format( "CALL {0}({1})", spName, callSql );
             return String.Format( "SET @{0}{1}={2}({3})", ParameterPrefix, returnParameter.BaseName, spName, callSql );
         }
 
         private string CreateOutputSelect( MySqlParameterCollection parms, bool preparing ) {
             var outSql = new StringBuilder();
-
             var delimiter = String.Empty;
             foreach ( MySqlParameter p in parms ) {
                 switch ( p.Direction ) {
@@ -199,32 +187,23 @@ namespace MySql.Data.MySqlClient {
                 }
                 var pName = "@" + p.BaseName;
                 var uName = "@" + ParameterPrefix + p.BaseName;
-
                 outSql.InvariantAppendFormat( "{0}{1}", delimiter, uName );
                 delimiter = ", ";
             }
-
             if ( outSql.Length == 0 ) return String.Empty;
-
-            if ( Command.Connection.Settings.AllowBatch
-                 && !preparing ) return String.Format( ";SELECT {0}", outSql );
-
+            if ( Command.Connection.Settings.AllowBatch && !preparing )
+                return String.Format( ";SELECT {0}", outSql );
             _outSelect = String.Format( "SELECT {0}", outSql );
-            return String.Empty;
+            return String.Empty;//wut?
         }
-
         internal void ProcessOutputParameters( MySqlDataReader reader ) {
             // We apparently need to always adjust our output types since the server
             // provided data types are not always right
             AdjustOutputTypes( reader );
-
             if ( ( reader.CommandBehavior & CommandBehavior.SchemaOnly ) != 0 ) return;
-
             // now read the output parameters data row
             reader.Read();
-
             const string prefix = "@" + ParameterPrefix;
-
             for ( var i = 0; i < reader.FieldCount; i++ ) {
                 var fieldName = reader.GetName( i );
                 if ( fieldName.StartsWith( prefix, StringComparison.OrdinalIgnoreCase ) ) fieldName = fieldName.Remove( 0, prefix.Length );
@@ -240,9 +219,9 @@ namespace MySql.Data.MySqlClient {
             // return values
             for ( var i = 0; i < reader.FieldCount; i++ ) {
                 var fieldName = reader.GetName( i );
-                if ( fieldName.IndexOf( ParameterPrefix ) != -1 ) fieldName = fieldName.Remove( 0, ParameterPrefix.Length + 1 );
+                if ( fieldName.InvariantContains( ParameterPrefix ) )
+                    fieldName = fieldName.Remove( 0, ParameterPrefix.Length + 1 );
                 var parameter = Command.Parameters.GetParameterFlexible( fieldName, true );
-
                 var v = MySqlField.GetIMySqlValue( parameter.MySqlDbType );
                 if ( v is MySqlBit ) {
                     var bit = (MySqlBit) v;
@@ -257,9 +236,9 @@ namespace MySql.Data.MySqlClient {
             base.Close( reader );
             if ( String.IsNullOrEmpty( _outSelect ) ) return;
             if ( ( reader.CommandBehavior & CommandBehavior.SchemaOnly ) != 0 ) return;
-
-            var cmd = new MySqlCommand( _outSelect, Command.Connection );
-            using ( var rdr = cmd.ExecuteReader( reader.CommandBehavior ) ) ProcessOutputParameters( rdr );
+            using (var cmd = new MySqlCommand( _outSelect, Command.Connection ))
+            using (var rdr = cmd.ExecuteReader( reader.CommandBehavior ))
+                ProcessOutputParameters( rdr );
         }
     }
 }

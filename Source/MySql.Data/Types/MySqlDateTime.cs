@@ -367,11 +367,8 @@ namespace MySql.Data.Types {
                 new Tuple<string, MySqlDbType>( "TIMESTAMP", MySqlDbType.Timestamp)
             };
         internal static void SetDsInfo( MySqlSchemaCollection sc ) {
-            // we use name indexing because this method will only be called
-            // when GetSchema is called for the DataSourceInformation 
-            // collection and then it wil be cached.
             foreach ( var typei in DsInfoTypes )
-                DsInfoHelper.FillDsInfoRow( sc.AddRow(), typei.Item1, typei.Item2, 0, typei.Item1, Constants.Types.DateTime, false, true );
+                DsInfoHelper.FillRow( sc.AddRow(), typei.Item1, typei.Item2, Constants.Types.DateTime, 0, typei.Item1 );
         }
 
         #region IComparable Members

@@ -27,42 +27,31 @@ using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlTimeSpan : IMySqlValue {
+        private const string MySqlTypeString = "TIME";
         private TimeSpan _mValue;
         private bool _isNull;
-
         public MySqlTimeSpan( bool isNull ) {
-            this._isNull = isNull;
+            _isNull = isNull;
             _mValue = TimeSpan.MinValue;
         }
-
         public MySqlTimeSpan( TimeSpan val ) {
             _isNull = false;
             _mValue = val;
         }
-
         #region IMySqlValue Members
         public bool IsNull => _isNull;
-
         MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.Time;
-
         object IMySqlValue.Value => _mValue;
-
         public TimeSpan Value => _mValue;
-
         Type IMySqlValue.SystemType => Constants.Types.TimeSpan;
-
-        string IMySqlValue.MySqlTypeName => "TIME";
-
+        string IMySqlValue.MySqlTypeName => MySqlTypeString;
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             if ( !( val is TimeSpan ) ) throw new MySqlException( "Only TimeSpan objects can be serialized by MySqlTimeSpan" );
-
             var ts = (TimeSpan) val;
             var negative = ts.TotalMilliseconds < 0;
             ts = ts.Duration();
-
             if ( binary ) {
                 packet.WriteByte( (byte) ( ts.Milliseconds > 0 ? 12 : 8 ) );
-
                 packet.WriteByte( (byte) ( negative ? 1 : 0 ) );
                 packet.WriteInteger( ts.Days, 4 );
                 packet.WriteByte( (byte) ts.Hours );
@@ -85,7 +74,6 @@ namespace MySql.Data.Types {
                 packet.WriteStringNoNull( s );
             }
         }
-
         IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {
             if ( nullVal ) return new MySqlTimeSpan( true );
 
@@ -123,45 +111,11 @@ namespace MySql.Data.Types {
             if ( negate == 1 ) _mValue = _mValue.Negate();
             return this;
         }
-
-        void IMySqlValue.SkipValue( MySqlPacket packet ) {
-            var len = packet.ReadByte();
-            packet.Position += len;
-        }
+        void IMySqlValue.SkipValue( MySqlPacket packet ) => packet.Position += packet.ReadByte();
         #endregion
-
-        internal static void SetDsInfo( MySqlSchemaCollection sc ) {
-            // we use name indexing because this method will only be called
-            // when GetSchema is called for the DataSourceInformation 
-            // collection and then it wil be cached.
-            var row = sc.AddRow();
-            row[ "TypeName" ] = "TIME";
-            row[ "ProviderDbType" ] = MySqlDbType.Time;
-            row[ "ColumnSize" ] = 0;
-            row[ "CreateFormat" ] = "TIME";
-            row[ "CreateParameters" ] = null;
-            row[ "DataType" ] = "System.TimeSpan";
-            row[ "IsAutoincrementable" ] = false;
-            row[ "IsBestMatch" ] = true;
-            row[ "IsCaseSensitive" ] = false;
-            row[ "IsFixedLength" ] = true;
-            row[ "IsFixedPrecisionScale" ] = true;
-            row[ "IsLong" ] = false;
-            row[ "IsNullable" ] = true;
-            row[ "IsSearchable" ] = true;
-            row[ "IsSearchableWithLike" ] = false;
-            row[ "IsUnsigned" ] = false;
-            row[ "MaximumScale" ] = 0;
-            row[ "MinimumScale" ] = 0;
-            row[ "IsConcurrencyType" ] = DBNull.Value;
-            row[ "IsLiteralSupported" ] = false;
-            row[ "LiteralPrefix" ] = null;
-            row[ "LiteralSuffix" ] = null;
-            row[ "NativeDataType" ] = null;
-        }
-
+        internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Time, Constants.Types.TimeSpan );
         public override string ToString() => String.Format( "{0} {1:00}:{2:00}:{3:00}", _mValue.Days, _mValue.Hours, _mValue.Minutes, _mValue.Seconds );
-
         private void ParseMySql( string s ) {
             var parts = s.Split( ':', '.' );
             var hours = Int32.Parse( parts[ 0 ] );

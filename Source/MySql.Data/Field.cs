@@ -326,16 +326,12 @@ namespace MySql.Data.MySqlClient {
             var charSets = Driver.CharacterSets;
             var version = Driver.Version;
 
-            if ( charSets == null
-                 || charSets.Count == 0
-                 || CharacterSetIndex == -1 ) return;
+            if ( charSets == null || charSets.Count == 0 || CharacterSetIndex == -1 ) return;
             if ( charSets[ CharacterSetIndex ] == null ) return;
-
             var cs = CharSetMap.GetCharacterSet( version, charSets[ CharacterSetIndex ] );
             // starting with 6.0.4 utf8 has a maxlen of 4 instead of 3.  The old
             // 3 byte utf8 is utf8mb3
-            if ( cs.Name.InvariantToLower() == "utf-8"
-                 && version.Major >= 6 ) MaxLength = 4;
+            if ( cs.Name.IgnoreCaseEquals( "utf-8" ) && version.Major >= 6 ) MaxLength = 4;
             else MaxLength = cs.ByteCount;
             Encoding = CharSetMap.GetEncoding( version, charSets[ CharacterSetIndex ] );
         }

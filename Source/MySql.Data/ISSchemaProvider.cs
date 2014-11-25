@@ -198,8 +198,8 @@ namespace MySql.Data.MySqlClient {
 
                 var body = reader.GetString( 2 );
                 var tokenizer = new MySqlTokenizer( body ) {
-                    AnsiQuotes = sqlMode.InvariantIndexOf("ANSI_QUOTES") != -1,
-                    BackslashEscapes = sqlMode.InvariantIndexOf( "NO_BACKSLASH_ESCAPES") == -1
+                    AnsiQuotes = sqlMode.Contains("ANSI_QUOTES"),
+                    BackslashEscapes = !sqlMode.Contains( "NO_BACKSLASH_ESCAPES")
                 };
 
                 var token = tokenizer.NextToken();
@@ -397,22 +397,15 @@ namespace MySql.Data.MySqlClient {
 
         public override MySqlSchemaCollection GetForeignKeyColumns( string[] restrictions ) {
             if ( !Connection.Driver.Version.IsAtLeast( 5, 0, 6 ) ) return base.GetForeignKeyColumns( restrictions );
-
-            var sql = @"SELECT kcu.* FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu
-                WHERE kcu.referenced_table_name IS NOT NULL";
-
-            var where = new StringBuilder();
-            if ( restrictions.Length >= 2
-                 && !String.IsNullOrEmpty( restrictions[ 1 ] ) )
-                where.InvariantAppendFormat( " AND kcu.constraint_schema LIKE '{0}'", restrictions[ 1 ] );
-            if ( restrictions.Length >= 3
-                 && !String.IsNullOrEmpty( restrictions[ 2 ] ) ) where.InvariantAppendFormat( " AND kcu.table_name LIKE '{0}'", restrictions[ 2 ] );
-            if ( restrictions.Length >= 4
-                 && !String.IsNullOrEmpty( restrictions[ 3 ] ) ) where.InvariantAppendFormat( " AND kcu.constraint_name LIKE '{0}'", restrictions[ 3 ] );
-
-            sql += where.ToString();
-
-            return GetTable( sql );
+            const string sql = @"SELECT kcu.* FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE kcu WHERE kcu.referenced_table_name IS NOT NULL";
+            var query = new StringBuilder(sql);
+            if ( restrictions.Length >= 2 && !String.IsNullOrEmpty( restrictions[ 1 ] ) )
+                query.InvariantAppendFormat( " AND kcu.constraint_schema LIKE '{0}'", restrictions[ 1 ] );
+            if ( restrictions.Length >= 3 && !String.IsNullOrEmpty( restrictions[ 2 ] ) )
+                query.InvariantAppendFormat( " AND kcu.table_name LIKE '{0}'", restrictions[ 2 ] );
+            if ( restrictions.Length >= 4 && !String.IsNullOrEmpty( restrictions[ 3 ] ) )
+                query.InvariantAppendFormat( " AND kcu.constraint_name LIKE '{0}'", restrictions[ 3 ] );
+            return GetTable( query.ToString() );
         }
 
         #region Procedures Support Rouines
@@ -462,8 +455,8 @@ namespace MySql.Data.MySqlClient {
 
             var pos = 1;
             var tokenizer = new MySqlTokenizer( body ) {
-                AnsiQuotes = sqlMode.InvariantIndexOf("ANSI_QUOTES") != -1,
-                BackslashEscapes = sqlMode.InvariantIndexOf( "NO_BACKSLASH_ESCAPES") == -1,
+                AnsiQuotes = sqlMode.Contains("ANSI_QUOTES"),
+                BackslashEscapes = !sqlMode.Contains( "NO_BACKSLASH_ESCAPES"),
                 ReturnComments = false
             };
             var token = tokenizer.NextToken();
@@ -473,8 +466,7 @@ namespace MySql.Data.MySqlClient {
             // parameter row for the return parameter since it is ordinal position
             // 0 and should appear first.
             while ( token != "(" ) {
-                if ( String.Compare( token, "FUNCTION", StringComparison.OrdinalIgnoreCase ) == 0
-                     && nameToRestrict == null ) {
+                if ( token.IgnoreCaseCompare( "FUNCTION" ) == 0 && nameToRestrict == null ) {
                     parametersTable.AddRow();
                     InitParameterRow( row, parametersTable.Rows[ 0 ] );
                 }
@@ -489,28 +481,22 @@ namespace MySql.Data.MySqlClient {
 
                 // handle mode and name for the parameter
                 var mode = token.InvariantToUpper();
-                if ( !tokenizer.Quoted
-                     && modes.Contains( mode ) ) {
+                if ( !tokenizer.Quoted && modes.Contains( mode ) ) {
                     parmRow[ "PARAMETER_MODE" ] = mode;
                     token = tokenizer.NextToken();
                 }
                 if ( tokenizer.Quoted ) token = token.Substring( 1, token.Length - 2 );
                 parmRow[ "PARAMETER_NAME" ] = token;
-
                 // now parse data type
                 token = ParseDataType( parmRow, tokenizer );
                 if ( token == "," ) token = tokenizer.NextToken();
-
                 // now determine if we should include this row after all
                 // we need to parse it before this check so we are correctly
                 // positioned for the next parameter
-                if ( nameToRestrict == null
-                     || String.Compare( parmRow[ "PARAMETER_NAME" ].ToString(), nameToRestrict, StringComparison.OrdinalIgnoreCase ) == 0 ) parametersTable.Rows.Add( parmRow );
+                if ( nameToRestrict == null || nameToRestrict.IgnoreCaseCompare( parmRow[ "PARAMETER_NAME" ].ToString() ) == 0 ) parametersTable.Rows.Add( parmRow );
             }
-
             // now parse out the return parameter if there is one.
-            token = tokenizer.NextToken().InvariantToUpper();
-            if ( String.Compare( token, "RETURNS", StringComparison.OrdinalIgnoreCase ) != 0 ) return;
+            if ( tokenizer.NextToken().IgnoreCaseEquals( "RETURNS") ) return;
             var parameterRow = parametersTable.Rows[ 0 ];
             parameterRow[ "PARAMETER_NAME" ] = "RETURN_VALUE";
             ParseDataType( parameterRow, tokenizer );
@@ -546,7 +532,7 @@ namespace MySql.Data.MySqlClient {
             }
             else dtd.Append( GetDataTypeDefaults( type, row ) );
 
-            while ( token != ")" && token != "," && token!="begin" && token!="return") {
+            while ( token != ")" && token != "," && !token.IgnoreCaseEquals("begin") && token.IgnoreCaseEquals("return")) {
                 switch ( token ) {
                     case "CHARACTER":
                     case "BINARY":
@@ -574,8 +560,8 @@ namespace MySql.Data.MySqlClient {
             if ( dtd.Length > 0 ) row[ "DTD_IDENTIFIER" ] = dtd.ToString();
 
             // now default the collation if one wasn't given
-            if ( string.IsNullOrEmpty( (string) row[ "COLLATION_NAME" ] )
-                 && !string.IsNullOrEmpty( (string) row[ "CHARACTER_SET_NAME" ] ) ) row[ "COLLATION_NAME" ] = CharSetMap.GetDefaultCollation( row[ "CHARACTER_SET_NAME" ].ToString(), Connection );
+            if ( string.IsNullOrEmpty( (string) row[ "COLLATION_NAME" ] ) && !string.IsNullOrEmpty( (string) row[ "CHARACTER_SET_NAME" ] ) )
+                row[ "COLLATION_NAME" ] = CharSetMap.GetDefaultCollation( row[ "CHARACTER_SET_NAME" ].ToString(), Connection );
 
             // now set the octet length
             if ( row[ "CHARACTER_MAXIMUM_LENGTH" ] == null ) return token;
@@ -588,8 +574,8 @@ namespace MySql.Data.MySqlClient {
             var format = "({0},{1})";
             //todo check unused var
             var precision = row[ "NUMERIC_PRECISION" ];
-            if ( !MetaData.IsNumericType( type )
-                 || !string.IsNullOrEmpty( (string) row[ "NUMERIC_PRECISION" ] ) ) return String.Empty;
+            if ( !MetaData.IsNumericType( type ) || !string.IsNullOrEmpty( (string) row[ "NUMERIC_PRECISION" ] ) )
+                return String.Empty;
             row[ "NUMERIC_PRECISION" ] = 10;
             row[ "NUMERIC_SCALE" ] = 0;
             if ( !MetaData.SupportScale( type ) ) format = "({0})";
@@ -597,10 +583,9 @@ namespace MySql.Data.MySqlClient {
         }
 
         private static void ParseDataTypeSize( MySqlSchemaRow row, string size ) {
-            size = size.Trim( '(', ')' );
-            var parts = size.Split( ',' );
-
-            if ( !MetaData.IsNumericType( row[ "DATA_TYPE" ].ToString() ) ) row[ "CHARACTER_MAXIMUM_LENGTH" ] = Int32.Parse( parts[ 0 ] );
+            var parts = size.Trim( '(', ')' ).Split( ',' );
+            if ( !MetaData.IsNumericType( row[ "DATA_TYPE" ].ToString() ) )
+                row[ "CHARACTER_MAXIMUM_LENGTH" ] = Int32.Parse( parts[ 0 ] );
             // will set octet length in a minute
             else {
                 row[ "NUMERIC_PRECISION" ] = Int32.Parse( parts[ 0 ] );

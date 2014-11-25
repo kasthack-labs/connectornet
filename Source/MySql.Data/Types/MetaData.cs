@@ -64,7 +64,7 @@ namespace MySql.Data.Types {
         }
 
         public static bool SupportScale( string typename ) {
-            switch ( StringUtility.InvariantToLower( typename ) ) {
+            switch ( typename.InvariantToLower() ) {
                 case "numeric":
                 case "decimal":
                 case "dec":
@@ -75,7 +75,7 @@ namespace MySql.Data.Types {
         }
 
         public static MySqlDbType NameToType( string typeName, bool unsigned, bool realAsFloat, MySqlConnection connection ) {
-            switch ( StringUtility.InvariantToUpper( typeName ) ) {
+            switch ( typeName.InvariantToUpper() ) {
                 case "CHAR":
                     return MySqlDbType.String;
                 case "VARCHAR":
@@ -88,8 +88,7 @@ namespace MySql.Data.Types {
                 case "DECIMAL":
                 case "DEC":
                 case "FIXED":
-                    if ( connection.Driver.Version.IsAtLeast( 5, 0, 3 ) ) return MySqlDbType.NewDecimal;
-                    return MySqlDbType.Decimal;
+                    return connection.Driver.Version.IsAtLeast( 5, 0, 3 ) ? MySqlDbType.NewDecimal : MySqlDbType.Decimal;
                 case "YEAR":
                     return MySqlDbType.Year;
                 case "TIME":

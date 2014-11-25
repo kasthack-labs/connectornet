@@ -329,12 +329,14 @@ namespace MySql.Data.MySqlClient {
                         sql = "SELECT * FROM " + sql;
                         break;
                     case CommandType.Text:
-                        if ( sql.InvariantIndexOf(" ") == -1 ) if ( AddCallStatement( sql ) ) sql = "call " + sql;
+                        if ( !sql.InvariantContains( " " ) && AddCallStatement( sql ) )
+                            sql = "call " + sql;
                         break;
                 }
 
                 // if we are on a replicated connection, we are only allow readonly statements
-                if ( _connection.Settings.Replication && !InternallyCreated ) EnsureCommandIsReadOnly( sql );
+                if ( _connection.Settings.Replication && !InternallyCreated )
+                    EnsureCommandIsReadOnly( sql );
 
                 if ( _statement == null || !_statement.IsPrepared )
                     _statement = CommandType == CommandType.StoredProcedure ? new StoredProcedure( this, sql ) : new PreparableStatement( this, sql );
@@ -425,22 +427,22 @@ namespace MySql.Data.MySqlClient {
             lastInsertedId = -1;
             object val = null;
             // give our interceptors a shot at it first
-            if ( _connection != null
-                 && _connection.CommandInterceptor.ExecuteScalar( CommandText, ref val ) ) return val;
-            using ( var reader = ExecuteReader() ) if ( reader.Read() ) val = reader.GetValue( 0 );
-
+            if ( _connection != null && _connection.CommandInterceptor.ExecuteScalar( CommandText, ref val ) )
+                return val;
+            using (var reader = ExecuteReader())
+                if ( reader.Read() ) val = reader.GetValue( 0 );
             return val;
         }
 
         private void HandleCommandBehaviors( CommandBehavior behavior ) {
-            if ( ( behavior & CommandBehavior.SchemaOnly ) != 0 ) {
-                new MySqlCommand( "SET SQL_SELECT_LIMIT=0", _connection ).ExecuteNonQuery();
-                _resetSqlSelect = true;
-            }
-            else if ( ( behavior & CommandBehavior.SingleRow ) != 0 ) {
-                new MySqlCommand( "SET SQL_SELECT_LIMIT=1", _connection ).ExecuteNonQuery();
-                _resetSqlSelect = true;
-            }
+            var selectLimit = string.Empty;
+
+            if ( ( behavior & CommandBehavior.SchemaOnly ) != 0 ) selectLimit = "0";
+            else if ( ( behavior & CommandBehavior.SingleRow ) != 0 ) selectLimit = "1";
+            else return;
+
+            new MySqlCommand( "SET SQL_SELECT_LIMIT="+selectLimit, _connection ).ExecuteNonQuery();
+            _resetSqlSelect = true;
         }
 
         /// <include file='docs/mysqlcommand.xml' path='docs/Prepare2/*'/>
@@ -508,7 +510,6 @@ namespace MySql.Data.MySqlClient {
         /// the returned rows. </returns>
         public IAsyncResult BeginExecuteReader( CommandBehavior behavior ) {
             if ( Caller != null ) Throw( new MySqlException( Resources.UnableToStartSecondAsyncOp ) );
-
             Caller = AsyncExecuteWrapper;
             _asyncResult = Caller.BeginInvoke( 1, behavior, null, null );
             return _asyncResult;
@@ -545,10 +546,7 @@ namespace MySql.Data.MySqlClient {
         /// which returns the number of affected rows. </returns>
         public IAsyncResult BeginExecuteNonQuery( AsyncCallback callback, object stateObject ) {
             if ( Caller != null ) Throw( new MySqlException( Resources.UnableToStartSecondAsyncOp ) );
-
-            Caller = AsyncExecuteWrapper;
-            _asyncResult = Caller.BeginInvoke( 2, CommandBehavior.Default, callback, stateObject );
-            return _asyncResult;
+            return _asyncResult = ( Caller = AsyncExecuteWrapper ).BeginInvoke( 2, CommandBehavior.Default, callback, stateObject );
         }
 
         /// <summary>
@@ -560,12 +558,8 @@ namespace MySql.Data.MySqlClient {
         /// which returns the number of affected rows. </returns>
         public IAsyncResult BeginExecuteNonQuery() {
             if ( Caller != null ) Throw( new MySqlException( Resources.UnableToStartSecondAsyncOp ) );
-
-            Caller = AsyncExecuteWrapper;
-            _asyncResult = Caller.BeginInvoke( 2, CommandBehavior.Default, null, null );
-            return _asyncResult;
+            return _asyncResult = ( Caller = AsyncExecuteWrapper ).BeginInvoke( 2, CommandBehavior.Default, null, null );
         }
-
         /// <summary>
         /// Finishes asynchronous execution of a SQL statement. 
         /// </summary>
@@ -590,7 +584,7 @@ namespace MySql.Data.MySqlClient {
         /// </summary>
         /// <param name="query">Query to validate</param>
         /// <returns>If it is necessary to add call statement</returns>
-            /*PATTERN MATCHES
+       /*PATTERN MATCHES
        * SELECT`user`FROM`mysql`.`user`;, select(left('test',1));, do(1);, commit, rollback, use, begin, end, use`sakila`;, select`test`;, select'1'=1;, SET@test='test';
        */
         private bool AddCallStatement( string query ) => AddCallStatementPattern.Matches( query ).Count == 0;
@@ -612,7 +606,6 @@ namespace MySql.Data.MySqlClient {
                 CacheAge = CacheAge
             };
             PartialClone( clone );
-
             foreach ( MySqlParameter p in Parameters ) clone.Parameters.Add( p.Clone() );
             return clone;
         }
@@ -630,19 +623,19 @@ namespace MySql.Data.MySqlClient {
 
         internal string GetCommandTextForBatching() {
             if ( _batchableCommandText != null ) return _batchableCommandText;
-            if ( CommandText.StartsWith( "INSERT", StringComparison.OrdinalIgnoreCase ) ) {
-                var cmd = new MySqlCommand( "SELECT @@sql_mode", Connection );
-                var sqlMode = cmd.ExecuteScalar().ToString().InvariantToUpper();
+            if ( CommandText.IgnoreCaseStartsWith( "INSERT" ) ) {
+                string sqlMode;
+                using (var cmd = new MySqlCommand( "SELECT @@sql_mode", Connection ))
+                    sqlMode = cmd.ExecuteScalar().ToString().InvariantToUpper();
                 var tokenizer = new MySqlTokenizer( CommandText ) {
-                    AnsiQuotes = sqlMode.InvariantIndexOf( "ANSI_QUOTES") != -1,
-                    BackslashEscapes = sqlMode.InvariantIndexOf( "NO_BACKSLASH_ESCAPES" ) == -1
+                    AnsiQuotes = sqlMode.Contains( "ANSI_QUOTES"),
+                    BackslashEscapes = !sqlMode.Contains( "NO_BACKSLASH_ESCAPES" )
                 };
                 var token = tokenizer.NextToken().InvariantToLower() ;
                 while ( token != null ) {
-                    if ( token.InvariantToUpper() == "VALUES" && !tokenizer.Quoted ) {
+                    if ( token.IgnoreCaseEquals( "VALUES" ) && !tokenizer.Quoted ) {
                         token = tokenizer.NextToken();
                         Debug.Assert( token == "(" );
-
                         // find matching right paren, and ensure that parens 
                         // are balanced.
                         var openParenCount = 1;
@@ -658,14 +651,13 @@ namespace MySql.Data.MySqlClient {
                                     openParenCount--;
                                     break;
                             }
-
                             if ( openParenCount == 0 ) break;
                         }
 
                         if ( token != null ) _batchableCommandText += token;
                         token = tokenizer.NextToken();
                         if ( token != null
-                             && ( token == "," || token.InvariantToUpper() == "ON" ) ) {
+                             && ( token == "," || token.IgnoreCaseEquals( "ON" ) ) ) {
                             _batchableCommandText = null;
                             break;
                         }
@@ -684,12 +676,10 @@ namespace MySql.Data.MySqlClient {
             _connection?.Throw( ex );
             throw ex;
         }
-
         public void Dispose() {
             Dispose( true );
             GC.SuppressFinalize( this );
         }
-
         protected override void Dispose( bool disposing ) {
             if ( _statement?.IsPrepared ?? false ) _statement.CloseStatement();
             base.Dispose( disposing );

@@ -27,88 +27,45 @@ using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlByte : IMySqlValue {
+        private const string MySqlTypeString = "TINYINT";
         private readonly bool _isNull;
-
         public MySqlByte( bool isNull ) : this() {
             _isNull = isNull;
             Value = 0;
             TreatAsBoolean = false;
         }
-
         public MySqlByte( sbyte val ) : this() {
             _isNull = false;
             Value = val;
             TreatAsBoolean = false;
         }
-
         #region IMySqlValue Members
         public bool IsNull => _isNull;
-
         MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.Byte;
-
         object IMySqlValue.Value {
             get {
                 if ( TreatAsBoolean ) return Convert.ToBoolean( Value );
                 return Value;
             }
         }
-
         public sbyte Value { get; set; }
-
         Type IMySqlValue.SystemType => TreatAsBoolean ? Constants.Types.Boolean : typeof( sbyte );
-
-        string IMySqlValue.MySqlTypeName => "TINYINT";
-
+        string IMySqlValue.MySqlTypeName => MySqlTypeString;
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var v = val as sbyte? ?? Convert.ToSByte( val );
             if ( binary ) packet.WriteByte( (byte) v );
             else packet.WriteStringNoNull( v.ToString() );
         }
-
         IMySqlValue IMySqlValue.ReadValue( MySqlPacket packet, long length, bool nullVal ) {
             if ( nullVal ) return new MySqlByte( true );
 
             if ( length == -1 ) return new MySqlByte( (sbyte) packet.ReadByte() );
             return new MySqlByte( SByte.Parse( packet.ReadString( length ), NumberStyles.Any, CultureInfo.InvariantCulture ) ) { TreatAsBoolean = TreatAsBoolean };
         }
-
         void IMySqlValue.SkipValue( MySqlPacket packet ) { packet.ReadByte(); }
         #endregion
-
         internal bool TreatAsBoolean { get; set; }
-
-        internal static void SetDsInfo( MySqlSchemaCollection sc ) {
-            // we use name indexing because this method will only be called
-            // when GetSchema is called for the DataSourceInformation 
-            // collection and then it wil be cached.
-
-
-            var row = sc.AddRow();
-
-
-            row[ "TypeName" ] = "TINYINT";
-            row[ "ProviderDbType" ] = MySqlDbType.Byte;
-            row[ "ColumnSize" ] = 0;
-            row[ "CreateFormat" ] = "TINYINT";
-            row[ "CreateParameters" ] = DBNull.Value;
-            row[ "DataType" ] = "System.SByte";
-            row[ "IsAutoincrementable" ] = true;
-            row[ "IsBestMatch" ] = true;
-            row[ "IsCaseSensitive" ] = false;
-            row[ "IsFixedLength" ] = true;
-            row[ "IsFixedPrecisionScale" ] = true;
-            row[ "IsLong" ] = false;
-            row[ "IsNullable" ] = true;
-            row[ "IsSearchable" ] = true;
-            row[ "IsSearchableWithLike" ] = false;
-            row[ "IsUnsigned" ] = false;
-            row[ "MaximumScale" ] = 0;
-            row[ "MinimumScale" ] = 0;
-            row[ "IsConcurrencyType" ] = DBNull.Value;
-            row[ "IsLiteralSupported" ] = false;
-            row[ "LiteralPrefix" ] = DBNull.Value;
-            row[ "LiteralSuffix" ] = DBNull.Value;
-            row[ "NativeDataType" ] = DBNull.Value;
-        }
+        internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Byte, Constants.Types.SByte, 0, MySqlTypeString, true );
     }
 }

@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
 
@@ -137,20 +138,17 @@ namespace MySql.Data.MySqlClient {
         }
 
         public bool NextRow( CommandBehavior behavior ) {
-            if ( _readDone ) {
-                if ( Cached ) return CachedNextRow( behavior );
-                return false;
-            }
+            if ( _readDone ) return Cached && CachedNextRow( behavior );
 
-            if ( ( behavior & CommandBehavior.SingleRow ) != 0
-                 && _rowIndex == 0 ) return false;
+            if ( ( behavior & CommandBehavior.SingleRow ) != 0 && _rowIndex == 0 )
+                return false;
 
             _isSequential = ( behavior & CommandBehavior.SequentialAccess ) != 0;
             _seqIndex = -1;
 
             // if we are at row index >= 0 then we need to fetch the data row and load it
             if ( _rowIndex >= 0 ) {
-                var fetched = false;
+                bool fetched;
                 try {
                     fetched = GetNextRow();
                 }
@@ -229,12 +227,9 @@ namespace MySql.Data.MySqlClient {
         }
 
         private bool IsOutputParameterResultSet() {
+            const string prefix = "@" + StoredProcedure.ParameterPrefix;
             if ( _driver.HasStatus( ServerStatusFlags.OutputParameters ) ) return true;
-
-            if ( Fields.Length == 0 ) return false;
-
-            for ( var x = 0; x < Fields.Length; x++ ) if ( !Fields[ x ].ColumnName.StartsWith( "@" + StoredProcedure.ParameterPrefix, StringComparison.OrdinalIgnoreCase ) ) return false;
-            return true;
+            return Fields.Length != 0 && Fields.All( t => t.ColumnName.IgnoreCaseStartsWith( prefix ) );
         }
 
         /// <summary>
@@ -264,11 +259,10 @@ namespace MySql.Data.MySqlClient {
 
             // we don't need to worry about caching the following since you won't have output
             // params with TableDirect commands
-            if ( outputParms ) {
-                var rowExists = _driver.FetchDataRow( _statementId, Fields.Length );
-                _rowIndex = 0;
-                if ( rowExists ) throw new MySqlException( Resources.MoreThanOneOPRow );
-            }
+            if ( !outputParms ) return;
+            var rowExists = _driver.FetchDataRow( _statementId, Fields.Length );
+            _rowIndex = 0;
+            if ( rowExists ) throw new MySqlException( Resources.MoreThanOneOPRow );
         }
     }
 }

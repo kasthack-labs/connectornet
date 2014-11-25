@@ -26,6 +26,7 @@ using MySql.Data.MySqlClient;
 
 namespace MySql.Data.Types {
     public struct MySqlDecimal : IMySqlValue {
+        private const string MySqlTypeString = "DECIMAL";
         private readonly string _mValue;
         private readonly bool _isNull;
 
@@ -37,8 +38,8 @@ namespace MySql.Data.Types {
 
         internal MySqlDecimal( string val ) : this() {
             _isNull = false;
-            Precision = Scale = 0;
             _mValue = val;
+            Precision = Scale = 0;
         }
 
         #region IMySqlValue Members
@@ -58,9 +59,9 @@ namespace MySql.Data.Types {
 
         public override string ToString() => _mValue;
 
-        Type IMySqlValue.SystemType => typeof( decimal );
+        Type IMySqlValue.SystemType => Constants.Types.Decimal;
 
-        string IMySqlValue.MySqlTypeName => "DECIMAL";
+        string IMySqlValue.MySqlTypeName => MySqlTypeString;
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var v = val as decimal? ?? Convert.ToDecimal( val );
@@ -75,39 +76,11 @@ namespace MySql.Data.Types {
         }
 
         void IMySqlValue.SkipValue( MySqlPacket packet ) {
-            var len = (int) packet.ReadFieldLength();
-            packet.Position += len;
+            packet.Position += (int) packet.ReadFieldLength();
         }
         #endregion
 
-        internal static void SetDsInfo( MySqlSchemaCollection sc ) {
-            // we use name indexing because this method will only be called
-            // when GetSchema is called for the DataSourceInformation 
-            // collection and then it wil be cached.
-            var row = sc.AddRow();
-            row[ "TypeName" ] = "DECIMAL";
-            row[ "ProviderDbType" ] = MySqlDbType.NewDecimal;
-            row[ "ColumnSize" ] = 0;
-            row[ "CreateFormat" ] = "DECIMAL({0},{1})";
-            row[ "CreateParameters" ] = "precision,scale";
-            row[ "DataType" ] = "System.Decimal";
-            row[ "IsAutoincrementable" ] = false;
-            row[ "IsBestMatch" ] = true;
-            row[ "IsCaseSensitive" ] = false;
-            row[ "IsFixedLength" ] = true;
-            row[ "IsFixedPrecisionScale" ] = true;
-            row[ "IsLong" ] = false;
-            row[ "IsNullable" ] = true;
-            row[ "IsSearchable" ] = true;
-            row[ "IsSearchableWithLike" ] = false;
-            row[ "IsUnsigned" ] = false;
-            row[ "MaximumScale" ] = 0;
-            row[ "MinimumScale" ] = 0;
-            row[ "IsConcurrencyType" ] = DBNull.Value;
-            row[ "IsLiteralSupported" ] = false;
-            row[ "LiteralPrefix" ] = null;
-            row[ "LiteralSuffix" ] = null;
-            row[ "NativeDataType" ] = null;
-        }
+        internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.NewDecimal, Constants.Types.Decimal, 0, "DECIMAL({0},{1})" );
     }
 }

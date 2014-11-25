@@ -23,15 +23,15 @@
 using System;
 using System.Globalization;
 using MySql.Data.MySqlClient;
-using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlDouble : IMySqlValue {
+        private const string MySqlTypeString = "DOUBLE";
         private readonly double _mValue;
         private readonly bool _isNull;
 
         public MySqlDouble( bool isNull ) {
-            this._isNull = isNull;
+            _isNull = isNull;
             _mValue = 0.0;
         }
 
@@ -51,7 +51,7 @@ namespace MySql.Data.Types {
 
         Type IMySqlValue.SystemType => Constants.Types.Double;
 
-        string IMySqlValue.MySqlTypeName => "DOUBLE";
+        string IMySqlValue.MySqlTypeName => MySqlTypeString;
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var v = val as double? ?? Convert.ToDouble( val );
@@ -75,43 +75,15 @@ namespace MySql.Data.Types {
             catch ( OverflowException ) {
                 // MySQL server < 5.5 can return values not compatible with
                 // double.Parse(), i.e out of range for double.
-
                 d = s.InvariantStartsWith( "-" ) ? double.MinValue : double.MaxValue;
             }
             return new MySqlDouble( d );
         }
 
-        void IMySqlValue.SkipValue( MySqlPacket packet ) { packet.Position += 8; }
+        void IMySqlValue.SkipValue( MySqlPacket packet ) => packet.Position += 8;
         #endregion
 
-        internal static void SetDsInfo( MySqlSchemaCollection sc ) {
-            // we use name indexing because this method will only be called
-            // when GetSchema is called for the DataSourceInformation 
-            // collection and then it wil be cached.
-            var row = sc.AddRow();
-            row[ "TypeName" ] = "DOUBLE";
-            row[ "ProviderDbType" ] = MySqlDbType.Double;
-            row[ "ColumnSize" ] = 0;
-            row[ "CreateFormat" ] = "DOUBLE";
-            row[ "CreateParameters" ] = null;
-            row[ "DataType" ] = "System.double";
-            row[ "IsAutoincrementable" ] = false;
-            row[ "IsBestMatch" ] = true;
-            row[ "IsCaseSensitive" ] = false;
-            row[ "IsFixedLength" ] = true;
-            row[ "IsFixedPrecisionScale" ] = true;
-            row[ "IsLong" ] = false;
-            row[ "IsNullable" ] = true;
-            row[ "IsSearchable" ] = true;
-            row[ "IsSearchableWithLike" ] = false;
-            row[ "IsUnsigned" ] = false;
-            row[ "MaximumScale" ] = 0;
-            row[ "MinimumScale" ] = 0;
-            row[ "IsConcurrencyType" ] = DBNull.Value;
-            row[ "IsLiteralSupported" ] = false;
-            row[ "LiteralPrefix" ] = null;
-            row[ "LiteralSuffix" ] = null;
-            row[ "NativeDataType" ] = null;
-        }
+        internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Double, Constants.Types.Double, 0, MySqlTypeString );
     }
 }

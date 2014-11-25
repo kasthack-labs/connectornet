@@ -28,6 +28,7 @@ namespace MySql.Data.Types {
     /// Summary description for MySqlUInt64.
     /// </summary>
     internal struct MySqlBit : IMySqlValue {
+        private const string MySqlTypeString = "BIT";
         private ulong _mValue;
         private bool _isNull;
 
@@ -47,7 +48,7 @@ namespace MySql.Data.Types {
 
         Type IMySqlValue.SystemType => Constants.Types.UInt64;
 
-        string IMySqlValue.MySqlTypeName => "BIT";
+        string IMySqlValue.MySqlTypeName => MySqlTypeString;
 
         public void WriteValue( MySqlPacket packet, bool binary, object value, int length ) {
             var v = value as ulong? ?? Convert.ToUInt64( value );
@@ -58,18 +59,13 @@ namespace MySql.Data.Types {
         public IMySqlValue ReadValue( MySqlPacket packet, long length, bool isNull ) {
             _isNull = isNull;
             if ( isNull ) return this;
-
             if ( length == -1 ) length = packet.ReadFieldLength();
-
             _mValue = ReadAsString ? UInt64.Parse( packet.ReadString( length ) ) : packet.ReadBitValue( (int) length );
             return this;
         }
+        public void SkipValue( MySqlPacket packet ) => packet.Position += (int) packet.ReadFieldLength();
 
-        public void SkipValue( MySqlPacket packet ) {
-            var len = (int) packet.ReadFieldLength();
-            packet.Position += len;
-        }
-
-        internal static void SetDsInfo( MySqlSchemaCollection sc ) => DsInfoHelper.FillDsInfoRow( sc.AddRow(), "BIT", MySqlDbType.Bit, 64, "BIT", Constants.Types.UInt64, false, false );
+        internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Bit, Constants.Types.UInt64, 64, MySqlTypeString, false, false );
     }
 }

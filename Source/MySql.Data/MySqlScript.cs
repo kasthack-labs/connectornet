@@ -29,6 +29,7 @@ using System.Linq;
 using MySql.Data.MySqlClient.Properties;
 using System.Threading.Tasks;
 using System.Threading;
+using MySql.Data.MySqlClient.common;
 
 namespace MySql.Data.MySqlClient {
     /// <summary>
@@ -125,28 +126,25 @@ namespace MySql.Data.MySqlClient {
             Connection.Settings.AllowUserVariables = true;
 
             try {
-                var mode = Connection.Driver.Property( "sql_mode" );
-                mode = mode.InvariantToUpper();
-                var ansiQuotes = mode.InvariantIndexOf( "ANSI_QUOTES" ) != -1;
-                var noBackslashEscapes = mode.InvariantIndexOf( "NO_BACKSLASH_ESCAPES" ) != -1;
-
+                var mode = Connection.Driver.Property( "sql_mode" ).InvariantToUpper();
+                var ansiQuotes = mode.InvariantContains( "ANSI_QUOTES" );
+                var noBackslashEscapes = mode.InvariantContains( "NO_BACKSLASH_ESCAPES" );
                 // first we break the query up into smaller queries
                 var statements = BreakIntoStatements( ansiQuotes, noBackslashEscapes );
-
                 var count = 0;
-                var cmd = new MySqlCommand( null, Connection );
-                foreach ( var statement in statements.Where( statement => !String.IsNullOrEmpty( statement.Text ) ) ) {
-                    cmd.CommandText = statement.Text;
-                    try {
-                        cmd.ExecuteNonQuery();
-                        count++;
-                        OnQueryExecuted( statement );
+                using ( var cmd = new MySqlCommand( null, Connection ) )
+                    foreach ( var statement in statements.Where( statement => !String.IsNullOrWhiteSpace( statement.Text ) ) ) {
+                        cmd.CommandText = statement.Text;
+                        try {
+                            cmd.ExecuteNonQuery();
+                            count++;
+                            OnQueryExecuted( statement );
+                        }
+                        catch ( Exception ex ) {
+                            if ( Error == null ) throw;
+                            if ( !OnScriptError( ex ) ) break;
+                        }
                     }
-                    catch ( Exception ex ) {
-                        if ( Error == null ) throw;
-                        if ( !OnScriptError( ex ) ) break;
-                    }
-                }
                 OnScriptCompleted();
                 return count;
             }
@@ -239,23 +237,25 @@ namespace MySql.Data.MySqlClient {
             if ( startPos >= Query.Length - 1 ) return statements;
             var sqlLeftOver = Query.Substring( startPos ).Trim();
             if ( !String.IsNullOrEmpty( sqlLeftOver ) ) {
-                var statement = new ScriptStatement { Text = sqlLeftOver, Line = FindLineNumber( startPos, lineNumbers ) };
-                statement.Position = startPos - lineNumbers[ statement.Line ];
+                var line = FindLineNumber( startPos, lineNumbers );
+                var statement = new ScriptStatement {
+                    Text = sqlLeftOver,
+                    Line = line,
+                    Position = startPos - lineNumbers[ line ],
+                };
                 statements.Add( statement );
             }
             return statements;
         }
 
         private void AdjustDelimiterEnd( MySqlTokenizer tokenizer ) {
-            if ( tokenizer.StopIndex < Query.Length ) {
-                var pos = tokenizer.StopIndex;
-                var c = Query[ pos ];
-
-                while ( !Char.IsWhiteSpace( c )
-                        && pos < ( Query.Length - 1 ) ) c = Query[ ++pos ];
-                tokenizer.StopIndex = pos;
-                tokenizer.Position = pos;
-            }
+            if ( tokenizer.StopIndex >= Query.Length ) return;
+            var pos = tokenizer.StopIndex;
+            var c = Query[ pos ];
+            while ( !Char.IsWhiteSpace( c ) && pos < ( Query.Length - 1 ) )
+                c = Query[ ++pos ];
+            tokenizer.StopIndex = pos;
+            tokenizer.Position = pos;
         }
 
         #region Async
@@ -267,11 +267,9 @@ namespace MySql.Data.MySqlClient {
 
         public Task<int> ExecuteAsync( CancellationToken cancellationToken ) {
             var result = new TaskCompletionSource<int>();
-            if ( cancellationToken == CancellationToken.None
-                 || !cancellationToken.IsCancellationRequested )
+            if ( cancellationToken.IsntCancelled() )
                 try {
-                    var executeResult = Execute();
-                    result.SetResult( executeResult );
+                    result.SetResult( Execute() );
                 }
                 catch ( Exception ex ) {
                     result.SetException( ex );

@@ -49,6 +49,7 @@ namespace MySql.Data.Types {
         private readonly bool _isNull;
 
         private const int GeometryLength = 25;
+        private const string MySqlTypeString = "GEOMETRY";
 
         public double? XCoordinate => _xValue;
 
@@ -128,13 +129,12 @@ namespace MySql.Data.Types {
 
         public byte[] Value => _valBinary;
 
-        Type IMySqlValue.SystemType => typeof( byte[] );
+        Type IMySqlValue.SystemType => Constants.Types.ByteArray;
 
-        string IMySqlValue.MySqlTypeName => "GEOMETRY";
+        string IMySqlValue.MySqlTypeName => MySqlTypeString;
 
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             byte[] buffToWrite;
-
             try {
                 buffToWrite = ( (MySqlGeometry) val )._valBinary;
             }
@@ -261,7 +261,6 @@ namespace MySql.Data.Types {
                 }
             }
             catch {}
-
             mySqlGeometryValue = new MySqlGeometry( true );
             return false;
         }
@@ -270,7 +269,7 @@ namespace MySql.Data.Types {
         // when GetSchema is called for the DataSourceInformation 
         // collection and then it wil be cached.
         public static void SetDsInfo( MySqlSchemaCollection dsTable ) =>
-            DsInfoHelper.FillDsInfoRow( dsTable.AddRow(), "GEOMETRY", MySqlDbType.Geometry, GeometryLength, "GEOMETRY", typeof(byte[]), false, false );
+            DsInfoHelper.FillRow( dsTable.AddRow(), MySqlTypeString, MySqlDbType.Geometry, Constants.Types.ByteArray, GeometryLength, MySqlTypeString, false, false );
 
         public string GetWkt() => _isNull ? String.Empty : string.Format( CultureInfo.InvariantCulture.NumberFormat, "POINT({0} {1})", _xValue, _yValue );
     }
