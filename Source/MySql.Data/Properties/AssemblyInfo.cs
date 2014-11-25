@@ -82,3 +82,4 @@ using MySql.Data;
 [assembly: InternalsVisibleTo( "MySql.Data.Entity.EF6, PublicKey = " + AssemblyPublicKey.Value )]
 [assembly: InternalsVisibleTo( "MySql.Data.RT.Tests, PublicKey = " + AssemblyPublicKey.Value )]
 [assembly: InternalsVisibleTo( "MySql.Fabric.Plugin, PublicKey = " + AssemblyPublicKey.Value )]
+[assembly: InternalsVisibleTo("MySqlDataTest, PublicKey = " + AssemblyPublicKey.Value)]
