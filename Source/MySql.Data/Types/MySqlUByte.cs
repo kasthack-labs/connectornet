@@ -22,6 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants.Types;
 namespace MySql.Data.Types {
     internal struct MySqlUByte : IMySqlValue {
         private const string MySqlTypeString = "TINYINT";
@@ -40,7 +41,7 @@ namespace MySql.Data.Types {
         MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.UByte;
         object IMySqlValue.Value => _mValue;
         public byte Value => _mValue;
-        Type IMySqlValue.SystemType => Constants.Types.Byte;
+        Type IMySqlValue.SystemType => TByte;
         string IMySqlValue.MySqlTypeName => MySqlTypeString;
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var v = val as byte? ?? Convert.ToByte( val );
@@ -55,6 +56,6 @@ namespace MySql.Data.Types {
         void IMySqlValue.SkipValue( MySqlPacket packet ) { packet.ReadByte(); }
         #endregion
         internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
-            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.UByte, Constants.Types.Byte, isAutoIncrementable: true,  isUnsigned: true  );
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.UByte, TByte, isAutoIncrementable: true,  isUnsigned: true  );
     }
 }

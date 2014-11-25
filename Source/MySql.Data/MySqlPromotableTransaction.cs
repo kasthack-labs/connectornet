@@ -26,8 +26,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Threading;
 using System.Transactions;
-using MySql.Data.Constants;
-using IsolationLevel = System.Transactions.IsolationLevel;
+using MySql.Data.Constants.Types;
 
 namespace MySql.Data.MySqlClient {
     /// <summary>
@@ -42,7 +41,7 @@ namespace MySql.Data.MySqlClient {
         public MySqlTransactionScope( MySqlConnection con, Transaction trans, MySqlTransaction simpleTransaction ) {
             Connection = con;
             BaseTransaction = trans;
-            this.SimpleTransaction = simpleTransaction;
+            SimpleTransaction = simpleTransaction;
         }
 
         public void Rollback( SinglePhaseEnlistment singlePhaseEnlistment ) {
@@ -94,8 +93,8 @@ namespace MySql.Data.MySqlClient {
         public bool InRollback => _scopeStack.Count > 0 && _scopeStack.Peek().RollbackThreadId == Thread.CurrentThread.ManagedThreadId;
 
         void IPromotableSinglePhaseNotification.Initialize() {
-            var valueName = Enum.GetName( Constants.Types.IsolationLevel, _baseTransaction.IsolationLevel );
-            var dataLevel = (System.Data.IsolationLevel)Enum.Parse( Constants.Types.IsolationLevel, valueName );
+            var valueName = Enum.GetName( TIsolationLevel, _baseTransaction.IsolationLevel );
+            var dataLevel = (System.Data.IsolationLevel)Enum.Parse( TIsolationLevel, valueName );
             var simpleTransaction = _connection.BeginTransaction( dataLevel );
 
             // We need to save the per-thread scope stack locally.

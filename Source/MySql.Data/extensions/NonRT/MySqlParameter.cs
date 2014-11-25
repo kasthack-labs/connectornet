@@ -25,7 +25,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
-using MySql.Data.Constants;
+using MySql.Data.Constants.Types;
 using System.ComponentModel.Design.Serialization;
 
 namespace MySql.Data.MySqlClient {
@@ -294,15 +294,15 @@ namespace MySql.Data.MySqlClient {
 
     internal class MySqlParameterConverter : TypeConverter {
         // Always call the base to see if it can perform the conversion.
-        public override bool CanConvertTo( ITypeDescriptorContext context, Type destinationType ) => destinationType == Constants.Types.InstanceDescriptor || base.CanConvertTo( context, destinationType );
+        public override bool CanConvertTo( ITypeDescriptorContext context, Type destinationType ) => destinationType == TInstanceDescriptor || base.CanConvertTo( context, destinationType );
 
         public override object ConvertTo( ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType ) {
-            if ( destinationType != Constants.Types.InstanceDescriptor ) return base.ConvertTo( context, culture, value, destinationType );
+            if ( destinationType != TInstanceDescriptor ) return base.ConvertTo( context, culture, value, destinationType );
             var ci =
                 typeof(MySqlParameter).GetConstructor(
                     new[] {
-                        Constants.Types.String, Constants.Types.MySqlDbType, Constants.Types.Int32, typeof( ParameterDirection ), Constants.Types.Boolean,
-                        Constants.Types.Boolean, Constants.Types.Byte, Constants.Types.String, typeof( DataRowVersion ), Constants.Types.Object
+                        TString, TMySqlDbType, TInt32, typeof( ParameterDirection ), TBoolean,
+                        TBoolean, TByte, TString, typeof( DataRowVersion ), TObject
                     } );
             var p = (MySqlParameter) value;
             return new InstanceDescriptor(

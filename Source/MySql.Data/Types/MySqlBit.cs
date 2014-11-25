@@ -22,7 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
-
+using MySql.Data.Constants.Types;
 namespace MySql.Data.Types {
     /// <summary>
     /// Summary description for MySqlUInt64.
@@ -46,7 +46,7 @@ namespace MySql.Data.Types {
 
         object IMySqlValue.Value => _mValue;
 
-        Type IMySqlValue.SystemType => Constants.Types.UInt64;
+        Type IMySqlValue.SystemType => TUInt64;
 
         string IMySqlValue.MySqlTypeName => MySqlTypeString;
 
@@ -66,6 +66,6 @@ namespace MySql.Data.Types {
         public void SkipValue( MySqlPacket packet ) => packet.Position += (int) packet.ReadFieldLength();
 
         internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
-            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Bit, Constants.Types.UInt64, 64, MySqlTypeString, false, false );
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Bit, TUInt64, 64, MySqlTypeString, false, false );
     }
 }

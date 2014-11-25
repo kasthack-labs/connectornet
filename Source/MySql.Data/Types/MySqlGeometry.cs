@@ -23,7 +23,7 @@
 using System;
 using System.Globalization;
 using MySql.Data.MySqlClient;
-
+using MySql.Data.Constants.Types;
 namespace MySql.Data.Types {
     //Bytes structure is:
     //SRID       [0 - 3]
@@ -129,7 +129,7 @@ namespace MySql.Data.Types {
 
         public byte[] Value => _valBinary;
 
-        Type IMySqlValue.SystemType => Constants.Types.ByteArray;
+        Type IMySqlValue.SystemType => TByteArray;
 
         string IMySqlValue.MySqlTypeName => MySqlTypeString;
 
@@ -269,7 +269,7 @@ namespace MySql.Data.Types {
         // when GetSchema is called for the DataSourceInformation 
         // collection and then it wil be cached.
         public static void SetDsInfo( MySqlSchemaCollection dsTable ) =>
-            DsInfoHelper.FillRow( dsTable.AddRow(), MySqlTypeString, MySqlDbType.Geometry, Constants.Types.ByteArray, GeometryLength, MySqlTypeString, false, false );
+            DsInfoHelper.FillRow( dsTable.AddRow(), MySqlTypeString, MySqlDbType.Geometry, TByteArray, GeometryLength, MySqlTypeString, false, false );
 
         public string GetWkt() => _isNull ? String.Empty : string.Format( CultureInfo.InvariantCulture.NumberFormat, "POINT({0} {1})", _xValue, _yValue );
     }

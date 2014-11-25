@@ -22,7 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
-using MySql.Data.Constants;
+using MySql.Data.Constants.Types;
 
 namespace MySql.Data.Types {
     internal struct MySqlString : IMySqlValue {
@@ -51,7 +51,7 @@ namespace MySql.Data.Types {
 
         public string Value => _mValue;
 
-        Type IMySqlValue.SystemType => Constants.Types.String;
+        Type IMySqlValue.SystemType => TString;
 
         string IMySqlValue.MySqlTypeName => _type == MySqlDbType.Set ? "SET" : _type == MySqlDbType.Enum ? "ENUM" : "VARCHAR";
 

@@ -22,7 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
-
+using MySql.Data.Constants.Types;
 namespace MySql.Data.Types {
     internal struct MySqlBinary : IMySqlValue {
         private readonly MySqlDbType _type;
@@ -50,7 +50,7 @@ namespace MySql.Data.Types {
 
         public byte[] Value => _mValue;
 
-        Type IMySqlValue.SystemType => Constants.Types.ByteArray;
+        Type IMySqlValue.SystemType => TByteArray;
 
         string IMySqlValue.MySqlTypeName {
             get {

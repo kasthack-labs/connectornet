@@ -23,6 +23,7 @@
 using System;
 using System.Globalization;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants.Types;
 
 namespace MySql.Data.Types {
     public struct MySqlDecimal : IMySqlValue {
@@ -59,7 +60,7 @@ namespace MySql.Data.Types {
 
         public override string ToString() => _mValue;
 
-        Type IMySqlValue.SystemType => Constants.Types.Decimal;
+        Type IMySqlValue.SystemType => TDecimal;
 
         string IMySqlValue.MySqlTypeName => MySqlTypeString;
 
@@ -81,6 +82,6 @@ namespace MySql.Data.Types {
         #endregion
 
         internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
-            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.NewDecimal, Constants.Types.Decimal, 0, "DECIMAL({0},{1})" );
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.NewDecimal, TDecimal, 0, "DECIMAL({0},{1})" );
     }
 }

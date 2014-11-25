@@ -25,10 +25,10 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.IO;
 using System.Threading;
-using MySql.Data.Constants;
 using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
 using System.Data;
+using MySql.Data.Constants.Types;
 
 namespace MySql.Data.MySqlClient {
     /// <include file='docs/MySqlDataReader.xml' path='docs/ClassSummary/*'/>
@@ -383,7 +383,7 @@ namespace MySql.Data.MySqlClient {
             // GetValue
             var v = ResultSet.Values[ i ];
             if ( v is MySqlDateTime )
-                return !_connection.Settings.AllowZeroDateTime ? Constants.Types.DateTime : Constants.Types.MySqlDateTime;
+                return !_connection.Settings.AllowZeroDateTime ? TDateTime : TMySqlDateTime;
             return v.SystemType;
         }
 
@@ -419,7 +419,7 @@ namespace MySql.Data.MySqlClient {
         public override Int16 GetInt16( int i ) {
             var v = GetFieldValue( i, true );
             if ( v is MySqlInt16 ) return ( (MySqlInt16)v ).Value;
-            return (short)ChangeType( v, i, Constants.Types.Int16 );
+            return (short)ChangeType( v, i, TInt16 );
         }
 
         /// <include file='docs/MySqlDataReader.xml' path='docs/GetInt32S/*'/>
@@ -429,7 +429,7 @@ namespace MySql.Data.MySqlClient {
         public override int GetInt32( int i ) {
             var v = GetFieldValue( i, true );
             if ( v is MySqlInt32 ) return ( (MySqlInt32)v ).Value;
-            return (int)ChangeType( v, i, Constants.Types.Int32 );
+            return (int)ChangeType( v, i, TInt32 );
         }
 
         /// <include file='docs/MySqlDataReader.xml' path='docs/GetInt64S/*'/>
@@ -440,7 +440,7 @@ namespace MySql.Data.MySqlClient {
             var v = GetFieldValue( i, true );
             if ( v is MySqlInt64 ) return ( (MySqlInt64)v ).Value;
 
-            return (long)ChangeType( v, i, Constants.Types.Int64 );
+            return (long)ChangeType( v, i, TInt64 );
         }
 
         /// <summary>
@@ -525,7 +525,7 @@ namespace MySql.Data.MySqlClient {
             var v = GetFieldValue( column, true );
             if ( v is MySqlUInt16 ) return ( (MySqlUInt16)v ).Value;
 
-            return (ushort)ChangeType( v, column, Constants.Types.Int16 );
+            return (ushort)ChangeType( v, column, TInt16 );
         }
 
         /// <include file='docs/MySqlDataReader.xml' path='docs/GetUInt32/*'/>
@@ -535,7 +535,7 @@ namespace MySql.Data.MySqlClient {
         public UInt32 GetUInt32( int column ) {
             var v = GetFieldValue( column, true );
             if ( v is MySqlUInt32 ) return ( (MySqlUInt32)v ).Value;
-            return (uint)ChangeType( v, column, Constants.Types.UInt32 );
+            return (uint)ChangeType( v, column, TUInt32 );
         }
 
         /// <include file='docs/MySqlDataReader.xml' path='docs/GetUInt64/*'/>
@@ -546,7 +546,7 @@ namespace MySql.Data.MySqlClient {
             var v = GetFieldValue( column, true );
             if ( v is MySqlUInt64 ) return ( (MySqlUInt64)v ).Value;
 
-            return (UInt64)ChangeType( v, column, Constants.Types.UInt64 );
+            return (UInt64)ChangeType( v, column, TUInt64 );
         }
         #endregion
         IDataReader IDataRecord.GetData( int i ) => base.GetData( i );
@@ -592,8 +592,7 @@ namespace MySql.Data.MySqlClient {
                     if ( ResultSet == null ) {
                         ResultSet = Driver.NextResult( Statement.StatementId, false );
                         if ( ResultSet == null ) return false;
-                        if ( ResultSet.IsOutputParameters
-                             && Command.CommandType == CommandType.StoredProcedure ) {
+                        if ( ResultSet.IsOutputParameters && Command.CommandType == CommandType.StoredProcedure ) {
                             var sp = Statement as StoredProcedure;
                             sp.ProcessOutputParameters( this );
                             ResultSet.Close();

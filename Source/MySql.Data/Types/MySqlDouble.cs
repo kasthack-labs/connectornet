@@ -23,6 +23,7 @@
 using System;
 using System.Globalization;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants.Types;
 
 namespace MySql.Data.Types {
     internal struct MySqlDouble : IMySqlValue {
@@ -49,7 +50,7 @@ namespace MySql.Data.Types {
 
         public double Value => _mValue;
 
-        Type IMySqlValue.SystemType => Constants.Types.Double;
+        Type IMySqlValue.SystemType => TDouble;
 
         string IMySqlValue.MySqlTypeName => MySqlTypeString;
 
@@ -84,6 +85,6 @@ namespace MySql.Data.Types {
         #endregion
 
         internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
-            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Double, Constants.Types.Double, 0, MySqlTypeString );
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Double, TDouble, 0, MySqlTypeString );
     }
 }

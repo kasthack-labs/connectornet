@@ -23,7 +23,7 @@
 using System;
 using MySql.Data.MySqlClient;
 using MySql.Data.MySqlClient.Properties;
-
+using MySql.Data.Constants.Types;
 namespace MySql.Data.Types {
     internal struct MySqlGuid : IMySqlValue {
         private const string MySqlTypeString = "GUID";
@@ -63,10 +63,9 @@ namespace MySql.Data.Types {
 
             if ( OldGuids ) WriteOldGuid( packet, guid, binary );
             else {
-                guid.ToString( "D" );
-
-                if ( binary ) packet.WriteLenString( guid.ToString( "D" ) );
-                else packet.WriteStringNoNull( "'" + MySqlHelper.EscapeString( guid.ToString( "D" ) ) + "'" );
+                var value = guid.ToString( "D" );
+                if ( binary ) packet.WriteLenString( value );
+                else packet.WriteStringNoNull( "'" + MySqlHelper.EscapeString( value ) + "'" );
             }
         }
         private void WriteOldGuid( MySqlPacket packet, Guid guid, bool binary ) {
@@ -123,7 +122,7 @@ namespace MySql.Data.Types {
 
         public static void SetDsInfo( MySqlSchemaCollection sc ) {
             var row = sc.AddRow();
-            DsInfoHelper.FillRow( row, MySqlTypeString, MySqlDbType.Guid, Constants.Types.Guid, createFormat: MySqlFormatString );
+            DsInfoHelper.FillRow( row, MySqlTypeString, MySqlDbType.Guid, TGuid, createFormat: MySqlFormatString );
             row[ "IsSearchable" ] = false;
         }
     }

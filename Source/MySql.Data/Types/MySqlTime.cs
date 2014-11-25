@@ -23,7 +23,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
-using MySql.Data.Constants;
+using MySql.Data.Constants.Types;
 
 namespace MySql.Data.Types {
     internal struct MySqlTimeSpan : IMySqlValue {
@@ -43,7 +43,7 @@ namespace MySql.Data.Types {
         MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.Time;
         object IMySqlValue.Value => _mValue;
         public TimeSpan Value => _mValue;
-        Type IMySqlValue.SystemType => Constants.Types.TimeSpan;
+        Type IMySqlValue.SystemType => TTimeSpan;
         string IMySqlValue.MySqlTypeName => MySqlTypeString;
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             if ( !( val is TimeSpan ) ) throw new MySqlException( "Only TimeSpan objects can be serialized by MySqlTimeSpan" );
@@ -114,7 +114,7 @@ namespace MySql.Data.Types {
         void IMySqlValue.SkipValue( MySqlPacket packet ) => packet.Position += packet.ReadByte();
         #endregion
         internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
-            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Time, Constants.Types.TimeSpan );
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Time, TTimeSpan );
         public override string ToString() => String.Format( "{0} {1:00}:{2:00}:{3:00}", _mValue.Days, _mValue.Hours, _mValue.Minutes, _mValue.Seconds );
         private void ParseMySql( string s ) {
             var parts = s.Split( ':', '.' );

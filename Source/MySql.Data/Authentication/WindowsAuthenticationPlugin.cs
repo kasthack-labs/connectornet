@@ -25,7 +25,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
-using MySql.Data.Constants;
+using MySql.Data.Constants.Types;
 using MySql.Data.MySqlClient.Properties;
 
 namespace MySql.Data.MySqlClient.Authentication {
@@ -79,11 +79,10 @@ namespace MySql.Data.MySqlClient.Authentication {
             clientBlob = null;
             continueProcessing = true;
             var clientBufferDesc = new SecBufferDesc( MaxTokenSize );
-            var initLifetime = new SecurityInteger( 0 );
-            var ss = -1;
+            int ss;
             try {
-                var contextAttributes = 0u;
-
+                uint contextAttributes;
+                SecurityInteger initLifetime;
                 if ( serverBlob == null )
                     ss = InitializeSecurityContext(
                         ref _outboundCredentials,
@@ -272,7 +271,7 @@ namespace MySql.Data.MySqlClient.Authentication {
         public void Dispose() {
             if ( pBuffers != IntPtr.Zero ) {
                 Debug.Assert( cBuffers == 1 );
-                var thisSecBuffer = (SecBuffer)Marshal.PtrToStructure( pBuffers, Constants.Types.SecBuffer );
+                var thisSecBuffer = (SecBuffer)Marshal.PtrToStructure( pBuffers, TSecBuffer );
                 thisSecBuffer.Dispose();
                 Marshal.FreeHGlobal( pBuffers );
                 pBuffers = IntPtr.Zero;
@@ -284,7 +283,7 @@ namespace MySql.Data.MySqlClient.Authentication {
 
             if ( pBuffers == IntPtr.Zero ) throw new InvalidOperationException( "Object has already been disposed!!!" );
             Debug.Assert( cBuffers == 1 );
-            var secBuffer = (SecBuffer)Marshal.PtrToStructure( pBuffers, Constants.Types.SecBuffer );
+            var secBuffer = (SecBuffer)Marshal.PtrToStructure( pBuffers, TSecBuffer );
             if ( secBuffer.cbBuffer > 0 ) {
                 buffer = new byte[secBuffer.cbBuffer];
                 Marshal.Copy( secBuffer.pvBuffer, buffer, 0, secBuffer.cbBuffer );

@@ -23,7 +23,7 @@
 using System;
 using System.Globalization;
 using MySql.Data.MySqlClient;
-
+using MySql.Data.Constants.Types;
 namespace MySql.Data.Types {
     internal struct MySqlSingle : IMySqlValue {
         private const string MySqlTypeString = "FLOAT";
@@ -49,7 +49,7 @@ namespace MySql.Data.Types {
 
         public float Value => _mValue;
 
-        Type IMySqlValue.SystemType => Constants.Types.Single;
+        Type IMySqlValue.SystemType => TSingle;
 
         string IMySqlValue.MySqlTypeName => MySqlTypeString;
 
@@ -72,6 +72,6 @@ namespace MySql.Data.Types {
         #endregion
 
         internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
-            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Float, Constants.Types.Single );
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Float, TSingle );
     }
 }

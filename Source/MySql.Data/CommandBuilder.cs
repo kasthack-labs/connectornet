@@ -25,8 +25,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
-using System.Globalization;
 using System.Text;
+using MySql.Data.Constants.ColumnNames.Columns;
 using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
 
@@ -74,23 +74,22 @@ namespace MySql.Data.MySqlClient {
 
             // retrieve the proc definition from the cache.
             var spName = command.CommandText;
-            if ( spName.IndexOf( "." ) == -1 ) spName = command.Connection.Database + "." + spName;
+            if ( !spName.InvariantContains( "." ) ) spName = command.Connection.Database + "." + spName;
 
             try {
                 var entry = command.Connection.ProcedureCache.GetProcedure( command.Connection, spName, null );
                 command.Parameters.Clear();
                 foreach ( var row in entry.Parameters.Rows ) {
-                    var p = new MySqlParameter();
-                    p.ParameterName = String.Format( "@{0}", row[ "PARAMETER_NAME" ] );
-                    if ( row[ "ORDINAL_POSITION" ].Equals( 0 )
+                    var p = new MySqlParameter { ParameterName = String.Format( "@{0}", row[ "PARAMETER_NAME" ] ) };
+                    if ( row[ OrdinalPosition ].Equals( 0 )
                          && p.ParameterName == "@" ) p.ParameterName = "@RETURN_VALUE";
                     p.Direction = GetDirection( row );
-                    var unsigned = StoredProcedure.GetFlags( row[ "DTD_IDENTIFIER" ].ToString() ).IndexOf( "UNSIGNED" ) != -1;
-                    var realAsFloat = entry.Procedure.Rows[ 0 ][ "SQL_MODE" ].ToString().IndexOf( "REAL_AS_FLOAT" ) != -1;
+                    var unsigned = StoredProcedure.GetFlags( row[ "DTD_IDENTIFIER" ].ToString() ).InvariantContains( "UNSIGNED" );
+                    var realAsFloat = entry.Procedure.Rows[ 0 ][ "SQL_MODE" ].ToString().InvariantContains( "REAL_AS_FLOAT" );
                     p.MySqlDbType = MetaData.NameToType( row[ "DATA_TYPE" ].ToString(), unsigned, realAsFloat, command.Connection );
-                    if ( row[ "CHARACTER_MAXIMUM_LENGTH" ] != null ) p.Size = (int) row[ "CHARACTER_MAXIMUM_LENGTH" ];
-                    if ( row[ "NUMERIC_PRECISION" ] != null ) p.Precision = Convert.ToByte( row[ "NUMERIC_PRECISION" ] );
-                    if ( row[ "NUMERIC_SCALE" ] != null ) p.Scale = Convert.ToByte( row[ "NUMERIC_SCALE" ] );
+                    if ( row[ CharacterMaximumLength ] != null ) p.Size = (int) row[ CharacterMaximumLength ];
+                    if ( row[ NumericPrecision ] != null ) p.Precision = Convert.ToByte( row[ NumericPrecision ] );
+                    if ( row[ NumericScale ] != null ) p.Scale = Convert.ToByte( row[ NumericScale ] );
                     if ( p.MySqlDbType == MySqlDbType.Set
                          || p.MySqlDbType == MySqlDbType.Enum ) p.PossibleValues = GetPossibleValues( row );
                     command.Parameters.Add( p );
@@ -132,7 +131,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         private static ParameterDirection GetDirection( MySqlSchemaRow row ) {
-            if ( Convert.ToInt32( row[ "ORDINAL_POSITION" ] ) == 0 )
+            if ( Convert.ToInt32( row[ OrdinalPosition ] ) == 0 )
                 return ParameterDirection.ReturnValue;
             switch ( row[ "PARAMETER_MODE" ].ToString() ) {
                 case "IN":

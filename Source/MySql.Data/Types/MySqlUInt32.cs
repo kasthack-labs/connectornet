@@ -22,8 +22,8 @@
 
 using System;
 using System.Globalization;
+using MySql.Data.Constants.Types;
 using MySql.Data.MySqlClient;
-using MySql.Data.Constants;
 
 namespace MySql.Data.Types {
     internal struct MySqlUInt32 : IMySqlValue {
@@ -37,7 +37,7 @@ namespace MySql.Data.Types {
             _mValue = 0;
         }
 
-        public MySqlUInt32( MySqlDbType type, bool isNull ) : this( type ) { this._isNull = isNull; }
+        public MySqlUInt32( MySqlDbType type, bool isNull ) : this( type ) { _isNull = isNull; }
 
         public MySqlUInt32( MySqlDbType type, uint val ) : this( type ) {
             _isNull = false;
@@ -53,7 +53,7 @@ namespace MySql.Data.Types {
 
         public uint Value => _mValue;
 
-        Type IMySqlValue.SystemType => Constants.Types.UInt32;
+        Type IMySqlValue.SystemType => TUInt32;
 
         string IMySqlValue.MySqlTypeName => _is24Bit ? "MEDIUMINT" : "INT";
 

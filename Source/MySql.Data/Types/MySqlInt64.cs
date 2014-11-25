@@ -22,7 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
-
+using MySql.Data.Constants.Types;
 namespace MySql.Data.Types {
     internal struct MySqlInt64 : IMySqlValue {
         private const string MySqlTypeString = "BIGINT";
@@ -41,7 +41,7 @@ namespace MySql.Data.Types {
         MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.Int64;
         object IMySqlValue.Value => _mValue;
         public long Value => _mValue;
-        Type IMySqlValue.SystemType => Constants.Types.Int64;
+        Type IMySqlValue.SystemType => TInt64;
         string IMySqlValue.MySqlTypeName => MySqlTypeString;
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var v = val as long? ?? Convert.ToInt64( val );
@@ -56,6 +56,6 @@ namespace MySql.Data.Types {
         void IMySqlValue.SkipValue( MySqlPacket packet ) => packet.Position += 8;
         #endregion
         internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
-            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Int64, Constants.Types.Int64, 0, MySqlTypeString, true );
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Int64, TInt64, 0, MySqlTypeString, true );
     }
 }

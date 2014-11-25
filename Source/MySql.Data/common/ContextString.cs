@@ -23,7 +23,7 @@
 using System;
 using System.Collections;
 using System.Text;
-using MySql.Data.Constants;
+using MySql.Data.Constants.Types;
 
 namespace MySql.Data.Common {
     internal class ContextString {
@@ -134,7 +134,7 @@ namespace MySql.Data.Common {
                     sb.Append( c );
                 }
             if ( sb.Length > 0 ) parts.Add( sb.ToString() );
-            return (string[]) parts.ToArray( Constants.Types.String );
+            return (string[]) parts.ToArray( TString );
         }
     }
 }

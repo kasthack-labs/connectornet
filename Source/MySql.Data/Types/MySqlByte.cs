@@ -23,7 +23,7 @@
 using System;
 using System.Globalization;
 using MySql.Data.MySqlClient;
-using MySql.Data.Constants;
+using MySql.Data.Constants.Types;
 
 namespace MySql.Data.Types {
     internal struct MySqlByte : IMySqlValue {
@@ -42,14 +42,9 @@ namespace MySql.Data.Types {
         #region IMySqlValue Members
         public bool IsNull => _isNull;
         MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.Byte;
-        object IMySqlValue.Value {
-            get {
-                if ( TreatAsBoolean ) return Convert.ToBoolean( Value );
-                return Value;
-            }
-        }
+        object IMySqlValue.Value => TreatAsBoolean ? (object) Convert.ToBoolean( Value ) : Value;
         public sbyte Value { get; set; }
-        Type IMySqlValue.SystemType => TreatAsBoolean ? Constants.Types.Boolean : typeof( sbyte );
+        Type IMySqlValue.SystemType => TreatAsBoolean ? TBoolean : TSByte;
         string IMySqlValue.MySqlTypeName => MySqlTypeString;
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var v = val as sbyte? ?? Convert.ToSByte( val );
@@ -66,6 +61,6 @@ namespace MySql.Data.Types {
         #endregion
         internal bool TreatAsBoolean { get; set; }
         internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
-            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Byte, Constants.Types.SByte, 0, MySqlTypeString, true );
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.Byte, TSByte, 0, MySqlTypeString, true );
     }
 }

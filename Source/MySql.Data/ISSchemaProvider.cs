@@ -23,12 +23,10 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
-using System.Globalization;
 using System.Text;
-using MySql.Data.Constants;
 using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
-
+using MySql.Data.Constants.Types;
 namespace MySql.Data.MySqlClient {
     internal class IsSchemaProvider : SchemaProvider {
         public IsSchemaProvider( MySqlConnection connection ) : base( connection ) { }
@@ -177,7 +175,7 @@ namespace MySql.Data.MySqlClient {
 
         private MySqlSchemaCollection GetProceduresWithParameters( string[] restrictions ) {
             var dt = GetProcedures( restrictions );
-            dt.AddColumn( "ParameterList", Constants.Types.String );
+            dt.AddColumn( "ParameterList", TString );
 
             foreach ( var row in dt.Rows ) row[ "ParameterList" ] = GetProcedureParameterLine( row );
             return dt;
@@ -266,21 +264,21 @@ namespace MySql.Data.MySqlClient {
 
         internal MySqlSchemaCollection CreateParametersTable() {
             var dt = new MySqlSchemaCollection( "Procedure Parameters" );
-            dt.AddColumn( "SPECIFIC_CATALOG", Constants.Types.String );
-            dt.AddColumn( "SPECIFIC_SCHEMA", Constants.Types.String );
-            dt.AddColumn( "SPECIFIC_NAME", Constants.Types.String );
-            dt.AddColumn( "ORDINAL_POSITION", Constants.Types.Int32 );
-            dt.AddColumn( "PARAMETER_MODE", Constants.Types.String );
-            dt.AddColumn( "PARAMETER_NAME", Constants.Types.String );
-            dt.AddColumn( "DATA_TYPE", Constants.Types.String );
-            dt.AddColumn( "CHARACTER_MAXIMUM_LENGTH", Constants.Types.Int32 );
-            dt.AddColumn( "CHARACTER_OCTET_LENGTH", Constants.Types.Int32 );
-            dt.AddColumn( "NUMERIC_PRECISION", Constants.Types.Byte );
-            dt.AddColumn( "NUMERIC_SCALE", Constants.Types.Int32 );
-            dt.AddColumn( "CHARACTER_SET_NAME", Constants.Types.String );
-            dt.AddColumn( "COLLATION_NAME", Constants.Types.String );
-            dt.AddColumn( "DTD_IDENTIFIER", Constants.Types.String );
-            dt.AddColumn( "ROUTINE_TYPE", Constants.Types.String );
+            dt.AddColumn( "SPECIFIC_CATALOG", TString );
+            dt.AddColumn( "SPECIFIC_SCHEMA", TString );
+            dt.AddColumn( "SPECIFIC_NAME", TString );
+            dt.AddColumn( "ORDINAL_POSITION", TInt32 );
+            dt.AddColumn( "PARAMETER_MODE", TString );
+            dt.AddColumn( "PARAMETER_NAME", TString );
+            dt.AddColumn( "DATA_TYPE", TString );
+            dt.AddColumn( "CHARACTER_MAXIMUM_LENGTH", TInt32 );
+            dt.AddColumn( "CHARACTER_OCTET_LENGTH", TInt32 );
+            dt.AddColumn( "NUMERIC_PRECISION", TByte );
+            dt.AddColumn( "NUMERIC_SCALE", TInt32 );
+            dt.AddColumn( "CHARACTER_SET_NAME", TString );
+            dt.AddColumn( "COLLATION_NAME", TString );
+            dt.AddColumn( "DTD_IDENTIFIER", TString );
+            dt.AddColumn( "ROUTINE_TYPE", TString );
             return dt;
         }
 

@@ -22,6 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants.Types;
 namespace MySql.Data.Types {
     internal struct MySqlUInt16 : IMySqlValue {
         private const string MySqlTypeString = "SMALLINT";
@@ -39,7 +40,7 @@ namespace MySql.Data.Types {
         MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.UInt16;
         object IMySqlValue.Value => _mValue;
         public ushort Value => _mValue;
-        Type IMySqlValue.SystemType => Constants.Types.UInt16;
+        Type IMySqlValue.SystemType => TUInt16;
         string IMySqlValue.MySqlTypeName => MySqlTypeString;
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var v = val as ushort? ?? Convert.ToUInt16( val );
@@ -52,6 +53,6 @@ namespace MySql.Data.Types {
         }
         void IMySqlValue.SkipValue( MySqlPacket packet ) { packet.Position += 2; }
         internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
-            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.UInt16, Constants.Types.UInt16, 0, "SMALLINT UNSIGNED", true, isUnsigned: true );
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.UInt16, TUInt16, 0, "SMALLINT UNSIGNED", true, isUnsigned: true );
     }
 }

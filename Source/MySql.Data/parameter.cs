@@ -25,9 +25,10 @@ using System.Collections;
 using System.ComponentModel;
 using System.Text;
 using MySql.Data.Types;
-using MySql.Data.Constants;
+using MySql.Data.Constants.Types;
 using System.Data;
 using System.Data.Common;
+
 namespace MySql.Data.MySqlClient {
     /// <summary>
     /// Represents a parameter to a <see cref="MySqlCommand"/>, and optionally, its mapping to <see cref="DataSet"/> columns. This class cannot be inherited.
@@ -252,7 +253,7 @@ namespace MySql.Data.MySqlClient {
                     case TypeCode.DateTime: MySqlDbType = MySqlDbType.DateTime; break;
                     case TypeCode.String: MySqlDbType = MySqlDbType.VarChar; break;
                     case TypeCode.Object: default:
-                        MySqlDbType = t.BaseType == Constants.Types.Enum ? MySqlDbType.Int32 : MySqlDbType.Blob;
+                        MySqlDbType = t.BaseType == TEnum ? MySqlDbType.Int32 : MySqlDbType.Blob;
                         break;
                 }
             }

@@ -26,6 +26,7 @@ using System.Globalization;
 using MySql.Data.Common;
 using MySql.Data.MySqlClient;
 using MySql.Data.MySqlClient.Properties;
+using MySql.Data.Constants.Types;
 
 namespace MySql.Data.Types {
     /// <summary>
@@ -179,7 +180,7 @@ namespace MySql.Data.Types {
         /// </summary>
         public DateTime Value => GetDateTime();
 
-        Type IMySqlValue.SystemType => Constants.Types.DateTime;
+        Type IMySqlValue.SystemType => TDateTime;
 
         string IMySqlValue.MySqlTypeName {
             get {
@@ -368,7 +369,7 @@ namespace MySql.Data.Types {
             };
         internal static void SetDsInfo( MySqlSchemaCollection sc ) {
             foreach ( var typei in DsInfoTypes )
-                DsInfoHelper.FillRow( sc.AddRow(), typei.Item1, typei.Item2, Constants.Types.DateTime, 0, typei.Item1 );
+                DsInfoHelper.FillRow( sc.AddRow(), typei.Item1, typei.Item2, TDateTime, 0, typei.Item1 );
         }
 
         #region IComparable Members

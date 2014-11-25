@@ -131,6 +131,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constants\ColumnNames\ColumnNames.cs" />
     <Compile Include="common\CancellationTokenExt.cs" />
     <Compile Include="Constants\AssemblyPublicKey.cs" />
     <Compile Include="Authentication\AuthenticationManager.cs">
@@ -160,6 +161,7 @@
     <Compile Include="common\Version.cs" />
     <Compile Include="CompressedStream.cs" />
     <Compile Include="Connection.cs" />
+    <Compile Include="Constraints.cs" />
     <Compile Include="Crypt.cs" />
     <Compile Include="dataadapter.cs" />
     <Compile Include="datareader.cs" />

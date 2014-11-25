@@ -24,7 +24,7 @@ using System;
 using System.Collections;
 using System.Data;
 using System.Data.Common;
-using MySql.Data.Constants;
+using MySql.Data.Constants.Types;
 using MySql.Data.Types;
 
 namespace MySql.Data.MySqlClient {
@@ -61,30 +61,30 @@ namespace MySql.Data.MySqlClient {
 
             var dataTableSchema = new DataTable( "SchemaTable" );
 
-            dataTableSchema.Columns.Add( "ColumnName", Constants.Types.String );
-            dataTableSchema.Columns.Add( "ColumnOrdinal", Constants.Types.Int32 );
-            dataTableSchema.Columns.Add( "ColumnSize", Constants.Types.Int32 );
-            dataTableSchema.Columns.Add( "NumericPrecision", Constants.Types.Int32 );
-            dataTableSchema.Columns.Add( "NumericScale", Constants.Types.Int32 );
-            dataTableSchema.Columns.Add( "IsUnique", Constants.Types.Boolean );
-            dataTableSchema.Columns.Add( "IsKey", Constants.Types.Boolean );
+            dataTableSchema.Columns.Add( "ColumnName", TString );
+            dataTableSchema.Columns.Add( "ColumnOrdinal", TInt32 );
+            dataTableSchema.Columns.Add( "ColumnSize", TInt32 );
+            dataTableSchema.Columns.Add( "NumericPrecision", TInt32 );
+            dataTableSchema.Columns.Add( "NumericScale", TInt32 );
+            dataTableSchema.Columns.Add( "IsUnique", TBoolean );
+            dataTableSchema.Columns.Add( "IsKey", TBoolean );
             var dc = dataTableSchema.Columns[ "IsKey" ];
             dc.AllowDBNull = true; // IsKey can have a DBNull
-            dataTableSchema.Columns.Add( "BaseCatalogName", Constants.Types.String );
-            dataTableSchema.Columns.Add( "BaseColumnName", Constants.Types.String );
-            dataTableSchema.Columns.Add( "BaseSchemaName", Constants.Types.String );
-            dataTableSchema.Columns.Add( "BaseTableName", Constants.Types.String );
-            dataTableSchema.Columns.Add( "DataType", Constants.Types.Type );
-            dataTableSchema.Columns.Add( "AllowDBNull", Constants.Types.Boolean );
-            dataTableSchema.Columns.Add( "ProviderType", Constants.Types.Int32 );
-            dataTableSchema.Columns.Add( "IsAliased", Constants.Types.Boolean );
-            dataTableSchema.Columns.Add( "IsExpression", Constants.Types.Boolean );
-            dataTableSchema.Columns.Add( "IsIdentity", Constants.Types.Boolean );
-            dataTableSchema.Columns.Add( "IsAutoIncrement", Constants.Types.Boolean );
-            dataTableSchema.Columns.Add( "IsRowVersion", Constants.Types.Boolean );
-            dataTableSchema.Columns.Add( "IsHidden", Constants.Types.Boolean );
-            dataTableSchema.Columns.Add( "IsLong", Constants.Types.Boolean );
-            dataTableSchema.Columns.Add( "IsReadOnly", Constants.Types.Boolean );
+            dataTableSchema.Columns.Add( "BaseCatalogName", TString );
+            dataTableSchema.Columns.Add( "BaseColumnName", TString );
+            dataTableSchema.Columns.Add( "BaseSchemaName", TString );
+            dataTableSchema.Columns.Add( "BaseTableName", TString );
+            dataTableSchema.Columns.Add( "DataType", TType );
+            dataTableSchema.Columns.Add( "AllowDBNull", TBoolean );
+            dataTableSchema.Columns.Add( "ProviderType", TInt32 );
+            dataTableSchema.Columns.Add( "IsAliased", TBoolean );
+            dataTableSchema.Columns.Add( "IsExpression", TBoolean );
+            dataTableSchema.Columns.Add( "IsIdentity", TBoolean );
+            dataTableSchema.Columns.Add( "IsAutoIncrement", TBoolean );
+            dataTableSchema.Columns.Add( "IsRowVersion", TBoolean );
+            dataTableSchema.Columns.Add( "IsHidden", TBoolean );
+            dataTableSchema.Columns.Add( "IsLong", TBoolean );
+            dataTableSchema.Columns.Add( "IsReadOnly", TBoolean );
 
             var ord = 1;
             for ( var i = 0; i < FieldCount; i++ ) {

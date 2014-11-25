@@ -22,6 +22,7 @@
 
 using System;
 using MySql.Data.MySqlClient;
+using MySql.Data.Constants.Types;
 namespace MySql.Data.Types {
     internal struct MySqlUInt64 : IMySqlValue {
         private const string MySqlTypeString = "BIGINT";
@@ -40,7 +41,7 @@ namespace MySql.Data.Types {
         MySqlDbType IMySqlValue.MySqlDbType => MySqlDbType.UInt64;
         object IMySqlValue.Value => _mValue;
         public ulong Value => _mValue;
-        Type IMySqlValue.SystemType => Constants.Types.UInt64;
+        Type IMySqlValue.SystemType => TUInt64;
         string IMySqlValue.MySqlTypeName => MySqlTypeString;
         void IMySqlValue.WriteValue( MySqlPacket packet, bool binary, object val, int length ) {
             var v = val as ulong? ?? Convert.ToUInt64( val );
@@ -55,7 +56,7 @@ namespace MySql.Data.Types {
         void IMySqlValue.SkipValue( MySqlPacket packet ) => packet.Position += 8;
         #endregion
         internal static void SetDsInfo( MySqlSchemaCollection sc ) =>
-            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.UInt64, Constants.Types.UInt64,
+            DsInfoHelper.FillRow( sc.AddRow(), MySqlTypeString, MySqlDbType.UInt64, TUInt64,
                 createFormat: "BIGINT UNSIGNED", isAutoIncrementable: true, isUnsigned: true);
     }
 }
