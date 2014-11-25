@@ -45,7 +45,7 @@ namespace MySql.Data.Types {
 
         short IConvertible.ToInt16( IFormatProvider provider ) => 0;
 
-        string IConvertible.ToString( IFormatProvider provider ) => null;
+        string IConvertible.ToString( IFormatProvider provider ) => null;//bug?
 
         byte IConvertible.ToByte( IFormatProvider provider ) => 0;
 

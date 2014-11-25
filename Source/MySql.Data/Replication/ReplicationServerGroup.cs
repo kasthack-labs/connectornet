@@ -139,8 +139,6 @@ namespace MySql.Data.MySqlClient.Replication {
         /// </summary>
         /// <param name="server">The failed server</param>
         /// <param name="exception">Exception that caused the failover</param>
-        protected internal virtual void HandleFailover( ReplicationServer server, Exception exception ) {
-            HandleFailover( server );
-        }
+        protected internal virtual void HandleFailover( ReplicationServer server, Exception exception ) => HandleFailover( server );
     }
 }

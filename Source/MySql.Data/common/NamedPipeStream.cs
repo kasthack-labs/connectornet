@@ -67,13 +67,14 @@ namespace MySql.Data.Common {
 
                 if ( nativeHandle != IntPtr.Zero ) break;
 
-                if ( Marshal.GetLastWin32Error() != ErrorPipeBusy ) throw new Win32Exception( Marshal.GetLastWin32Error(), "Error opening pipe" );
+                if ( Marshal.GetLastWin32Error() != ErrorPipeBusy )
+                    throw new Win32Exception( Marshal.GetLastWin32Error(), "Error opening pipe" );
                 var sw = LowResolutionStopwatch.StartNew();
                 var success = NativeMethods.WaitNamedPipe( path, timeout );
                 sw.Stop();
                 if ( !success ) {
-                    if ( timeout < sw.ElapsedMilliseconds
-                         || Marshal.GetLastWin32Error() == ErrorSemTimeout ) throw new TimeoutException( "Timeout waiting for named pipe" );
+                    if ( timeout < sw.ElapsedMilliseconds || Marshal.GetLastWin32Error() == ErrorSemTimeout )
+                        throw new TimeoutException( "Timeout waiting for named pipe" );
                     throw new Win32Exception( Marshal.GetLastWin32Error(), "Error waiting for pipe" );
                 }
                 timeout -= (uint) sw.ElapsedMilliseconds;

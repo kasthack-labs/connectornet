@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using MySql.Data.MySqlClient;
 using MySql.Data.MySqlClient.Properties;
@@ -63,18 +64,8 @@ namespace MySql.Data.Common {
         }
 
         private void DetermineStatementType( List<Token> tok ) {
-            foreach ( var t in tok )
-                if ( t.Type == TokenType.Keyword ) {
-                    QueryType = t.Text.ToUpperInvariant();
-                    //string s = t.Text.ToLowerInvariant();
-                    //if (s == "select")
-                    //    queryType = "SELECT";
-                    //else if (s == "update" || s == "insert")
-                    //    queryType = "UPSERT";
-                    //else
-                    //    queryType = "OTHER";
-                    break;
-                }
+            var enumerable = tok.FirstOrDefault(t => t.Type == TokenType.Keyword);
+            if (enumerable!=null) QueryType = enumerable.Text.ToUpperInvariant();
         }
 
         /// <summary>
@@ -97,12 +88,8 @@ namespace MySql.Data.Common {
 
         private void CollapseWhitespace( List<Token> tok ) {
             Token lastToken = null;
-
             foreach ( var t in tok ) {
-                if ( t.Output
-                     && t.Type == TokenType.Whitespace
-                     && lastToken != null
-                     && lastToken.Type == TokenType.Whitespace ) t.Output = false;
+                if ( t.Output && t.Type == TokenType.Whitespace && lastToken?.Type == TokenType.Whitespace ) t.Output = false;
                 if ( t.Output ) lastToken = t;
             }
         }
@@ -213,27 +200,17 @@ namespace MySql.Data.Common {
 
         private bool LetterStartsComment( char c ) => c == '#' || c == '/' || c == '-';
 
-        private bool IsSpecialCharacter( char c ) {
-            if ( Char.IsLetterOrDigit( c )
-                 || c == '$'
-                 || c == '_'
-                 || c == '.' ) return false;
-            return true;
-        }
+        private bool IsSpecialCharacter( char c ) => !Char.IsLetterOrDigit( c ) && c != '$' && c != '_' && c != '.';
 
         private bool ConsumeComment() {
             var c = _fullSql[ _pos ];
             // make sure the comment starts correctly
-            if ( c == '/'
-                 && ( ( _pos + 1 ) >= _fullSql.Length || _fullSql[ _pos + 1 ] != '*' ) ) return false;
-            if ( c == '-'
-                 && ( ( _pos + 2 ) >= _fullSql.Length || _fullSql[ _pos + 1 ] != '-' || _fullSql[ _pos + 2 ] != ' ' ) ) return false;
+            if ( c == '/' && ( ( _pos + 1 ) >= _fullSql.Length || _fullSql[ _pos + 1 ] != '*' ) ) return false;
+            if ( c == '-' && ( ( _pos + 2 ) >= _fullSql.Length || _fullSql[ _pos + 1 ] != '-' || _fullSql[ _pos + 2 ] != ' ' ) ) return false;
 
             var endingPattern = "\n";
             if ( c == '/' ) endingPattern = "*/";
-
             var startingIndex = _pos;
-
             var index = _fullSql.IndexOf(endingPattern, _pos, StringComparison.Ordinal);
             if ( index == -1 ) index = _fullSql.Length - 1;
             else index += endingPattern.Length;
@@ -243,10 +220,7 @@ namespace MySql.Data.Common {
             return true;
         }
 
-        private void ConsumeSymbol() {
-            var c = _fullSql[ _pos++ ];
-            _tokens.Add( new Token( TokenType.Symbol, c.ToString() ) );
-        }
+        private void ConsumeSymbol() => _tokens.Add( new Token( TokenType.Symbol, _fullSql[ _pos++ ].ToString() ) );
 
         private void ConsumeQuotedToken( char c ) {
             var escaped = false;

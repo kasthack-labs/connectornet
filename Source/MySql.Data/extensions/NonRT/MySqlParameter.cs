@@ -27,6 +27,7 @@ using System.Data.Common;
 using System.Globalization;
 using MySql.Data.Constants.Types;
 using System.ComponentModel.Design.Serialization;
+using System.Reflection;
 
 namespace MySql.Data.MySqlClient {
     [TypeConverter( typeof( MySqlParameterConverter ) )]
@@ -108,9 +109,7 @@ namespace MySql.Data.MySqlClient {
         /// <summary>
         /// Resets the <b>DbType</b> property to its original settings. 
         /// </summary>
-        public override void ResetDbType() {
-            _inferType = true;
-        }
+        public override void ResetDbType() => _inferType = true;
 
         /// <summary>
         /// Sets or gets a value which indicates whether the source column is nullable. 
@@ -273,10 +272,6 @@ namespace MySql.Data.MySqlClient {
                 case DbType.Currency:
                     _mySqlDbType = MySqlDbType.Decimal;
                     break;
-
-                case DbType.Object:
-                case DbType.VarNumeric:
-                case DbType.Binary:
                 default:
                     _mySqlDbType = MySqlDbType.Blob;
                     break;
@@ -298,15 +293,13 @@ namespace MySql.Data.MySqlClient {
 
         public override object ConvertTo( ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType ) {
             if ( destinationType != TInstanceDescriptor ) return base.ConvertTo( context, culture, value, destinationType );
-            var ci =
-                typeof(MySqlParameter).GetConstructor(
-                    new[] {
-                        TString, TMySqlDbType, TInt32, typeof( ParameterDirection ), TBoolean,
-                        TBoolean, TByte, TString, typeof( DataRowVersion ), TObject
-                    } );
             var p = (MySqlParameter) value;
             return new InstanceDescriptor(
-                ci,
+                typeof(MySqlParameter).GetConstructor(
+                    new[] {
+                        TString, TMySqlDbType, TInt32, typeof( ParameterDirection ), TBoolean,//todo:types -> TypeConstants
+                        TBoolean, TByte, TString, typeof( DataRowVersion ), TObject
+                    } ),
                 new[] {
                     p.ParameterName, p.DbType, p.Size, p.Direction, p.IsNullable, p.Precision, p.Scale, p.SourceColumn, p.SourceVersion,
                     p.Value

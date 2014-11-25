@@ -39,6 +39,9 @@ using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
 using MySql.Data.Constants.Types;
 using MySql.Data.Constants.ColumnNames.DsInfo;
+using MySql.Data.Constants.ColumnNames.DataSourceInformation;
+using GroupByBehavior = System.Data.Common.GroupByBehavior;
+using IdentifierCase = System.Data.Common.IdentifierCase;
 
 namespace MySql.Data.MySqlClient {
     internal class SchemaProvider {
@@ -604,46 +607,45 @@ namespace MySql.Data.MySqlClient {
 
         private MySqlSchemaCollection GetDataSourceInformation() {
             var dt = new MySqlSchemaCollection( "DataSourceInformation" );
-            dt.AddColumn( "CompositeIdentifierSeparatorPattern", TString );
-            dt.AddColumn( "DataSourceProductName", TString );
-            dt.AddColumn( "DataSourceProductVersion", TString );
-            dt.AddColumn( "DataSourceProductVersionNormalized", TString );
-            dt.AddColumn( "GroupByBehavior", TGroupByBehavior );
-            dt.AddColumn( "IdentifierPattern", TString );
-            dt.AddColumn( "IdentifierCase", TIdentifierCase );
-            dt.AddColumn( "OrderByColumnsInSelect", TBoolean );
-            dt.AddColumn( "ParameterMarkerFormat", TString );
-            dt.AddColumn( "ParameterMarkerPattern", TString );
-            dt.AddColumn( "ParameterNameMaxLength", TInt32 );
-            dt.AddColumn( "ParameterNamePattern", TString );
-            dt.AddColumn( "QuotedIdentifierPattern", TString );
-            dt.AddColumn( "QuotedIdentifierCase", TIdentifierCase );
-            dt.AddColumn( "StatementSeparatorPattern", TString );
-            dt.AddColumn( "StringLiteralPattern", TString );
-            dt.AddColumn( "SupportedJoinOperators", TSupportedJoinOperators );
+            dt.AddColumn( CompositeIdentifierSeparatorPattern, TString );
+            dt.AddColumn( DataSourceProductName, TString );
+            dt.AddColumn( DataSourceProductVersion, TString );
+            dt.AddColumn( DataSourceProductVersionNormalized, TString );
+            dt.AddColumn( DataSourceInformation.GroupByBehavior, TGroupByBehavior );
+            dt.AddColumn( IdentifierPattern, TString );
+            dt.AddColumn( DataSourceInformation.IdentifierCase, TIdentifierCase );
+            dt.AddColumn( OrderByColumnsInSelect, TBoolean );
+            dt.AddColumn( ParameterMarkerFormat, TString );
+            dt.AddColumn( ParameterMarkerPattern, TString );
+            dt.AddColumn( ParameterNameMaxLength, TInt32 );
+            dt.AddColumn( ParameterNamePattern, TString );
+            dt.AddColumn( QuotedIdentifierPattern, TString );
+            dt.AddColumn( QuotedIdentifierCase, TIdentifierCase );
+            dt.AddColumn( StatementSeparatorPattern, TString );
+            dt.AddColumn( StringLiteralPattern, TString );
+            dt.AddColumn( DataSourceInformation.SupportedJoinOperators, TSupportedJoinOperators );
 
             var v = Connection.Driver.Version;
             var ver = String.Format( "{0:0}.{1:0}.{2:0}", v.Major, v.Minor, v.Build );
 
             var row = dt.AddRow();
-            row[ "CompositeIdentifierSeparatorPattern" ] = "\\.";
-            row[ "DataSourceProductName" ] = "MySQL";
-            row[ "DataSourceProductVersion" ] = Connection.ServerVersion;
-            row[ "DataSourceProductVersionNormalized" ] = ver;
-            row[ "GroupByBehavior" ] = GroupByBehavior.Unrelated;
-            row[ "IdentifierPattern" ] =
-                @"(^\`\p{Lo}\p{Lu}\p{Ll}_@#][\p{Lo}\p{Lu}\p{Ll}\p{Nd}@$#_]*$)|(^\`[^\`\0]|\`\`+\`$)|(^\"" + [^\""\0]|\""\""+\""$)";
-            row[ "IdentifierCase" ] = IdentifierCase.Insensitive;
-            row[ "OrderByColumnsInSelect" ] = false;
-            row[ "ParameterMarkerFormat" ] = "{0}";
-            row[ "ParameterMarkerPattern" ] = "(@[A-Za-z0-9_$#]*)";
-            row[ "ParameterNameMaxLength" ] = 128;
-            row[ "ParameterNamePattern" ] = @"^[\p{Lo}\p{Lu}\p{Ll}\p{Lm}_@#][\p{Lo}\p{Lu}\p{Ll}\p{Lm}\p{Nd}\uff3f_@#\$]*(?=\s+|$)";
-            row[ "QuotedIdentifierPattern" ] = @"(([^\`]|\`\`)*)";
-            row[ "QuotedIdentifierCase" ] = IdentifierCase.Sensitive;
-            row[ "StatementSeparatorPattern" ] = ";";
-            row[ "StringLiteralPattern" ] = "'(([^']|'')*)'";
-            row[ "SupportedJoinOperators" ] = 15;
+            row[ CompositeIdentifierSeparatorPattern ] = "\\.";
+            row[ DataSourceProductName ] = "MySQL";
+            row[ DataSourceProductVersion ] = Connection.ServerVersion;
+            row[ DataSourceProductVersionNormalized ] = ver;
+            row[ DataSourceInformation.GroupByBehavior ] = GroupByBehavior.Unrelated;
+            row[ IdentifierPattern ] = @"(^\`\p{Lo}\p{Lu}\p{Ll}_@#][\p{Lo}\p{Lu}\p{Ll}\p{Nd}@$#_]*$)|(^\`[^\`\0]|\`\`+\`$)|(^\"" + [^\""\0]|\""\""+\""$)";
+            row[ DataSourceInformation.IdentifierCase ] = IdentifierCase.Insensitive;
+            row[ OrderByColumnsInSelect ] = false;
+            row[ ParameterMarkerFormat ] = "{0}";
+            row[ ParameterMarkerPattern ] = "(@[A-Za-z0-9_$#]*)";
+            row[ ParameterNameMaxLength ] = 128;
+            row[ ParameterNamePattern ] = @"^[\p{Lo}\p{Lu}\p{Ll}\p{Lm}_@#][\p{Lo}\p{Lu}\p{Ll}\p{Lm}\p{Nd}\uff3f_@#\$]*(?=\s+|$)";
+            row[ QuotedIdentifierPattern ] = @"(([^\`]|\`\`)*)";
+            row[ QuotedIdentifierCase ] = IdentifierCase.Sensitive;
+            row[ StatementSeparatorPattern ] = ";";
+            row[ StringLiteralPattern ] = "'(([^']|'')*)'";
+            row[ DataSourceInformation.SupportedJoinOperators ] = 15;
             dt.Rows.Add( row );
 
             return dt;
@@ -795,8 +797,8 @@ namespace MySql.Data.MySqlClient {
 
         public virtual MySqlSchemaCollection GetUdf( string[] restrictions ) {
             var sql = "SELECT name,ret,dl FROM mysql.func";
-            if ( restrictions?.Length >= 1
-                 && !String.IsNullOrEmpty( restrictions[ 0 ] ) ) sql += String.Format( " WHERE name LIKE '{0}'", restrictions[ 0 ] );
+            if ( restrictions?.Length >= 1 && !String.IsNullOrEmpty( restrictions[ 0 ] ) )
+                sql += String.Format( " WHERE name LIKE '{0}'", restrictions[ 0 ] );
 
             var dt = new MySqlSchemaCollection( "User-defined Functions" );
             dt.AddColumn( "NAME", TString );

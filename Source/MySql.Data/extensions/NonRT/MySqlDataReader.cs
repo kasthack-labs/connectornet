@@ -26,7 +26,7 @@ using System.Data;
 using System.Data.Common;
 using MySql.Data.Constants.Types;
 using MySql.Data.Types;
-
+using MySql.Data.Constants.ColumnNames.SchemaTable;
 namespace MySql.Data.MySqlClient {
     public sealed partial class MySqlDataReader : DbDataReader, IDataReader {
         /// <summary>
@@ -38,8 +38,8 @@ namespace MySql.Data.MySqlClient {
         public MySqlGeometry GetMySqlGeometry( int i ) {
             try {
                 var v = GetFieldValue( i, false );
-                if ( v is MySqlGeometry
-                     || v is MySqlBinary ) return new MySqlGeometry( MySqlDbType.Geometry, (Byte[]) v.Value );
+                if ( v is MySqlGeometry || v is MySqlBinary )
+                    return new MySqlGeometry( MySqlDbType.Geometry, (byte[]) v.Value );
             }
             catch {
                 Throw( new Exception( "Can't get MySqlGeometry from value" ) );
@@ -60,56 +60,55 @@ namespace MySql.Data.MySqlClient {
             if ( FieldCount == 0 ) return null;
 
             var dataTableSchema = new DataTable( "SchemaTable" );
-
-            dataTableSchema.Columns.Add( "ColumnName", TString );
-            dataTableSchema.Columns.Add( "ColumnOrdinal", TInt32 );
-            dataTableSchema.Columns.Add( "ColumnSize", TInt32 );
-            dataTableSchema.Columns.Add( "NumericPrecision", TInt32 );
-            dataTableSchema.Columns.Add( "NumericScale", TInt32 );
-            dataTableSchema.Columns.Add( "IsUnique", TBoolean );
-            dataTableSchema.Columns.Add( "IsKey", TBoolean );
-            var dc = dataTableSchema.Columns[ "IsKey" ];
-            dc.AllowDBNull = true; // IsKey can have a DBNull
-            dataTableSchema.Columns.Add( "BaseCatalogName", TString );
-            dataTableSchema.Columns.Add( "BaseColumnName", TString );
-            dataTableSchema.Columns.Add( "BaseSchemaName", TString );
-            dataTableSchema.Columns.Add( "BaseTableName", TString );
-            dataTableSchema.Columns.Add( "DataType", TType );
-            dataTableSchema.Columns.Add( "AllowDBNull", TBoolean );
-            dataTableSchema.Columns.Add( "ProviderType", TInt32 );
-            dataTableSchema.Columns.Add( "IsAliased", TBoolean );
-            dataTableSchema.Columns.Add( "IsExpression", TBoolean );
-            dataTableSchema.Columns.Add( "IsIdentity", TBoolean );
-            dataTableSchema.Columns.Add( "IsAutoIncrement", TBoolean );
-            dataTableSchema.Columns.Add( "IsRowVersion", TBoolean );
-            dataTableSchema.Columns.Add( "IsHidden", TBoolean );
-            dataTableSchema.Columns.Add( "IsLong", TBoolean );
-            dataTableSchema.Columns.Add( "IsReadOnly", TBoolean );
+            var cols = dataTableSchema.Columns;
+            cols.Add( ColumnName, TString );
+            cols.Add( ColumnOrdinal, TInt32 );
+            cols.Add( ColumnSize, TInt32 );
+            cols.Add( NumericPrecision, TInt32 );
+            cols.Add( NumericScale, TInt32 );
+            cols.Add( IsUnique, TBoolean );
+            cols.Add( IsKey, TBoolean );
+            cols[ IsKey ].AllowDBNull = true; // IsKey can have a DBNull
+            cols.Add( BaseCatalogName, TString );
+            cols.Add( BaseColumnName, TString );
+            cols.Add( BaseSchemaName, TString );
+            cols.Add( BaseTableName, TString );
+            cols.Add( DataType, TType );
+            cols.Add( AllowDBNull, TBoolean );
+            cols.Add( ProviderType, TInt32 );
+            cols.Add( IsAliased, TBoolean );
+            cols.Add( IsExpression, TBoolean );
+            cols.Add( IsIdentity, TBoolean );
+            cols.Add( IsAutoIncrement, TBoolean );
+            cols.Add( IsRowVersion, TBoolean );
+            cols.Add( IsHidden, TBoolean );
+            cols.Add( IsLong, TBoolean );
+            cols.Add( IsReadOnly, TBoolean );
 
             var ord = 1;
             for ( var i = 0; i < FieldCount; i++ ) {
                 var f = ResultSet.Fields[ i ];
                 var r = dataTableSchema.NewRow();
-                r[ "ColumnName" ] = f.ColumnName;
-                r[ "ColumnOrdinal" ] = ord++;
-                r[ "ColumnSize" ] = f.IsTextField ? f.ColumnLength / f.MaxLength : f.ColumnLength;
-                var prec = f.Precision;
-                var pscale = f.Scale;
-                if ( prec != -1 ) r[ "NumericPrecision" ] = (short) prec;
-                if ( pscale != -1 ) r[ "NumericScale" ] = (short) pscale;
-                r[ "DataType" ] = GetFieldType( i );
-                r[ "ProviderType" ] = (int) f.Type;
-                r[ "IsLong" ] = f.IsBlob && f.ColumnLength > 255;
-                r[ "AllowDBNull" ] = f.AllowsNull;
-                r[ "IsReadOnly" ] = false;
-                r[ "IsRowVersion" ] = false;
-                r[ "IsUnique" ] = false;
-                r[ "IsKey" ] = f.IsPrimaryKey;
-                r[ "IsAutoIncrement" ] = f.IsAutoIncrement;
-                r[ "BaseSchemaName" ] = f.DatabaseName;
-                r[ "BaseCatalogName" ] = null;
-                r[ "BaseTableName" ] = f.RealTableName;
-                r[ "BaseColumnName" ] = f.OriginalColumnName;
+                r[ ColumnName ] = f.ColumnName;
+                r[ ColumnOrdinal ] = ord++;
+                r[ ColumnSize ] = f.IsTextField ? f.ColumnLength / f.MaxLength : f.ColumnLength;
+                short prec = f.Precision;
+                if ( prec != -1 ) r[ NumericPrecision ] = prec;
+                short pscale = f.Scale;
+                if ( pscale != -1 ) r[ NumericScale ] = pscale;
+                r[ DataType ] = GetFieldType( i );
+                r[ ProviderType ] = (int)f.Type;
+                r[ IsLong ] = f.IsBlob && f.ColumnLength > 255;
+                r[ AllowDBNull ] = f.AllowsNull;
+                r[ IsReadOnly ] = false;
+                r[ IsRowVersion ] = false;
+                r[ IsUnique ] = false;
+                r[ IsKey ] = f.IsPrimaryKey;
+                r[ IsAutoIncrement ] = f.IsAutoIncrement;
+                r[ BaseSchemaName ] = f.DatabaseName;
+                r[ BaseCatalogName ] = null;
+                r[ BaseTableName ] = f.RealTableName;
+                r[ BaseColumnName ] = f.OriginalColumnName;
 
                 dataTableSchema.Rows.Add( r );
             }

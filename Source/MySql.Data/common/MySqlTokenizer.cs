@@ -88,12 +88,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         public static bool IsParameter( string s ) {
-            if ( String.IsNullOrEmpty( s ) ) return false;
-            if ( s[ 0 ] == '?' ) return true;
-            if ( s.Length > 1
-                 && s[ 0 ] == '@'
-                 && s[ 1 ] != '@' ) return true;
-            return false;
+            return !String.IsNullOrEmpty( s ) && ( s[ 0 ] == '?' || s.Length > 1 && s[ 0 ] == '@' && s[ 1 ] != '@' );
         }
 
         public string NextParameter() {
@@ -115,13 +110,8 @@ namespace MySql.Data.MySqlClient {
                 var c = _sql[ Position++ ];
                 if ( Char.IsWhiteSpace( c ) ) continue;
 
-                if ( c == '`'
-                     || c == '\''
-                     || c == '"'
-                     || ( c == '[' && SqlServerMode ) ) ReadQuotedToken( c );
-                else if ( c == '#'
-                          || c == '-'
-                          || c == '/' ) {
+                if ( c == '`' || c == '\'' || c == '"' || ( c == '[' && SqlServerMode ) ) ReadQuotedToken( c );
+                else if ( c == '#' || c == '-' || c == '/' ) {
                     if ( !ReadComment( c ) ) ReadSpecialToken();
                 }
                 else ReadUnquotedToken();
@@ -156,8 +146,7 @@ namespace MySql.Data.MySqlClient {
 
             var startingIndex = Position - 1;
 
-            int index;
-            index = _sql.IndexOf( endingPattern, Position );
+            var index = _sql.IndexOf(endingPattern, Position, StringComparison.Ordinal);
             if ( endingPattern == "\n" ) index = _sql.IndexOf( '\n', Position );
             if ( index == -1 ) index = _sql.Length - 1;
             else index += endingPattern.Length;
@@ -235,11 +224,7 @@ namespace MySql.Data.MySqlClient {
         private bool IsParameterMarker( char c ) => c == '@' || c == '?';
 
         private bool IsSpecialCharacter( char c ) {
-            if ( Char.IsLetterOrDigit( c )
-                 || c == '$'
-                 || c == '_'
-                 || c == '.' ) return false;
-            return !IsParameterMarker( c );
+            return !Char.IsLetterOrDigit( c ) && c != '$' && c != '_' && c != '.' && !IsParameterMarker( c );
         }
     }
 }

@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MySql.Data.MySqlClient.Properties;
 
 namespace MySql.Data.MySqlClient {
@@ -53,32 +54,29 @@ namespace MySql.Data.MySqlClient {
         private readonly List<BaseExceptionInterceptor> _interceptors = new List<BaseExceptionInterceptor>();
 
         public ExceptionInterceptor( MySqlConnection connection ) {
-            this.Connection = connection;
-
+            Connection = connection;
             LoadInterceptors( connection.Settings.ExceptionInterceptors );
-
             // we always have the standard interceptor
             _interceptors.Add( new StandardExceptionInterceptor() );
         }
 
         protected override void AddInterceptor( object o ) {
             if ( o == null ) throw new ArgumentException( String.Format( "Unable to instantiate ExceptionInterceptor" ) );
-
-            if ( !( o is BaseExceptionInterceptor ) ) throw new InvalidOperationException( String.Format( Resources.TypeIsNotExceptionInterceptor, o.GetType() ) );
+            if ( !( o is BaseExceptionInterceptor ) )
+                throw new InvalidOperationException( String.Format( Resources.TypeIsNotExceptionInterceptor, o.GetType() ) );
             var ie = o as BaseExceptionInterceptor;
             ie.Init( Connection );
             _interceptors.Insert( 0, (BaseExceptionInterceptor) o );
         }
 
         public void Throw( Exception exception ) {
-            var e = exception;
-            foreach ( var ie in _interceptors ) e = ie.InterceptException( e );
-            throw e;
+            throw _interceptors.Aggregate( exception, ( current, ie ) => ie.InterceptException( current ) );
         }
 
         protected override string ResolveType( string nameOrType ) {
-            if ( MySqlConfiguration.Settings != null
-                 && MySqlConfiguration.Settings.ExceptionInterceptors != null ) foreach ( var e in MySqlConfiguration.Settings.ExceptionInterceptors ) if ( String.Compare( e.Name, nameOrType, true ) == 0 ) return e.Type;
+            if ( MySqlConfiguration.Settings?.ExceptionInterceptors != null )
+                foreach ( var e in MySqlConfiguration.Settings.ExceptionInterceptors )
+                    if ( e.Name.IgnoreCaseEquals( nameOrType ) ) return e.Type;
             return base.ResolveType( nameOrType );
         }
     }

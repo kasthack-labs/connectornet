@@ -22,7 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 using MySql.Data.MySqlClient.Properties;
 
@@ -106,7 +105,7 @@ namespace MySql.Data.MySqlClient {
             var schema = String.Empty;
             var name = spName;
 
-            var dotIndex = spName.IndexOf( "." );
+            var dotIndex = spName.IndexOf( '.' );
             if ( dotIndex != -1 ) {
                 schema = spName.Substring( 0, dotIndex );
                 name = spName.Substring( dotIndex + 1, spName.Length - dotIndex - 1 );
@@ -119,8 +118,7 @@ namespace MySql.Data.MySqlClient {
             if ( proc.Rows.Count > 1 ) throw new MySqlException( Resources.ProcAndFuncSameName );
             if ( proc.Rows.Count == 0 ) throw new MySqlException( String.Format( Resources.InvalidProcName, name, schema ) );
 
-            var entry = new ProcedureCacheEntry();
-            entry.Procedure = proc;
+            var entry = new ProcedureCacheEntry { Procedure = proc };
 
             // we don't use GetSchema here because that would cause another
             // query of procedures and we don't need that since we already

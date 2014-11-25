@@ -25,6 +25,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
+using MySql.Data.Common;
 using MySql.Data.Constants.Types;
 using MySql.Data.MySqlClient.Properties;
 
@@ -39,25 +40,16 @@ namespace MySql.Data.MySqlClient.Authentication {
         private SecurityInteger _lifetime = new SecurityInteger( 0 );
         private bool _continueProcessing;
         private string _targetName;
-
         protected override void CheckConstraints() {
-            var platform = String.Empty;
-            var p = (int) Environment.OSVersion.Platform;
-            if ( ( p == 4 )
-                 || ( p == 128 ) ) platform = "Unix";
-            else if ( Environment.OSVersion.Platform == PlatformID.MacOSX ) platform = "Mac OS/X";
-
-            if ( !String.IsNullOrEmpty( platform ) ) throw new MySqlException( String.Format( Resources.WinAuthNotSupportOnPlatform, platform ) );
+            if (!Platform.IsWindows())
+                throw new MySqlException( Resources.WinAuthNotSupportOnPlatform );
             base.CheckConstraints();
         }
 
         public override string GetUsername() {
-            var username = base.GetUsername();
-            return String.IsNullOrEmpty( username ) ?"auth_windows" : username;
+            return String.IsNullOrEmpty( base.GetUsername() ) ?"auth_windows" : base.GetUsername();
         }
-
         public override string PluginName => "authentication_windows_client";
-
         protected override byte[] MoreData( byte[] moreData ) {
             if ( moreData == null ) AcquireCredentials();
 
@@ -65,9 +57,7 @@ namespace MySql.Data.MySqlClient.Authentication {
 
             if ( _continueProcessing ) InitializeClient( out clientBlob, moreData, out _continueProcessing );
 
-            if ( !_continueProcessing
-                 || clientBlob == null
-                 || clientBlob.Length == 0 ) {
+            if ( !_continueProcessing || clientBlob == null || clientBlob.Length == 0 ) {
                 FreeCredentialsHandle( ref _outboundCredentials );
                 DeleteSecurityContext( ref _clientContext );
                 return null;
@@ -127,7 +117,8 @@ namespace MySql.Data.MySqlClient.Authentication {
                 if ( ss != SecEOk
                      && ss != SecIContinueNeeded
                      && ss != SecICompleteNeeded
-                     && ss != SecICompleteAndContinue ) throw new MySqlException( "InitializeSecurityContext() failed  with errorcode " + ss );
+                     && ss != SecICompleteAndContinue )
+                    throw new MySqlException( string.Format( "InitializeSecurityContext() failed  with errorcode {0}", ss ) );
 
                 clientBlob = clientBufferDesc.GetSecBufferByteArray();
             }
@@ -170,7 +161,7 @@ namespace MySql.Data.MySqlClient.Authentication {
                 IntPtr.Zero,
                 ref _outboundCredentials,
                 ref _lifetime );
-            if ( ss != SecEOk ) throw new MySqlException( "AcquireCredentialsHandle failed with errorcode" + ss );
+            if ( ss != SecEOk ) throw new MySqlException( string.Format( "AcquireCredentialsHandle failed with errorcode{0}", ss ) );
         }
 
         #region SSPI Constants and Imports

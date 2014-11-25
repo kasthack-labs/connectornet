@@ -36,9 +36,9 @@ namespace MySql.Data.Common {
         private readonly string _srcString;
 
         public DbVersion( string s, int major, int minor, int build ) {
-            this._major = major;
-            this._minor = minor;
-            this._build = build;
+            _major = major;
+            _minor = minor;
+            _build = build;
             _srcString = s;
         }
 

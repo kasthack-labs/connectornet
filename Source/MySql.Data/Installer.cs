@@ -25,6 +25,7 @@ using System.Collections;
 using System.ComponentModel;
 using System.Configuration.Install;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security.Permissions;
 using System.Xml;
@@ -61,7 +62,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         internal static void UpdateMachineConfigs( string rootPath, bool add ) {
-            var dirs = new string[2] { "v2.0.50727", "v4.0.30319" };
+            var dirs = new[] { "v2.0.50727", "v4.0.30319" };
             foreach ( var frameworkDir in dirs ) {
                 var path = rootPath + frameworkDir;
 
@@ -80,20 +81,16 @@ namespace MySql.Data.MySqlClient {
             if ( doc == null
                  || mysqlNode == null ) return null;
 
-            XmlElement dA;
-            XmlElement aI;
-            XmlElement bR;
-
-            var ns = "urn:schemas-microsoft-com:asm.v1";
+            const string ns = "urn:schemas-microsoft-com:asm.v1";
 
             //mysql.data
-            dA = (XmlElement) doc.CreateNode( XmlNodeType.Element, "dependentAssembly", ns );
-            aI = (XmlElement) doc.CreateNode( XmlNodeType.Element, "assemblyIdentity", ns );
+            var dA = (XmlElement) doc.CreateNode( XmlNodeType.Element, "dependentAssembly", ns );
+            var aI = (XmlElement) doc.CreateNode( XmlNodeType.Element, "assemblyIdentity", ns );
             aI.SetAttribute( "name", "MySql.Data" );
             aI.SetAttribute( "publicKeyToken", "c5687fc88969c44d" );
             aI.SetAttribute( "culture", "neutral" );
 
-            bR = (XmlElement) doc.CreateNode( XmlNodeType.Element, "bindingRedirect", ns );
+            var bR = (XmlElement) doc.CreateNode( XmlNodeType.Element, "bindingRedirect", ns );
             bR.SetAttribute( "oldVersion", oldVersion );
             bR.SetAttribute( "newVersion", newVersion );
             dA.AppendChild( aI );
@@ -164,12 +161,9 @@ namespace MySql.Data.MySqlClient {
 
             foreach ( XmlNode node in nodes[ 0 ].ChildNodes ) {
                 if ( node.Attributes == null ) continue;
-                foreach ( XmlAttribute attr in node.Attributes )
-                    if ( attr.Name == "invariant"
-                         && attr.Value == "MySql.Data.MySqlClient" ) {
-                        nodes[ 0 ].RemoveChild( node );
-                        break;
-                    }
+                if ( node.Attributes.Cast<XmlAttribute>().Any( attr => attr.Name == "invariant" && attr.Value == "MySql.Data.MySqlClient" ) ) {
+                    nodes[ 0 ].RemoveChild( node );
+                }
             }
             nodes[ 0 ].AppendChild( newNode );
 

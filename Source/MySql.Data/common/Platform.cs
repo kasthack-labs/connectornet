@@ -53,8 +53,7 @@ namespace MySql.Data.Common {
 
         private static void Init() {
             _inited = true;
-            var t = Type.GetType( "Mono.Runtime" );
-            _isMono = t != null;
+            _isMono = Type.GetType( "Mono.Runtime" ) != null;
         }
     }
 }

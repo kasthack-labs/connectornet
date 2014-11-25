@@ -55,17 +55,15 @@ namespace MySql.Data.Common {
         }
 
         protected virtual void Dispose( bool disposing ) {
-            if ( disposing ) {
-                if ( View != IntPtr.Zero ) {
-                    NativeMethods.UnmapViewOfFile( View );
-                    View = IntPtr.Zero;
-                }
-                if ( _fileMapping != IntPtr.Zero ) {
-                    // Free the handle
-                    NativeMethods.CloseHandle( _fileMapping );
-                    _fileMapping = IntPtr.Zero;
-                }
+            if ( !disposing ) return;
+            if ( View != IntPtr.Zero ) {
+                NativeMethods.UnmapViewOfFile( View );
+                View = IntPtr.Zero;
             }
+            if ( _fileMapping == IntPtr.Zero ) return;
+            // Free the handle
+            NativeMethods.CloseHandle( _fileMapping );
+            _fileMapping = IntPtr.Zero;
         }
     }
 
@@ -93,7 +91,6 @@ namespace MySql.Data.Common {
 
         public void Open( uint timeOut ) {
             if ( _connectionClosed != null ) Debug.Assert( false, "Connection is already open" );
-
             GetConnectNumber( timeOut );
             SetupEvents();
         }

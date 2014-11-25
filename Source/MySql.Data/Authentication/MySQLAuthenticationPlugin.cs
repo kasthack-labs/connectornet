@@ -44,7 +44,6 @@ namespace MySql.Data.MySqlClient.Authentication {
             }
             var plugin = AuthenticationPluginManager.GetPlugin( method );
             if ( plugin == null ) throw new MySqlException( String.Format( Resources.UnknownAuthenticationMethod, method ) );
-
             plugin._driver = driver;
             plugin.SetAuthData( authData );
             return plugin;
@@ -63,31 +62,22 @@ namespace MySql.Data.MySqlClient.Authentication {
         protected virtual void CheckConstraints() { }
 
         protected virtual void AuthenticationFailed( Exception ex ) {
-            var msg = String.Format( Resources.AuthenticationFailed, Settings.Server, GetUsername(), PluginName, ex.Message );
-            throw new MySqlException( msg, ex );
+            throw new MySqlException( String.Format( Resources.AuthenticationFailed, Settings.Server, GetUsername(), PluginName, ex.Message ), ex );
         }
-
         protected virtual void AuthenticationSuccessful() { }
-
         protected virtual byte[] MoreData( byte[] data ) => null;
-
         internal void Authenticate( bool reset ) {
             CheckConstraints();
-
             var packet = _driver.Packet;
-
             // send auth response
             packet.WriteString( GetUsername() );
-
             // now write the password
             WritePassword( packet );
-
-            if ( ( Flags & ClientFlags.ConnectWithDb ) != 0 || reset ) if ( !String.IsNullOrEmpty( Settings.Database ) ) packet.WriteString( Settings.Database );
-
+            if ( ( Flags & ClientFlags.ConnectWithDb ) != 0 || reset )
+                if ( !String.IsNullOrWhiteSpace( Settings.Database ) )
+                    packet.WriteString( Settings.Database );
             if ( reset ) packet.WriteInteger( 8, 2 );
-
             if ( ( Flags & ClientFlags.PluginAuth ) != 0 ) packet.WriteString( PluginName );
-
             _driver.SetConnectAttrs();
             _driver.SendPacket( packet );
             //read server response
@@ -113,13 +103,12 @@ namespace MySql.Data.MySqlClient.Authentication {
                 else packet.WriteString( s );
             else if ( password == null ) packet.WriteByte( 0 );
             else if ( password is byte[] ) packet.Write( password as byte[] );
-            else throw new MySqlException( "Unexpected password format: " + password.GetType() );
+            else throw new MySqlException( string.Format( "Unexpected password format: {0}", password.GetType() ) );
         }
 
         private MySqlPacket ReadPacket() {
             try {
-                var p = _driver.ReadPacket();
-                return p;
+                return _driver.ReadPacket();
             }
             catch ( MySqlException ex ) {
                 // make sure this is an auth failed ex
@@ -127,15 +116,11 @@ namespace MySql.Data.MySqlClient.Authentication {
                 return null;
             }
         }
-
         private void HandleAuthChange( MySqlPacket packet ) {
-            var b = packet.ReadByte();
-            Debug.Assert( b == 0xfe );
-
+            Debug.Assert( packet.ReadByte() == 0xfe );
             var method = packet.ReadString();
             var authData = new byte[packet.Length - packet.Position];
             Array.Copy( packet.Buffer, packet.Position, authData, 0, authData.Length );
-
             var plugin = GetPlugin( method, _driver, authData );
             plugin.AuthenticationChange();
         }
@@ -144,16 +129,13 @@ namespace MySql.Data.MySqlClient.Authentication {
             var packet = _driver.Packet;
             packet.Clear();
             var moreData = MoreData( null );
-            while ( moreData != null
-                    && moreData.Length > 0 ) {
+            while ( moreData != null && moreData.Length > 0 ) {
                 packet.Clear();
                 packet.Write( moreData );
                 _driver.SendPacket( packet );
-
                 packet = ReadPacket();
                 var prefixByte = packet.Buffer[ 0 ];
                 if ( prefixByte != 1 ) return;
-
                 // a prefix of 0x01 means need more auth data
                 var responseData = new byte[packet.Length - 1];
                 Array.Copy( packet.Buffer, 1, responseData, 0, responseData.Length );
@@ -162,11 +144,8 @@ namespace MySql.Data.MySqlClient.Authentication {
             // we get here if MoreData returned null but the last packet read was a more data packet
             ReadPacket();
         }
-
         public abstract string PluginName { get; }
-
         public virtual string GetUsername() => Settings.UserId;
-
         public virtual object GetPassword() => null;
     }
 }

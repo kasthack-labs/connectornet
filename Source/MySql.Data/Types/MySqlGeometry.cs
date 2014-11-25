@@ -244,8 +244,7 @@ namespace MySql.Data.Types {
                 if ( value.Contains( ";" ) ) arrayResult = value.Split( ';' );
                 else strResult = value;
 
-                if ( arrayResult.Length > 1
-                     || strResult != String.Empty ) {
+                if ( arrayResult.Length > 1 || strResult != String.Empty ) {
                     var point = strResult != String.Empty ? strResult : arrayResult[ 1 ];
                     point = point.Replace( "POINT (", "" ).Replace( "POINT(", "" ).Replace( ")", "" );
                     var coord = point.Split( ' ' );

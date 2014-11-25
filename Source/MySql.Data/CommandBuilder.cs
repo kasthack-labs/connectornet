@@ -26,6 +26,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
 using System.Text;
+using MySql.Data.Constants.ColumnNames;
 using MySql.Data.Constants.ColumnNames.Columns;
 using MySql.Data.MySqlClient.Properties;
 using MySql.Data.Types;
@@ -80,13 +81,13 @@ namespace MySql.Data.MySqlClient {
                 var entry = command.Connection.ProcedureCache.GetProcedure( command.Connection, spName, null );
                 command.Parameters.Clear();
                 foreach ( var row in entry.Parameters.Rows ) {
-                    var p = new MySqlParameter { ParameterName = String.Format( "@{0}", row[ "PARAMETER_NAME" ] ) };
-                    if ( row[ OrdinalPosition ].Equals( 0 )
-                         && p.ParameterName == "@" ) p.ParameterName = "@RETURN_VALUE";
+                    var p = new MySqlParameter { ParameterName = String.Format( "@{0}", row[ Procedures.ParameterName ] ) };
+                    if ( row[ OrdinalPosition ].Equals( 0 ) && p.ParameterName == "@" )
+                        p.ParameterName = "@RETURN_VALUE";
                     p.Direction = GetDirection( row );
-                    var unsigned = StoredProcedure.GetFlags( row[ "DTD_IDENTIFIER" ].ToString() ).InvariantContains( "UNSIGNED" );
-                    var realAsFloat = entry.Procedure.Rows[ 0 ][ "SQL_MODE" ].ToString().InvariantContains( "REAL_AS_FLOAT" );
-                    p.MySqlDbType = MetaData.NameToType( row[ "DATA_TYPE" ].ToString(), unsigned, realAsFloat, command.Connection );
+                    var unsigned = StoredProcedure.GetFlags( row[ Procedures.DtdIdentifier ].ToString() ).InvariantContains( "UNSIGNED" );
+                    var realAsFloat = entry.Procedure.Rows[ 0 ][ Procedures.SqlMode ].ToString().InvariantContains( "REAL_AS_FLOAT" );
+                    p.MySqlDbType = MetaData.NameToType( row[ DataType ].ToString(), unsigned, realAsFloat, command.Connection );
                     if ( row[ CharacterMaximumLength ] != null ) p.Size = (int) row[ CharacterMaximumLength ];
                     if ( row[ NumericPrecision ] != null ) p.Precision = Convert.ToByte( row[ NumericPrecision ] );
                     if ( row[ NumericScale ] != null ) p.Scale = Convert.ToByte( row[ NumericScale ] );
@@ -102,7 +103,7 @@ namespace MySql.Data.MySqlClient {
 
         private static List<string> GetPossibleValues( MySqlSchemaRow row ) {
             var types = new[] { "ENUM", "SET" };
-            var dtdIdentifier = row[ "DTD_IDENTIFIER" ].ToString().Trim();
+            var dtdIdentifier = row[ Procedures.DtdIdentifier ].ToString().Trim();
 
             var index = 0;
             for ( ; index < 2; index++ ) if ( dtdIdentifier.StartsWith( types[ index ], StringComparison.OrdinalIgnoreCase ) ) break;
@@ -120,7 +121,7 @@ namespace MySql.Data.MySqlClient {
                     var end = dtdIdentifier.Length - 1;
                     if ( token == "," ) end = tokenzier.StartIndex;
 
-                    var value = dtdIdentifier.Substring( start, end - start ).Trim( '\'', '\"' ).Trim();
+                    var value = dtdIdentifier.Substring( start, end - start ).Trim().Trim( '\'', '\"' ).Trim();
                     values.Add( value );
                     start = tokenzier.StopIndex;
                 }
@@ -133,7 +134,7 @@ namespace MySql.Data.MySqlClient {
         private static ParameterDirection GetDirection( MySqlSchemaRow row ) {
             if ( Convert.ToInt32( row[ OrdinalPosition ] ) == 0 )
                 return ParameterDirection.ReturnValue;
-            switch ( row[ "PARAMETER_MODE" ].ToString() ) {
+            switch ( row[ Procedures.ParameterMode ].ToString() ) {
                 case "IN":
                     return ParameterDirection.Input;
                 case "OUT":
@@ -193,8 +194,8 @@ namespace MySql.Data.MySqlClient {
             var schemaTable = base.GetSchemaTable( sourceCommand );
             //todo: check type!!!
             foreach ( DataRow row in schemaTable.Rows )
-                if ( row[ "BaseSchemaName" ].Equals( sourceCommand.Connection.Database ) )
-                    row[ "BaseSchemaName" ] = null;
+                if ( row[ SchemaTable.BaseSchemaName ].Equals( sourceCommand.Connection.Database ) )
+                    row[ SchemaTable.BaseSchemaName ] = null;
 
             return schemaTable;
         }
@@ -219,7 +220,7 @@ namespace MySql.Data.MySqlClient {
         }
 
         protected override void ApplyParameterInfo( DbParameter parameter, DataRow row, StatementType statementType, bool whereClause ) {
-            ( (MySqlParameter) parameter ).MySqlDbType = (MySqlDbType) row[ "ProviderType" ];
+            ( (MySqlParameter) parameter ).MySqlDbType = (MySqlDbType) row[ SchemaTable.ProviderType ];
         }
 
         protected override string GetParameterName( int parameterOrdinal ) => String.Format( "@p{0}", parameterOrdinal.InvariantToString() );

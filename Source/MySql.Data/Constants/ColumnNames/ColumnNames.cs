@@ -20,7 +20,12 @@ namespace MySql.Data.Constants.ColumnNames {
         public const string SqlMode = "SQL_MODE";
         public const string RoutineComment = "ROUTINE_COMMENT";
         public const string Definer = "DEFINER";
+        public const string ParameterName = "PARAMETER_NAME";
+        public const string ParameterMode = "PARAMETER_MODE";
+        public const string Parameterlist = "ParameterList";
     }
+
+
     public static class Indexes {
         public const string IndexCatalog = "INDEX_CATALOG";
         public const string IndexSchema = "INDEX_SCHEMA";
@@ -35,6 +40,7 @@ namespace MySql.Data.Constants.ColumnNames {
         public const string IndexType = "INDEX_TYPE";
         public const string SortOrder = "SORT_ORDER";
     }
+
     public static class Columns {
         public const string OrdinalPosition = "ORDINAL_POSITION";
         public const string ColumnName = "COLUMN_NAME";
@@ -66,11 +72,13 @@ namespace MySql.Data.Constants.ColumnNames {
         public const string ReferencedTableName = "REFERENCED_TABLE_NAME";
         public const string ReferencedColumnName = "REFERENCED_COLUMN_NAME";
     }
+
     public static class Shared {
         public const string TableCatalog = "TABLE_CATALOG";
         public const string TableSchema = "TABLE_SCHEMA";
         public const string TableName = "TABLE_NAME";
     }
+
     public static class Tables {
         public const string TableType = "TABLE_TYPE";
         public const string Engine = "ENGINE";
@@ -91,6 +99,19 @@ namespace MySql.Data.Constants.ColumnNames {
         public const string TableCollation = "TABLE_COLLATION";
         public const string Checksum = "CHECKSUM";
         public const string SchemaName = "SCHEMA_NAME";
+    }
+
+    public static class Triggers {
+        public const string TriggerCatalog = "TRIGGER_CATALOG";
+        public const string TriggerSchema = "TRIGGER_SCHEMA";
+        public const string EventObjectTable = "EVENT_OBJECT_TABLE";
+        public const string TriggerName = "TRIGGER_NAME";
+    }
+
+    public static class Views {
+        public const string ViewCatalog = "VIEW_CATALOG";
+        public const string ViewSchema = "VIEW_SCHEMA";
+        public const string ViewName = "VIEW_NAME";
     }
 
     public static class DsInfo {
@@ -117,5 +138,50 @@ namespace MySql.Data.Constants.ColumnNames {
         public const string LiteralPrefix = "LiteralPrefix";
         public const string LiteralSuffix = "LiteralSuffix";
         public const string NativeDataType = "NativeDataType";
+    }
+
+    public static class DataSourceInformation {
+        public const string CompositeIdentifierSeparatorPattern = "CompositeIdentifierSeparatorPattern";
+        public const string DataSourceProductName = "DataSourceProductName";
+        public const string DataSourceProductVersion = "DataSourceProductVersion";
+        public const string DataSourceProductVersionNormalized = "DataSourceProductVersionNormalized";
+        public const string GroupByBehavior = "GroupByBehavior";
+        public const string IdentifierPattern = "IdentifierPattern";
+        public const string IdentifierCase = "IdentifierCase";
+        public const string OrderByColumnsInSelect = "OrderByColumnsInSelect";
+        public const string ParameterMarkerFormat = "ParameterMarkerFormat";
+        public const string ParameterMarkerPattern = "ParameterMarkerPattern";
+        public const string ParameterNameMaxLength = "ParameterNameMaxLength";
+        public const string ParameterNamePattern = "ParameterNamePattern";
+        public const string QuotedIdentifierPattern = "QuotedIdentifierPattern";
+        public const string QuotedIdentifierCase = "QuotedIdentifierCase";
+        public const string StatementSeparatorPattern = "StatementSeparatorPattern";
+        public const string StringLiteralPattern = "StringLiteralPattern";
+        public const string SupportedJoinOperators = "SupportedJoinOperators";
+    }
+
+    public static class SchemaTable {
+        public const string ColumnName = "ColumnName";
+        public const string ColumnOrdinal = "ColumnOrdinal";
+        public const string ColumnSize = "ColumnSize";
+        public const string NumericPrecision = "NumericPrecision";
+        public const string NumericScale = "NumericScale";
+        public const string IsUnique = "IsUnique";
+        public const string IsKey = "IsKey";
+        public const string BaseCatalogName = "BaseCatalogName";
+        public const string BaseColumnName = "BaseColumnName";
+        public const string BaseSchemaName = "BaseSchemaName";
+        public const string BaseTableName = "BaseTableName";
+        public const string DataType = "DataType";
+        public const string ProviderType = "ProviderType";
+        public const string IsAliased = "IsAliased";
+        public const string IsExpression = "IsExpression";
+        public const string IsIdentity = "IsIdentity";
+        public const string IsAutoIncrement = "IsAutoIncrement";
+        public const string IsRowVersion = "IsRowVersion";
+        public const string IsHidden = "IsHidden";
+        public const string IsLong = "IsLong";
+        public const string AllowDBNull = "AllowDBNull";
+        public const string IsReadOnly = "IsReadOnly";
     }
 }

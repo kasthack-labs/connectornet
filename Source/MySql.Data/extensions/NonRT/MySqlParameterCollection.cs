@@ -58,9 +58,7 @@ namespace MySql.Data.MySqlClient {
 
         protected override DbParameter GetParameter( int index ) => InternalGetParameter( index );
 
-        protected override void SetParameter( string parameterName, DbParameter value ) {
-            InternalSetParameter( parameterName, value as MySqlParameter );
-        }
+        protected override void SetParameter( string parameterName, DbParameter value ) => InternalSetParameter( parameterName, value as MySqlParameter );
 
         protected override void SetParameter( int index, DbParameter value ) { InternalSetParameter( index, value as MySqlParameter ); }
 
@@ -159,20 +157,14 @@ namespace MySql.Data.MySqlClient {
         /// Removes the specified <see cref="MySqlParameter"/> from the collection using the parameter name.
         /// </summary>
         /// <param name="parameterName">The name of the <see cref="MySqlParameter"/> object to retrieve. </param>
-        public override void RemoveAt( string parameterName ) {
-            var p = GetParameter( parameterName );
-            Remove( p );
-        }
+        public override void RemoveAt( string parameterName ) => Remove( GetParameter( parameterName ) );
 
         /// <summary>
         /// Removes the specified <see cref="MySqlParameter"/> from the collection using a specific index.
         /// </summary>
         /// <param name="index">The zero-based index of the parameter. </param>
         /// <overloads>Removes the specified <see cref="MySqlParameter"/> from the collection.</overloads>
-        public override void RemoveAt( int index ) {
-            var o = _items[ index ];
-            Remove( o );
-        }
+        public override void RemoveAt( int index ) => Remove( _items[ index ] );
 
         /// <summary>
         /// Gets an object that can be used to synchronize access to the 

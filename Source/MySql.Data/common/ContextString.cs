@@ -28,17 +28,13 @@ using MySql.Data.Constants.Types;
 namespace MySql.Data.Common {
     internal class ContextString {
         private readonly bool _escapeBackslash;
-
         // Create a private ctor so the compiler doesn't give us a default one
         public ContextString( string contextMarkers, bool escapeBackslash ) {
             ContextMarkers = contextMarkers;
             _escapeBackslash = escapeBackslash;
         }
-
         public string ContextMarkers { get; set; }
-
         public int IndexOf( string src, string target ) => IndexOf( src, target, 0 );
-
         public int IndexOf( string src, string target, int startIndex ) {
             var index = src.IndexOf(target, startIndex, StringComparison.Ordinal);
             while ( index != -1 ) {
@@ -47,27 +43,18 @@ namespace MySql.Data.Common {
             }
             return index;
         }
-
         private bool IndexInQuotes( string src, int index, int startIndex ) {
             var contextMarker = Char.MinValue;
             var escaped = false;
-
             for ( var i = startIndex; i < index; i++ ) {
                 var c = src[ i ];
-
                 var contextIndex = ContextMarkers.IndexOf( c );
-
                 // if we have found the closing marker for our open marker, then close the context
-                if ( contextIndex > -1
-                     && contextMarker == ContextMarkers[ contextIndex ]
-                     && !escaped ) contextMarker = Char.MinValue;
-
+                if ( contextIndex <= -1 || escaped ) continue;
+                if ( contextMarker == ContextMarkers[ contextIndex ] ) contextMarker = Char.MinValue;
                 // if we have found a context marker and we are not in a context yet, then start one
-                else if ( contextMarker == Char.MinValue
-                          && contextIndex > -1
-                          && !escaped ) contextMarker = c;
-
-                else if ( c == '\\' && _escapeBackslash ) escaped = !escaped;
+                else if ( contextMarker == Char.MinValue ) contextMarker = c;
+                else if ( c == '\\' && _escapeBackslash ) escaped = true;
             }
             return contextMarker != Char.MinValue || escaped;
         }
@@ -81,17 +68,11 @@ namespace MySql.Data.Common {
                 var contextIndex = ContextMarkers.IndexOf( c );
 
                 // if we have found the closing marker for our open marker, then close the context
-                if ( contextIndex > -1
-                     && contextMarker == ContextMarkers[ contextIndex ]
-                     && !escaped ) contextMarker = Char.MinValue;
-
+                if ( contextIndex > -1 && contextMarker == ContextMarkers[ contextIndex ] && !escaped )
+                    contextMarker = Char.MinValue;
                 // if we have found a context marker and we are not in a context yet, then start one
-                else if ( contextMarker == Char.MinValue
-                          && contextIndex > -1
-                          && !escaped ) contextMarker = c;
-
-                else if ( contextMarker == Char.MinValue
-                          && c == target ) return pos;
+                else if ( contextMarker == Char.MinValue && contextIndex > -1 && !escaped ) contextMarker = c;
+                else if ( contextMarker == Char.MinValue && c == target ) return pos;
                 else if ( c == '\\' && _escapeBackslash ) escaped = !escaped;
                 pos++;
             }

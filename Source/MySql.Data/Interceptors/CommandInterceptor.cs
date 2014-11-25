@@ -51,19 +51,15 @@ namespace MySql.Data.MySqlClient {
         private readonly List<BaseCommandInterceptor> _interceptors = new List<BaseCommandInterceptor>();
 
         public CommandInterceptor( MySqlConnection connection ) {
-            this.Connection = connection;
-
+            Connection = connection;
             LoadInterceptors( connection.Settings.CommandInterceptors );
         }
 
         public bool ExecuteScalar( string sql, ref object returnValue ) {
             if ( _insideInterceptor ) return false;
             _insideInterceptor = true;
-
             var handled = false;
-
             foreach ( var bci in _interceptors ) handled |= bci.ExecuteScalar( sql, ref returnValue );
-
             _insideInterceptor = false;
             return handled;
         }
@@ -71,11 +67,8 @@ namespace MySql.Data.MySqlClient {
         public bool ExecuteNonQuery( string sql, ref int returnValue ) {
             if ( _insideInterceptor ) return false;
             _insideInterceptor = true;
-
             var handled = false;
-
             foreach ( var bci in _interceptors ) handled |= bci.ExecuteNonQuery( sql, ref returnValue );
-
             _insideInterceptor = false;
             return handled;
         }
@@ -83,18 +76,14 @@ namespace MySql.Data.MySqlClient {
         public bool ExecuteReader( string sql, CommandBehavior behavior, ref MySqlDataReader returnValue ) {
             if ( _insideInterceptor ) return false;
             _insideInterceptor = true;
-
             var handled = false;
-
             foreach ( var bci in _interceptors ) handled |= bci.ExecuteReader( sql, behavior, ref returnValue );
-
             _insideInterceptor = false;
             return handled;
         }
 
         protected override void AddInterceptor( object o ) {
             if ( o == null ) throw new ArgumentException( String.Format( "Unable to instantiate CommandInterceptor" ) );
-
             if ( !( o is BaseCommandInterceptor ) ) throw new InvalidOperationException( String.Format( Resources.TypeIsNotCommandInterceptor, o.GetType() ) );
             var ie = o as BaseCommandInterceptor;
             ie.Init( Connection );
@@ -102,8 +91,9 @@ namespace MySql.Data.MySqlClient {
         }
 
         protected override string ResolveType( string nameOrType ) {
-            if ( MySqlConfiguration.Settings != null
-                 && MySqlConfiguration.Settings.CommandInterceptors != null ) foreach ( var e in MySqlConfiguration.Settings.CommandInterceptors ) if ( String.Compare( e.Name, nameOrType, true ) == 0 ) return e.Type;
+            if ( MySqlConfiguration.Settings?.CommandInterceptors != null )
+                foreach ( var e in MySqlConfiguration.Settings.CommandInterceptors )
+                    if ( e.Name.IgnoreCaseEquals( nameOrType )) return e.Type;
             return base.ResolveType( nameOrType );
         }
     }

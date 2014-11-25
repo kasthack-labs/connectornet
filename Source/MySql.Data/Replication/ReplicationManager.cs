@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using MySql.Data.MySqlClient.Properties;
 
 namespace MySql.Data.MySqlClient.Replication {
@@ -66,8 +67,7 @@ namespace MySql.Data.MySqlClient.Replication {
         /// <returns>Server Group added</returns>
         internal static ReplicationServerGroup AddGroup( string name, string groupType, int retryTime ) {
             if ( string.IsNullOrEmpty( groupType ) ) groupType = "MySql.Data.MySqlClient.Replication.ReplicationRoundRobinServerGroup";
-            var t = Type.GetType( groupType );
-            var g = (ReplicationServerGroup) Activator.CreateInstance( t, name, retryTime );
+            var g = (ReplicationServerGroup) Activator.CreateInstance( Type.GetType( groupType ), name, retryTime );
             _groups.Add( g );
             return g;
         }
@@ -79,8 +79,7 @@ namespace MySql.Data.MySqlClient.Replication {
         /// <param name="isMaster">True if the server to return must be a master</param>
         /// <returns>Replication Server defined by the Load Balancing plugin</returns>
         internal static ReplicationServer GetServer( string groupName, bool isMaster ) {
-            var group = GetGroup( groupName );
-            return group.GetServer( isMaster );
+            return GetGroup( groupName ).GetServer( isMaster );
         }
 
         /// <summary>
@@ -89,12 +88,7 @@ namespace MySql.Data.MySqlClient.Replication {
         /// <param name="groupName">Group name</param>
         /// <returns>Server Group if found, otherwise throws an MySqlException</returns>
         internal static ReplicationServerGroup GetGroup( string groupName ) {
-            ReplicationServerGroup group = null;
-            foreach ( var g in _groups ) {
-                if ( String.Compare( g.Name, groupName, StringComparison.OrdinalIgnoreCase ) != 0 ) continue;
-                group = g;
-                break;
-            }
+            var group = _groups.FirstOrDefault( g => g.Name.IgnoreCaseEquals( groupName ));
             if ( group == null ) throw new MySqlException( String.Format( Resources.ReplicationGroupNotFound, groupName ) );
             return group;
         }
@@ -104,10 +98,7 @@ namespace MySql.Data.MySqlClient.Replication {
         /// </summary>
         /// <param name="groupName">Group name to validate</param>
         /// <returns>True if replication group name is found, otherwise false</returns>
-        internal static bool IsReplicationGroup( string groupName ) {
-            foreach ( var g in _groups ) if ( String.Compare( g.Name, groupName, StringComparison.OrdinalIgnoreCase ) == 0 ) return true;
-            return false;
-        }
+        internal static bool IsReplicationGroup( string groupName ) => _groups.Any( g =>  g.Name.IgnoreCaseEquals( groupName ));
 
         /// <summary>
         /// Assigns a new server driver to the connection object

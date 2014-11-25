@@ -47,7 +47,6 @@ namespace MySql.Data.MySqlClient {
         /// <returns>A <see cref="DataTable"/> that contains schema information. </returns>
         public override DataTable GetSchema( string collectionName ) {
             if ( collectionName == null ) collectionName = SchemaProvider.MetaCollection;
-
             return GetSchema( collectionName, null );
         }
 
@@ -61,16 +60,11 @@ namespace MySql.Data.MySqlClient {
         /// <returns>A <see cref="DataTable"/> that contains schema information.</returns>
         public override DataTable GetSchema( string collectionName, string[] restrictionValues ) {
             if ( collectionName == null ) collectionName = SchemaProvider.MetaCollection;
-
-            var restrictions = _schemaProvider.CleanRestrictions( restrictionValues );
-            var c = _schemaProvider.GetSchema( collectionName, restrictions );
-            return c.AsDataTable();
+            return _schemaProvider.GetSchema( collectionName, _schemaProvider.CleanRestrictions( restrictionValues ) ).AsDataTable();
         }
 
-        protected override DbTransaction BeginDbTransaction( IsolationLevel isolationLevel ) {
-            if ( isolationLevel == IsolationLevel.Unspecified ) return BeginTransaction();
-            return BeginTransaction( isolationLevel );
-        }
+        protected override DbTransaction BeginDbTransaction( IsolationLevel isolationLevel ) =>
+            isolationLevel == IsolationLevel.Unspecified ? BeginTransaction() : BeginTransaction( isolationLevel );
 
         protected override DbCommand CreateDbCommand() => CreateCommand();
 

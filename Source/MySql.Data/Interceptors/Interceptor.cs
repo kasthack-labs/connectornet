@@ -32,15 +32,10 @@ namespace MySql.Data.MySqlClient {
 
         protected void LoadInterceptors( string interceptorList ) {
             if ( String.IsNullOrEmpty( interceptorList ) ) return;
-
             var interceptors = interceptorList.Split( '|' );
             foreach ( var interceptorType in interceptors ) {
                 if ( String.IsNullOrEmpty( interceptorType ) ) continue;
-
-                var type = ResolveType( interceptorType );
-                var t = Type.GetType( type );
-                var interceptorObject = Activator.CreateInstance( t );
-                AddInterceptor( interceptorObject );
+                AddInterceptor( Activator.CreateInstance( Type.GetType( ResolveType( interceptorType ) ) ) );
             }
         }
 

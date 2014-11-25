@@ -47,14 +47,13 @@ namespace MySql.Data.Common {
         }
 
         public static Stream GetStream( string server, uint port, string pipename, uint keepalive, DbVersion v, uint timeout ) {
-            var settings = new MySqlConnectionStringBuilder {
+            return GetStream( new MySqlConnectionStringBuilder {
                 Server = server,
                 Port = port,
                 PipeName = pipename,
                 Keepalive = keepalive,
                 ConnectionTimeout = timeout
-            };
-            return GetStream( settings );
+            } );
         }
 
         public static Stream GetStream( MySqlConnectionStringBuilder settings ) {
@@ -86,8 +85,7 @@ namespace MySql.Data.Common {
             return str;
         }
 
-        private static Stream GetNamedPipeStream( MySqlConnectionStringBuilder settings ) {
-            return NamedPipeStream.Create( settings.PipeName, settings.Server, settings.ConnectionTimeout );
-        }
+        private static Stream GetNamedPipeStream( MySqlConnectionStringBuilder settings ) =>
+            NamedPipeStream.Create( settings.PipeName, settings.Server, settings.ConnectionTimeout );
     }
 }
