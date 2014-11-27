@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MySql.Data.MySqlClient {
     internal class TableCache {
@@ -29,27 +30,24 @@ namespace MySql.Data.MySqlClient {
 
         static TableCache() { Cache = new BaseTableCache( 480 /* 8 hour max by default */ ); }
 
-        public static void AddToCache( string commandText, ResultSet resultSet ) { Cache.AddToCache( commandText, resultSet ); }
+        public static void AddToCache( string commandText, ResultSet resultSet ) => Cache.AddToCache( commandText, resultSet );
 
-        public static ResultSet RetrieveFromCache( string commandText, int cacheAge ) => (ResultSet) Cache.RetrieveFromCache( commandText, cacheAge );
-
-        public static void RemoveFromCache( string commandText ) { Cache.RemoveFromCache( commandText ); }
-
-        public static void DumpCache() { Cache.Dump(); }
+        public static ResultSet RetrieveFromCache( string commandText, int cacheAge ) =>
+            (ResultSet) Cache.RetrieveFromCache( commandText, cacheAge );
+        public static void RemoveFromCache( string commandText ) => Cache.RemoveFromCache( commandText );
+        public static void DumpCache() => Cache.Dump();
     }
 
     public class BaseTableCache {
         protected int MaxCacheAge;
         private readonly Dictionary<string, CacheEntry> _cache = new Dictionary<string, CacheEntry>();
-
         public BaseTableCache( int maxCacheAge ) { MaxCacheAge = maxCacheAge; }
 
         public virtual void AddToCache( string commandText, object resultSet ) {
             CleanCache();
-            var entry = new CacheEntry { CacheTime = DateTime.Now, CacheElement = resultSet };
             lock ( _cache ) {
                 if ( _cache.ContainsKey( commandText ) ) return;
-                _cache.Add( commandText, entry );
+                _cache.Add( commandText, new CacheEntry { CacheTime = DateTime.Now, CacheElement = resultSet } );
             }
         }
 
@@ -73,15 +71,10 @@ namespace MySql.Data.MySqlClient {
 
         protected virtual void CleanCache() {
             var now = DateTime.Now;
-            var keysToRemove = new List<string>();
-
             lock ( _cache ) {
-                foreach ( var key in _cache.Keys ) {
-                    var diff = now.Subtract( _cache[ key ].CacheTime );
-                    if ( diff.TotalSeconds > MaxCacheAge ) keysToRemove.Add( key );
-                }
-
-                foreach ( var key in keysToRemove ) _cache.Remove( key );
+                var list = _cache.Keys.Where( key => now.Subtract( _cache[ key ].CacheTime ).TotalSeconds > MaxCacheAge ).ToList();
+                foreach ( var key in list )
+                    _cache.Remove( key );
             }
         }
 

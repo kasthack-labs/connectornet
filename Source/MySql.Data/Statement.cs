@@ -59,10 +59,7 @@ namespace MySql.Data.MySqlClient {
 
         public virtual bool ExecuteNext() {
             if ( _buffers.Count == 0 ) return false;
-
-            var packet = _buffers[ 0 ];
-            //MemoryStream ms = stream.InternalBuffer;
-            Driver.SendQuery( packet );
+            Driver.SendQuery( _buffers[ 0 ] );
             _buffers.RemoveAt( 0 );
             return true;
         }

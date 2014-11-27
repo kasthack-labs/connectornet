@@ -119,14 +119,9 @@ namespace MySql.Data.MySqlClient {
             }
         }
 
-        object IServiceProvider.GetService( Type serviceType ) {
-            // DbProviderServices is the only service we offer up right now
-            if ( serviceType != DbServicesType ) return null;
-
-            if ( MySqlDbProviderServicesInstance == null ) return null;
-
-            return MySqlDbProviderServicesInstance.GetValue( null );
-        }
+        // DbProviderServices is the only service we offer up right now
+        object IServiceProvider.GetService( Type serviceType ) =>
+            serviceType != DbServicesType ? null : MySqlDbProviderServicesInstance?.GetValue( null );
         #endregion
     }
 }

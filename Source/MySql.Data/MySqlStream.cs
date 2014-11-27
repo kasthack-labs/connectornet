@@ -103,12 +103,12 @@ namespace MySql.Data.MySqlClient {
             _packet.ReadByte(); // read off the 0xff
 
             var code = _packet.ReadInteger( 2 );
-            var msg = String.Empty;
 
-            msg = _packet.Version.IsAtLeast( 5, 5, 0 ) ? _packet.ReadString( Encoding.UTF8 ) : _packet.ReadString();
+            var msg = _packet.Version.IsAtLeast( 5, 5, 0 ) ? _packet.ReadString( Encoding.UTF8 ) : _packet.ReadString();
 
             if ( !msg.InvariantStartsWith( "#" ) ) throw new MySqlException( msg, code );
             msg.Substring( 1, 5 ); /* state code */
+            //wtf???
             msg = msg.Substring( 6 );
             throw new MySqlException( msg, code );
         }

@@ -70,26 +70,20 @@ namespace MySql.Data.MySqlClient {
         }
 
         internal void Dispose( bool disposing ) {
-            if ( disposing ) if ( ( Connection != null && Connection.State == ConnectionState.Open || Connection.SoftClosed ) && _open ) Rollback();
+            if ( !disposing ) return;
+            if ( CheckConnection() && _open ) Rollback();
         }
-
+        private bool CheckConnection() => Connection != null && (Connection.State == ConnectionState.Open || Connection.SoftClosed );
         /// <include file='docs/MySqlTransaction.xml' path='docs/Commit/*'/>
-        public override void Commit() {
-            if ( Connection == null
-                 || ( Connection.State != ConnectionState.Open && !Connection.SoftClosed ) ) throw new InvalidOperationException( "Connection must be valid and open to commit transaction" );
-            if ( !_open ) throw new InvalidOperationException( "Transaction has already been committed or is not pending" );
-            var cmd = new MySqlCommand( "COMMIT", Connection );
-            cmd.ExecuteNonQuery();
-            _open = false;
-        }
-
+        public override void Commit() => CommitOrRollback( "commit", "committed", "COMMIT" );
         /// <include file='docs/MySqlTransaction.xml' path='docs/Rollback/*'/>
-        public override void Rollback() {
-            if ( Connection == null
-                 || ( Connection.State != ConnectionState.Open && !Connection.SoftClosed ) ) throw new InvalidOperationException( "Connection must be valid and open to rollback transaction" );
-            if ( !_open ) throw new InvalidOperationException( "Transaction has already been rolled back or is not pending" );
-            var cmd = new MySqlCommand( "ROLLBACK", Connection );
-            cmd.ExecuteNonQuery();
+        public override void Rollback() => CommitOrRollback( "rollback", "rolled back", "ROLLBACK" );
+        private void CommitOrRollback( string ex1, string ex2, string action ) {
+            if ( !CheckConnection() )
+                throw new InvalidOperationException( string.Format( "Connection must be valid and open to {0} transaction", ex1 ) );
+            if ( !_open )
+                throw new InvalidOperationException( string.Format( "Transaction has already been {0} or is not pending", ex2 ) );
+            using ( var cmd = new MySqlCommand( action, Connection ) ) cmd.ExecuteNonQuery();
             _open = false;
         }
     }

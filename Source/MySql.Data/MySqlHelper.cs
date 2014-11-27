@@ -127,7 +127,7 @@ namespace MySql.Data.MySqlClient {
                 cn.Open();
                 //call the overload that takes a connection in place of the connection string
                 return ExecuteDataset( cn, commandText, commandParameters );
-            }
+            }//
         }
 
         /// <summary>

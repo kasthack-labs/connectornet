@@ -30,45 +30,36 @@ namespace MySql.Data.MySqlClient {
         private static PerformanceCounter _procedureSoftQueries;
 
         public SystemPerformanceMonitor( MySqlConnection connection ) : base( connection ) {
-            var categoryName = Resources.PerfMonCategoryName;
-
-            if ( connection.Settings.UsePerformanceMonitor
-                 && _procedureHardQueries == null )
-                try {
-                    _procedureHardQueries = new PerformanceCounter( categoryName, "HardProcedureQueries", false );
-                    _procedureSoftQueries = new PerformanceCounter( categoryName, "SoftProcedureQueries", false );
-                }
-                catch ( Exception ex ) {
-                    MySqlTrace.LogError( connection.ServerThread, ex.Message );
-                }
+            if ( !connection.Settings.UsePerformanceMonitor || _procedureHardQueries != null ) return;
+            try {
+                var categoryName = Resources.PerfMonCategoryName;
+                _procedureHardQueries = new PerformanceCounter( categoryName, "HardProcedureQueries", false );
+                _procedureSoftQueries = new PerformanceCounter( categoryName, "SoftProcedureQueries", false );
+            }
+            catch ( Exception ex ) {
+                MySqlTrace.LogError( connection.ServerThread, ex.Message );
+            }
         }
 
 #if DEBUG
         private void EnsurePerfCategoryExist() {
-            var ccdc = new CounterCreationDataCollection();
-            var ccd = new CounterCreationData();
-            ccd.CounterType = PerformanceCounterType.NumberOfItems32;
-            ccd.CounterName = "HardProcedureQueries";
-            ccdc.Add( ccd );
+            var ccdc = new CounterCreationDataCollection {
+                new CounterCreationData { CounterType = PerformanceCounterType.NumberOfItems32, CounterName = "HardProcedureQueries" },
+                new CounterCreationData { CounterType = PerformanceCounterType.NumberOfItems32, CounterName = "SoftProcedureQueries" }
+            };
 
-            ccd = new CounterCreationData();
-            ccd.CounterType = PerformanceCounterType.NumberOfItems32;
-            ccd.CounterName = "SoftProcedureQueries";
-            ccdc.Add( ccd );
-
-            if ( !PerformanceCounterCategory.Exists( Resources.PerfMonCategoryName ) ) PerformanceCounterCategory.Create( Resources.PerfMonCategoryName, null, ccdc );
+            if ( !PerformanceCounterCategory.Exists( Resources.PerfMonCategoryName ) )
+                PerformanceCounterCategory.Create( Resources.PerfMonCategoryName, null, ccdc );
         }
 #endif
 
-        public void AddHardProcedureQuery() {
-            if ( !Connection.Settings.UsePerformanceMonitor
-                 || _procedureHardQueries == null ) return;
+        public new void AddHardProcedureQuery() {
+            if ( !Connection.Settings.UsePerformanceMonitor || _procedureHardQueries == null ) return;
             _procedureHardQueries.Increment();
         }
 
-        public void AddSoftProcedureQuery() {
-            if ( !Connection.Settings.UsePerformanceMonitor
-                 || _procedureSoftQueries == null ) return;
+        public new void AddSoftProcedureQuery() {
+            if ( !Connection.Settings.UsePerformanceMonitor || _procedureSoftQueries == null ) return;
             _procedureSoftQueries.Increment();
         }
     }

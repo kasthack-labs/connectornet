@@ -39,9 +39,10 @@ namespace MySql.Data.MySqlClient {
         internal MySqlClientPermission( DBDataPermission permission ) : base( permission ) { }
 
         internal MySqlClientPermission( string connectionString ) : base( PermissionState.None ) {
-            if ( ( connectionString == null )
-                 || connectionString.Length == 0 ) base.Add( string.Empty, string.Empty, KeyRestrictionBehavior.AllowOnly );
-            else base.Add( connectionString, string.Empty, KeyRestrictionBehavior.AllowOnly );
+            base.Add(
+                string.IsNullOrEmpty( connectionString ) ? string.Empty : connectionString,
+                string.Empty,
+                KeyRestrictionBehavior.AllowOnly );
         }
         #endregion
 

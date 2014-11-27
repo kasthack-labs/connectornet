@@ -161,11 +161,9 @@ namespace MySql.Data.MySqlClient {
                 }
                 catch ( MySqlException ex ) {
                     // expired password capability
-                    if ( ex.Number == 1820 ) {
-                        IsPasswordExpired = true;
-                        return;
-                    }
-                    throw;
+                    if ( ex.Number != 1820 ) throw;
+                    IsPasswordExpired = true;
+                    return;
                 }
             }
 

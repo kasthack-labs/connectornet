@@ -44,8 +44,8 @@ namespace MySql.Data.MySqlClient {
         private List<IMySqlValue[]> _cachedValues;
 
         public ResultSet( int affectedRows, long insertedId ) {
-            this.AffectedRows = affectedRows;
-            this.InsertedId = insertedId;
+            AffectedRows = affectedRows;
+            InsertedId = insertedId;
             _readDone = true;
         }
 
@@ -53,7 +53,7 @@ namespace MySql.Data.MySqlClient {
             AffectedRows = -1;
             InsertedId = -1;
             _driver = d;
-            this._statementId = statementId;
+            _statementId = statementId;
             _rowIndex = -1;
             LoadColumns( numCols );
             IsOutputParameters = IsOutputParameterResultSet();
@@ -64,7 +64,7 @@ namespace MySql.Data.MySqlClient {
         #region Properties
         public bool HasRows { get; }
 
-        public int Size => Fields == null ? 0 : Fields.Length;
+        public int Size => Fields?.Length ?? 0;
 
         public MySqlField[] Fields { get; private set; }
 
@@ -100,10 +100,8 @@ namespace MySql.Data.MySqlClient {
             // first we try a quick hash lookup
             int ordinal;
             if ( _fieldHashCs.TryGetValue( name, out ordinal ) ) return ordinal;
-
             // ok that failed so we use our CI hash      
             if ( _fieldHashCi.TryGetValue( name, out ordinal ) ) return ordinal;
-
             // Throw an exception if the ordinal cannot be found.
             throw new IndexOutOfRangeException( String.Format( Resources.CouldNotFindColumnName, name ) );
         }
@@ -187,8 +185,7 @@ namespace MySql.Data.MySqlClient {
                 // if we have rows but the user didn't read the first one then mark it as skipped
                 if ( HasRows && _rowIndex == -1 ) SkippedRows++;
                 try {
-                    while ( _driver.IsOpen
-                            && _driver.SkipDataRow() ) {
+                    while ( _driver.IsOpen && _driver.SkipDataRow() ) {
                         TotalRows++;
                         SkippedRows++;
                     }
@@ -200,7 +197,6 @@ namespace MySql.Data.MySqlClient {
                 _readDone = true;
             }
             else if ( _driver == null ) CacheClose();
-
             _driver = null;
             if ( Cached ) CacheReset();
         }

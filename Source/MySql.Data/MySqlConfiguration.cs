@@ -22,28 +22,25 @@
 
 using System.Collections.Generic;
 using System.Configuration;
-
+using GCEC = MySql.Data.MySqlClient.GenericConfigurationElementCollection<MySql.Data.MySqlClient.InterceptorConfigurationElement>;
+using GCECA = MySql.Data.MySqlClient.GenericConfigurationElementCollection<MySql.Data.MySqlClient.AuthenticationPluginConfigurationElement>;
 namespace MySql.Data.MySqlClient {
     public sealed class MySqlConfiguration : ConfigurationSection {
         public static MySqlConfiguration Settings { get; } = ConfigurationManager.GetSection( "MySQL" ) as MySqlConfiguration;
 
         [ConfigurationProperty( "ExceptionInterceptors", IsRequired = false )]
-        [ConfigurationCollection( typeof( InterceptorConfigurationElement ), AddItemName = "add", ClearItemsName = "clear",
-            RemoveItemName = "remove" )]
-        public GenericConfigurationElementCollection<InterceptorConfigurationElement> ExceptionInterceptors
-            => (GenericConfigurationElementCollection<InterceptorConfigurationElement>) this[ "ExceptionInterceptors" ];
+        [ConfigurationCollection( typeof(InterceptorConfigurationElement), AddItemName = "add", ClearItemsName = "clear", RemoveItemName = "remove" )]
+        public GCEC ExceptionInterceptors => (GCEC) this[ "ExceptionInterceptors" ];
 
         [ConfigurationProperty( "CommandInterceptors", IsRequired = false )]
-        [ConfigurationCollection( typeof( InterceptorConfigurationElement ), AddItemName = "add", ClearItemsName = "clear",
-            RemoveItemName = "remove" )]
-        public GenericConfigurationElementCollection<InterceptorConfigurationElement> CommandInterceptors
-            => (GenericConfigurationElementCollection<InterceptorConfigurationElement>) this[ "CommandInterceptors" ];
+        [ConfigurationCollection( typeof(InterceptorConfigurationElement), AddItemName = "add", ClearItemsName = "clear", RemoveItemName = "remove" )]
+        public GCEC CommandInterceptors
+            => ( GCEC ) this[ "CommandInterceptors" ];
 
         [ConfigurationProperty( "AuthenticationPlugins", IsRequired = false )]
-        [ConfigurationCollection( typeof( AuthenticationPluginConfigurationElement ), AddItemName = "add", ClearItemsName = "clear",
-            RemoveItemName = "remove" )]
-        public GenericConfigurationElementCollection<AuthenticationPluginConfigurationElement> AuthenticationPlugins
-            => (GenericConfigurationElementCollection<AuthenticationPluginConfigurationElement>) this[ "AuthenticationPlugins" ];
+        [ConfigurationCollection( typeof( AuthenticationPluginConfigurationElement ), AddItemName = "add", ClearItemsName = "clear", RemoveItemName = "remove" )]
+        public GCECA AuthenticationPlugins
+            => (GCECA) this[ "AuthenticationPlugins" ];
 
         [ConfigurationProperty( "Replication", IsRequired = true )]
         public ReplicationConfigurationElement Replication {

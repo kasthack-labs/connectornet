@@ -209,8 +209,8 @@ namespace MySql.Data.MySqlClient {
         }
 
         public void ResetTimeout( int newTimeout ) {
-            if ( newTimeout == Timeout.Infinite
-                 || newTimeout == 0 ) _timeout = Timeout.Infinite;
+            if ( newTimeout == Timeout.Infinite || newTimeout == 0 )
+                _timeout = Timeout.Infinite;
             else _timeout = newTimeout;
             _stopwatch.Reset();
         }

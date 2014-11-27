@@ -62,11 +62,8 @@ namespace MySql.Data.MySqlClient {
             return retValue + key;
         }
 
-        private ProcedureCacheEntry GetParameters( string procName ) {
-            var procCacheKey = GetCacheKey( procName );
-            var entry = Connection.ProcedureCache.GetProcedure( Connection, procName, procCacheKey );
-            return entry;
-        }
+        private ProcedureCacheEntry GetParameters( string procName ) =>
+            Connection.ProcedureCache.GetProcedure( Connection, procName, GetCacheKey( procName ) );
 
         public static string GetFlags( string dtd ) {
             var x = dtd.Length - 1;
@@ -90,7 +87,8 @@ namespace MySql.Data.MySqlClient {
             var pName = (string) param[ "PARAMETER_NAME" ];
 
             if ( param[ "ORDINAL_POSITION" ].Equals( 0 ) ) {
-                if ( returnParameter == null ) throw new InvalidOperationException( String.Format( Resources.RoutineRequiresReturnParameter, spName ) );
+                if ( returnParameter == null )
+                    throw new InvalidOperationException( String.Format( Resources.RoutineRequiresReturnParameter, spName ) );
                 pName = returnParameter.ParameterName;
             }
 
@@ -206,7 +204,8 @@ namespace MySql.Data.MySqlClient {
             const string prefix = "@" + ParameterPrefix;
             for ( var i = 0; i < reader.FieldCount; i++ ) {
                 var fieldName = reader.GetName( i );
-                if ( fieldName.StartsWith( prefix, StringComparison.OrdinalIgnoreCase ) ) fieldName = fieldName.Remove( 0, prefix.Length );
+                if ( fieldName.StartsWith( prefix, StringComparison.OrdinalIgnoreCase ) )
+                    fieldName = fieldName.Remove( 0, prefix.Length );
                 var parameter = Command.Parameters.GetParameterFlexible( fieldName, true );
                 parameter.Value = reader.GetValue( i );
             }

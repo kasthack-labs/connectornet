@@ -35,7 +35,7 @@ namespace MySql.Data.MySqlClient.Replication {
         /// <param name="isMaster">True if the server to return must be a master</param>
         /// <returns>Next available server</returns>
         protected internal override ReplicationServer GetServer( bool isMaster ) {
-            for ( var i = 0; i < Servers.Count; i++ ) {
+            foreach ( ReplicationServer t in Servers ) {
                 _nextServer++;
                 if ( _nextServer == Servers.Count ) _nextServer = 0;
                 var s = Servers[ _nextServer ];

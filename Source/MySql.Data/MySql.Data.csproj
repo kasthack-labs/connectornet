@@ -161,7 +161,6 @@
     <Compile Include="common\Version.cs" />
     <Compile Include="CompressedStream.cs" />
     <Compile Include="Connection.cs" />
-    <Compile Include="Constraints.cs" />
     <Compile Include="Crypt.cs" />
     <Compile Include="dataadapter.cs" />
     <Compile Include="datareader.cs" />

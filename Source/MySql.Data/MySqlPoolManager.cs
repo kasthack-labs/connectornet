@@ -98,20 +98,12 @@ namespace MySql.Data.MySqlClient {
 
         public static void RemoveConnection( Driver driver ) {
             Debug.Assert( driver != null );
-
-            var pool = driver.Pool;
-            if ( pool == null ) return;
-
-            pool.RemoveConnection( driver );
+            driver.Pool?.RemoveConnection( driver );
         }
 
         public static void ReleaseConnection( Driver driver ) {
             Debug.Assert( driver != null );
-
-            var pool = driver.Pool;
-            if ( pool == null ) return;
-
-            pool.ReleaseConnection( driver );
+            driver.Pool?.ReleaseConnection( driver );
         }
 
         public static void ClearPool( MySqlConnectionStringBuilder settings ) {
@@ -149,9 +141,7 @@ namespace MySql.Data.MySqlClient {
             lock ( Pools ) {
                 // Create separate keys list.
                 var keys = new List<string>( Pools.Count );
-
-                foreach ( var key in Pools.Keys ) keys.Add( key );
-
+                keys.AddRange( Pools.Keys );
                 // Remove all pools by key.
                 foreach ( var key in keys ) ClearPoolByText( key );
             }

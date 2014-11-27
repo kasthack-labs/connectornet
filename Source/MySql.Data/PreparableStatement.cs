@@ -126,7 +126,7 @@ namespace MySql.Data.MySqlClient {
                 _packet.Encoding = p.Encoding;
                 p.Serialize( _packet, true, Connection.Settings );
             }
-            if ( _nullMap != null ) _nullMap.CopyTo( _packet.Buffer, _nullMapPosition );
+            _nullMap?.CopyTo( _packet.Buffer, _nullMapPosition );
 
             ExecutionCount++;
 

@@ -52,7 +52,7 @@ namespace MySql.Data.MySqlClient {
             _autoEvent = new AutoResetEvent( false );
 
             if ( _minSize > _maxSize ) _minSize = _maxSize;
-            this.Settings = settings;
+            Settings = settings;
             _inUsePool = new List<Driver>( (int) _maxSize );
             _idlePool = new Queue<Driver>( (int) _maxSize );
 

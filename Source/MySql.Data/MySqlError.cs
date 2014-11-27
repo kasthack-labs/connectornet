@@ -30,9 +30,9 @@ namespace MySql.Data.MySqlClient {
         /// <param name="code"></param>
         /// <param name="message"></param>
         public MySqlError( string level, int code, string message ) {
-            this.Level = level;
-            this.Code = code;
-            this.Message = message;
+            Level = level;
+            Code = code;
+            Message = message;
         }
 
         /// <summary>

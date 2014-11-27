@@ -121,12 +121,10 @@ namespace MySql.Data.MySqlClient.Replication {
                         if ( connection.Driver == null
                              || !connection.Driver.IsOpen ) isNewServer = true;
                         else {
-                            var msb = new MySqlConnectionStringBuilder( server.ConnectionString );
-                            if ( !msb.Equals( connection.Driver.Settings ) ) isNewServer = true;
+                            if ( !new MySqlConnectionStringBuilder( server.ConnectionString ).Equals( connection.Driver.Settings ) ) isNewServer = true;
                         }
                         if ( isNewServer ) {
-                            var driver = Driver.Create( new MySqlConnectionStringBuilder( server.ConnectionString ) );
-                            connection.Driver = driver;
+                            connection.Driver = Driver.Create( new MySqlConnectionStringBuilder( server.ConnectionString ) );
                         }
                         return;
                     }

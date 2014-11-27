@@ -80,10 +80,7 @@ namespace MySql.Data.MySqlClient {
 
         internal void SendPacket( MySqlPacket p ) { Stream.SendPacket( p ); }
 
-        internal void SendEmptyPacket() {
-            var buffer = new byte[4];
-            Stream.SendEntirePacketDirectly( buffer, 0 );
-        }
+        internal void SendEmptyPacket() => Stream.SendEntirePacketDirectly( new byte[4], 0 );
 
         internal MySqlPacket ReadPacket() => Packet = Stream.ReadPacket();
 
@@ -429,8 +426,7 @@ namespace MySql.Data.MySqlClient {
 
             var fieldCount = (int) Packet.ReadFieldLength();
             if ( -1 == fieldCount ) {
-                var filename = Packet.ReadString();
-                SendFileToServer( filename );
+                SendFileToServer( Packet.ReadString() );
                 return GetResult( ref affectedRow, ref insertedId );
             }
             if ( fieldCount != 0 ) return fieldCount;
@@ -687,7 +683,7 @@ namespace MySql.Data.MySqlClient {
         internal void SetConnectAttrs() {
             // Sets connect attributes
             if ( ( Flags & ClientFlags.ConnectAttrs ) == 0 ) return;
-            var connectAttrs = string.Empty;
+            var connectAttrs = new StringBuilder();
             var attrs = new MySqlConnectAttrs();
             foreach ( var property in attrs.GetType().GetProperties() ) {
                 var name = property.Name;
@@ -697,10 +693,10 @@ namespace MySql.Data.MySqlClient {
                     if ( displayNameAttribute != null ) name = displayNameAttribute.DisplayName;
                 }
                 var value = (string) property.GetValue( attrs, null );
-                connectAttrs += string.Format( "{0}{1}", (char) name.Length, name );
-                connectAttrs += string.Format( "{0}{1}", (char) value.Length, value );
+                connectAttrs.AppendFormat( "{0}{1}", (char) name.Length, name );
+                connectAttrs.AppendFormat( "{0}{1}", (char) value.Length, value );
             }
-            Packet.WriteLenString( connectAttrs );
+            Packet.WriteLenString( connectAttrs.ToString() );
         }
     }
 }

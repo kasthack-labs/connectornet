@@ -40,7 +40,6 @@ namespace MySql.Data.MySqlClient {
         }
 
         protected abstract void AddInterceptor( object o );
-
         protected virtual string ResolveType( string nameOrType ) => nameOrType;
     }
 }

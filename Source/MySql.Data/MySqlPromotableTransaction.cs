@@ -107,14 +107,12 @@ namespace MySql.Data.MySqlClient {
         }
 
         void IPromotableSinglePhaseNotification.Rollback( SinglePhaseEnlistment singlePhaseEnlistment ) {
-            var current = _scopeStack.Peek();
-            current.Rollback( singlePhaseEnlistment );
+            _scopeStack.Peek().Rollback( singlePhaseEnlistment );
             _scopeStack.Pop();
         }
 
-        void IPromotableSinglePhaseNotification.SinglePhaseCommit( SinglePhaseEnlistment singlePhaseEnlistment ) {
+        void IPromotableSinglePhaseNotification.SinglePhaseCommit( SinglePhaseEnlistment singlePhaseEnlistment ) =>
             _scopeStack.Pop().SinglePhaseCommit( singlePhaseEnlistment );
-        }
 
         byte[] ITransactionPromoter.Promote() { throw new NotSupportedException(); }
     }
@@ -124,8 +122,7 @@ namespace MySql.Data.MySqlClient {
 
         public static Driver GetDriverInTransaction( Transaction transaction ) {
             lock ( DriversInUse.SyncRoot ) {
-                var d = (Driver) DriversInUse[ transaction.GetHashCode() ];
-                return d;
+                return (Driver) DriversInUse[ transaction.GetHashCode() ];
             }
         }
 
