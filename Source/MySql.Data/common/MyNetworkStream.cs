@@ -143,6 +143,9 @@ namespace MySql.Data.Common {
         #region Create Code
         public static MyNetworkStream CreateStream( MySqlConnectionStringBuilder settings, bool unix ) {
             MyNetworkStream stream = null;
+            if ( !unix ) {
+                return CreateSocketStream( settings, null, unix );
+            }
             var ipHe = GetHostEntry( settings.Server );
             foreach ( var address in ipHe.AddressList )
                 try {
@@ -150,11 +153,10 @@ namespace MySql.Data.Common {
                     if ( stream != null ) break;
                 }
                 catch ( Exception ex ) {
-                    var socketException = ex as SocketException;
                     // if the exception is a ConnectionRefused then we eat it as we may have other address
                     // to attempt
-                    if ( socketException == null ) throw;
-                    if ( socketException.SocketErrorCode != SocketError.ConnectionRefused ) throw;
+                    var socketException = ex as SocketException;
+                    if ( socketException == null || socketException.SocketErrorCode != SocketError.ConnectionRefused ) throw;
                 }
             return stream;
         }

@@ -34,7 +34,7 @@ namespace MySql.Data.MySqlClient {
     [ToolboxBitmap( typeof( MySqlDataAdapter ), "MySqlClient.resources.dataadapter.bmp" )]
     [DesignerCategory( "Code" )]
     [Designer( "MySql.Data.MySqlClient.Design.MySqlDataAdapterDesigner,MySqlClient.Design" )]
-    public sealed class MySqlDataAdapter : DbDataAdapter, IDbDataAdapter, IDataAdapter, ICloneable {
+    public sealed class MySqlDataAdapter : DbDataAdapter {
         private int _updateBatchSize;
         private List<IDbCommand> _commandBatch;
 
