@@ -143,7 +143,7 @@ namespace MySql.Data.Common {
         #region Create Code
         public static MyNetworkStream CreateStream( MySqlConnectionStringBuilder settings, bool unix ) {
             MyNetworkStream stream = null;
-            if ( !unix ) {
+            if ( unix ) {
                 return CreateSocketStream( settings, null, unix );
             }
             var ipHe = GetHostEntry( settings.Server );
